@@ -169,6 +169,10 @@ jobs:
             echo "mix.exs and mix.lock updated."
           fi
 
+      - name: Fetch test dependencies
+        if: steps.update.outputs.updated == 'true'
+        run: MIX_ENV=test mix deps.get
+
       - name: Run tests
         if: steps.update.outputs.updated == 'true'
         run: mix test
