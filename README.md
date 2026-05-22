@@ -88,4 +88,4 @@ The application is configured for deployment to standard Phoenix hosting platfor
 
 ## License
 
-MIT
+Apache-2.0
