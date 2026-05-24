@@ -64,7 +64,7 @@ defmodule PetalBoilerplate.MixProject do
       {:telemetry_poller, "~> 1.0"},
 
       # Utilities
-      {:gettext, "~> 0.20"},
+      {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
 
       # Domain
