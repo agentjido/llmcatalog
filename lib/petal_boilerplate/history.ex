@@ -9,8 +9,9 @@ defmodule PetalBoilerplate.History do
   @default_recent_limit 50
   @max_limit 500
   @history_archive_name "petal_boilerplate-llm_db-history.tar.gz"
+  @history_staging_suffix "-staging"
 
-  alias LLMDB.{History.Bundle, Snapshot, Snapshot.ReleaseStore}
+  alias LLMDB.{History.Bundle, Snapshot.ReleaseStore}
 
   @doc """
   Configures a writable history directory and syncs the published bundle when needed.
@@ -132,20 +133,31 @@ defmodule PetalBoilerplate.History do
   end
 
   defp ensure_local_bundle(history_dir) do
-    with {:ok, snapshot_id} <- packaged_snapshot_id(),
-         true <- history_current?(history_dir, snapshot_id) do
-      :ok
-    else
-      false -> sync_history_bundle(history_dir)
-      {:error, _reason} = error -> error
+    case latest_available_history_release() do
+      {:ok, snapshot_id, archive_url} ->
+        if history_current?(history_dir, snapshot_id) do
+          :ok
+        else
+          sync_history_bundle(history_dir, archive_url)
+        end
+
+      {:error, _reason} = error ->
+        if history_available_locally?(history_dir), do: :ok, else: error
     end
   end
 
-  defp packaged_snapshot_id do
-    case Snapshot.read(Snapshot.packaged_path()) do
-      {:ok, %{"snapshot_id" => snapshot_id}} when is_binary(snapshot_id) -> {:ok, snapshot_id}
-      {:ok, _snapshot} -> {:error, :missing_snapshot_id}
-      {:error, reason} -> {:error, reason}
+  defp latest_available_history_release do
+    with {:ok, releases} <- fetch_releases(),
+         release when is_map(release) <- Enum.find(releases, &history_release?/1),
+         {:ok, meta_url} <- release_asset_url(release, "history-meta.json"),
+         {:ok, archive_url} <- release_asset_url(release, "history.tar.gz"),
+         {:ok, meta} <- fetch_json(meta_url),
+         snapshot_id when is_binary(snapshot_id) <- meta["to_snapshot_id"] do
+      {:ok, snapshot_id, archive_url}
+    else
+      nil -> {:error, :not_found}
+      {:error, _reason} = error -> error
+      _ -> {:error, :not_found}
     end
   end
 
@@ -156,25 +168,124 @@ defmodule PetalBoilerplate.History do
     end
   end
 
-  defp sync_history_bundle(history_dir) do
+  defp history_available_locally?(history_dir) do
+    match?({:ok, _meta}, Bundle.read_meta(history_dir))
+  end
+
+  defp sync_history_bundle(history_dir, archive_url) do
     archive_path = Path.join(System.tmp_dir!(), @history_archive_name)
+    staging_dir = history_dir <> @history_staging_suffix
 
     try do
-      with :ok <- ReleaseStore.download_history_archive(archive_path),
-           :ok <- replace_history_bundle(archive_path, history_dir) do
+      with :ok <- download_history_archive(archive_url, archive_path),
+           :ok <- replace_history_bundle(archive_path, history_dir, staging_dir) do
         :ok
       else
-        {:error, reason} ->
-          File.rm_rf(history_dir)
-          {:error, reason}
+        error -> error
       end
     after
       File.rm(archive_path)
+      File.rm_rf(staging_dir)
     end
   end
 
-  defp replace_history_bundle(archive_path, history_dir) do
-    File.rm_rf(history_dir)
-    Bundle.install_archive(archive_path, history_dir)
+  defp replace_history_bundle(archive_path, history_dir, staging_dir) do
+    File.rm_rf(staging_dir)
+
+    with :ok <- Bundle.install_archive(archive_path, staging_dir),
+         {:ok, _meta} <- Bundle.read_meta(staging_dir) do
+      File.rm_rf(history_dir)
+      File.rename(staging_dir, history_dir)
+    end
+  end
+
+  defp download_history_archive(archive_url, archive_path) when is_binary(archive_url) do
+    ensure_req_started()
+
+    case Req.get(archive_url) do
+      {:ok, %{status: status, body: body}} when status in 200..299 ->
+        archive_path
+        |> Path.dirname()
+        |> File.mkdir_p!()
+
+        File.write!(archive_path, body)
+        :ok
+
+      {:ok, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:ok, %{status: status, body: body}} ->
+        {:error, {:http_status, status, body}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp download_history_archive(_archive_url, _archive_path) do
+    {:error, :not_found}
+  end
+
+  defp fetch_releases do
+    repo = ReleaseStore.config().repo
+    url = "https://api.github.com/repos/#{repo}/releases?per_page=100"
+
+    fetch_json(url, headers: [{"accept", "application/vnd.github+json"}])
+  end
+
+  defp history_release?(%{"draft" => true}), do: false
+  defp history_release?(%{"prerelease" => true}), do: false
+
+  defp history_release?(release) do
+    with {:ok, _meta_url} <- release_asset_url(release, "history-meta.json"),
+         {:ok, _archive_url} <- release_asset_url(release, "history.tar.gz") do
+      true
+    else
+      _ -> false
+    end
+  end
+
+  defp release_asset_url(%{"assets" => assets}, filename) when is_list(assets) do
+    assets
+    |> Enum.find_value(fn
+      %{"name" => ^filename, "browser_download_url" => url} when is_binary(url) -> url
+      %{"name" => ^filename, "url" => url} when is_binary(url) -> url
+      _asset -> nil
+    end)
+    |> case do
+      url when is_binary(url) -> {:ok, url}
+      nil -> {:error, :not_found}
+    end
+  end
+
+  defp release_asset_url(_release, _filename), do: {:error, :not_found}
+
+  defp fetch_json(url, opts \\ []) when is_binary(url) do
+    with {:ok, body} <- http_get(url, opts) do
+      decode_json_body(body)
+    end
+  end
+
+  defp http_get(url, opts) when is_binary(url) do
+    ensure_req_started()
+
+    case Req.get(url, opts) do
+      {:ok, %{status: status, body: body}} when status in 200..299 -> {:ok, body}
+      {:ok, %{status: 404}} -> {:error, :not_found}
+      {:ok, %{status: status, body: body}} -> {:error, {:http_status, status, body}}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp decode_json_body(body) when is_binary(body), do: Jason.decode(body)
+  defp decode_json_body(body) when is_map(body) or is_list(body), do: {:ok, body}
+  defp decode_json_body(_body), do: {:error, :invalid_json_body}
+
+  defp ensure_req_started do
+    case Application.ensure_all_started(:req) do
+      {:ok, _apps} -> :ok
+      {:error, {:already_started, _app}} -> :ok
+      {:error, reason} -> raise "failed to start req application: #{inspect(reason)}"
+    end
   end
 end
