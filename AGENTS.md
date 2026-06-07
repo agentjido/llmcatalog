@@ -70,3 +70,7 @@
 - Atom exhaustion: providers/modalities use strings not atoms (see `parse_provider_ids`)
 - ETS caching: Catalog pre-enriches models (search indexes, capability sets) into `:catalog_models` table
 - LiveView lifecycle: use `mount/3`, `handle_event/3`, `handle_info/2` patterns
+
+## Release Hygiene
+
+- Do not modify `CHANGELOG.md`; release notes are generated from Git history during release, so keep changes focused on proper Conventional Commits.
