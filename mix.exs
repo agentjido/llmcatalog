@@ -68,7 +68,7 @@ defmodule PetalBoilerplate.MixProject do
       {:jason, "~> 1.2"},
 
       # Domain
-      {:llm_db, "~> 2026.5"},
+      {:llm_db, "~> 2026.6"},
 
       # Dev & test
       {:phoenix_live_reload, "~> 1.6", only: [:dev, :test]},
