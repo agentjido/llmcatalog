@@ -481,7 +481,7 @@ defmodule PetalBoilerplateWeb.HistoryLive do
     range_summary =
       cond do
         is_binary(from_ref) and is_binary(to_ref) ->
-          "#{range_kind || "history"} #{short_sha(from_ref)} -> #{short_sha(to_ref)}"
+          "#{range_kind} #{short_sha(from_ref)} -> #{short_sha(to_ref)}"
 
         true ->
           nil
@@ -501,7 +501,6 @@ defmodule PetalBoilerplateWeb.HistoryLive do
   end
 
   defp short_sha(sha) when is_binary(sha), do: String.slice(sha, 0, 7)
-  defp short_sha(_), do: "unknown"
 
   defp history_module do
     Application.get_env(:petal_boilerplate, :history_module, PetalBoilerplate.History)

@@ -141,6 +141,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     reasoning: "--cap-reason",
     streaming: "--cap-stream",
     embeddings: "--cap-embed",
+    batch: "--cap-tools",
+    citations: "--cap-stream",
+    code_execution: "--cap-embed",
+    context_management: "--cap-vision",
     json_output: "--muted-foreground",
     audio_input: "--cap-stream",
     audio_output: "--cap-stream",
@@ -154,6 +158,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     reasoning: "Reasoning",
     streaming: "Streaming",
     embeddings: "Embed",
+    batch: "Batch",
+    citations: "Cite",
+    code_execution: "Code",
+    context_management: "Ctx",
     json_output: "JSON",
     audio_input: "Audio In",
     audio_output: "Audio Out",
@@ -167,6 +175,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     reasoning: "hero-academic-cap",
     streaming: "hero-bolt",
     embeddings: "hero-hashtag",
+    batch: "hero-arrows-right-left",
+    citations: "hero-document-text",
+    code_execution: "hero-code-bracket",
+    context_management: "hero-circle-stack",
     json_output: "hero-code-bracket",
     audio_input: "hero-microphone",
     audio_output: "hero-speaker-wave",
@@ -486,13 +498,17 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       {:streaming_text, "Streaming"},
       {:reasoning, "Reasoning"},
       {:embeddings, "Embeddings"},
-      {:json_native, "JSON Output"}
+      {:json_native, "JSON Output"},
+      {:batch, "Batch"},
+      {:citations, "Citations"},
+      {:code_execution, "Code Execution"},
+      {:context_management, "Context Management"}
     ]
 
     assigns = assign(assigns, :capabilities, capabilities)
 
     ~H"""
-    <div class="w-44 p-2">
+    <div class="w-56 p-2">
       <form phx-change="filter">
         <%= for {cap_key, cap_label} <- @capabilities do %>
           <label
@@ -692,7 +708,18 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   defp has_capability_filters?(capabilities) do
     Enum.any?(
-      [:chat, :tools, :reasoning, :embeddings, :json_native, :streaming_text],
+      [
+        :chat,
+        :tools,
+        :reasoning,
+        :embeddings,
+        :json_native,
+        :streaming_text,
+        :batch,
+        :citations,
+        :code_execution,
+        :context_management
+      ],
       fn cap ->
         get_capability_filter(capabilities, cap)
       end
@@ -848,6 +875,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       :embeddings -> "Embeddings"
       :json_native -> "JSON"
       :streaming_text -> "Streaming"
+      :batch -> "Batch"
+      :citations -> "Citations"
+      :code_execution -> "Code"
+      :context_management -> "Context"
       other -> to_string(other) |> String.capitalize()
     end
   end
@@ -997,13 +1028,23 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             <td class="px-3 py-2">
               <div class="flex flex-wrap gap-1">
                 <.capability_badge
-                  :if={get_in(model.capabilities, [:reasoning, :enabled])}
+                  :if={model_has_capability?(model, :reasoning)}
                   capability={:reasoning}
                   compact
                 />
                 <.capability_badge
-                  :if={get_in(model.capabilities, [:tools, :enabled])}
+                  :if={model_has_capability?(model, :tools)}
                   capability={:tools}
+                  compact
+                />
+                <.capability_badge
+                  :if={model_has_capability?(model, :batch)}
+                  capability={:batch}
+                  compact
+                />
+                <.capability_badge
+                  :if={model_has_capability?(model, :code_execution)}
+                  capability={:code_execution}
                   compact
                 />
                 <.capability_badge :if={has_vision?(model)} capability={:vision} compact />
@@ -1013,18 +1054,18 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                   compact
                 />
                 <.capability_badge
-                  :if={get_in(model.capabilities, [:json, :native])}
+                  :if={model_has_capability?(model, :json_output)}
                   capability={:json_output}
                   compact
                 />
               </div>
             </td>
             <td class="px-3 py-2 text-right font-mono text-xs">
-              {ModelLive.format_number(get_in(model.limits, [:context]))}
+              {ModelLive.format_number(model_limit(model, :context))}
             </td>
             <td class="px-3 py-2 text-right font-mono text-xs">
-              {ModelLive.format_cost(get_in(model.cost, [:input]))}/{ModelLive.format_cost(
-                get_in(model.cost, [:output])
+              {ModelLive.format_cost(model_cost(model, :input))}/{ModelLive.format_cost(
+                model_cost(model, :output)
               )}
             </td>
           </tr>
@@ -1090,24 +1131,34 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 >
                   <.modality_badges model={model} />
                   <span class="font-mono">
-                    {ModelLive.format_number(get_in(model.limits, [:context]))}
+                    {ModelLive.format_number(model_limit(model, :context))}
                   </span>
                   <span class="font-mono">
-                    {ModelLive.format_cost(get_in(model.cost, [:input]))}/{ModelLive.format_cost(
-                      get_in(model.cost, [:output])
+                    {ModelLive.format_cost(model_cost(model, :input))}/{ModelLive.format_cost(
+                      model_cost(model, :output)
                     )}
                   </span>
                 </div>
 
                 <div class="flex flex-wrap gap-1 mt-2">
                   <.capability_badge
-                    :if={get_in(model.capabilities, [:reasoning, :enabled])}
+                    :if={model_has_capability?(model, :reasoning)}
                     capability={:reasoning}
                     compact
                   />
                   <.capability_badge
-                    :if={get_in(model.capabilities, [:tools, :enabled])}
+                    :if={model_has_capability?(model, :tools)}
                     capability={:tools}
+                    compact
+                  />
+                  <.capability_badge
+                    :if={model_has_capability?(model, :batch)}
+                    capability={:batch}
+                    compact
+                  />
+                  <.capability_badge
+                    :if={model_has_capability?(model, :code_execution)}
+                    capability={:code_execution}
                     compact
                   />
                   <.capability_badge :if={has_vision?(model)} capability={:vision} compact />
@@ -1165,8 +1216,8 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   defp modality_badges(assigns) do
     modalities = assigns.model.modalities || %{}
-    input_list = modalities[:input] || []
-    output_list = modalities[:output] || []
+    input_list = map_value(modalities, :input) || []
+    output_list = map_value(modalities, :output) || []
     all_modalities = (input_list ++ output_list) |> Enum.uniq()
 
     assigns = assign(assigns, :modalities, all_modalities)
@@ -1201,7 +1252,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   defp has_vision?(model) do
     modalities = model.modalities || %{}
-    input_list = modalities[:input] || []
+    input_list = map_value(modalities, :input) || []
     :image in input_list
   end
 
@@ -1216,6 +1267,13 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   attr :history_api_url, :string, default: nil
 
   def model_detail_modal(assigns) do
+    assigns =
+      assigns
+      |> assign(:specification_rows, specification_rows(assigns.model))
+      |> assign(:reasoning_metadata_rows, reasoning_metadata_rows(assigns.model))
+      |> assign(:advanced_capability_rows, advanced_capability_rows(assigns.model))
+      |> assign(:pricing_component_rows, pricing_component_rows(assigns.model))
+
     ~H"""
     <div
       :if={@model}
@@ -1281,7 +1339,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 >
                   <div class="text-xs mb-2" style="color: hsl(var(--muted-foreground));">Input</div>
                   <div class="flex flex-wrap gap-2">
-                    <%= for mod <- (@model.modalities[:input] || []) do %>
+                    <%= for mod <- model_modalities(@model, :input) do %>
                       <span
                         class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm"
                         style="background-color: hsl(var(--primary) / 0.1); color: hsl(var(--primary));"
@@ -1298,7 +1356,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 >
                   <div class="text-xs mb-2" style="color: hsl(var(--muted-foreground));">Output</div>
                   <div class="flex flex-wrap gap-2">
-                    <%= for mod <- (@model.modalities[:output] || []) do %>
+                    <%= for mod <- model_modalities(@model, :output) do %>
                       <span
                         class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm"
                         style="background-color: hsl(var(--secondary)); color: hsl(var(--secondary-foreground));"
@@ -1319,18 +1377,34 @@ defmodule PetalBoilerplateWeb.ModelComponents do
           >
             <h3 class="text-sm font-semibold mb-3">Capabilities</h3>
             <div class="flex flex-wrap gap-2">
-              <.capability_badge :if={@model.capabilities[:chat]} capability={:chat} />
+              <.capability_badge :if={model_has_capability?(@model, :chat)} capability={:chat} />
               <.capability_badge
-                :if={get_in(@model.capabilities, [:reasoning, :enabled])}
+                :if={model_has_capability?(@model, :reasoning)}
                 capability={:reasoning}
               />
               <.capability_badge
-                :if={get_in(@model.capabilities, [:tools, :enabled])}
+                :if={model_has_capability?(@model, :tools)}
                 capability={:tools}
+              />
+              <.capability_badge
+                :if={model_has_capability?(@model, :batch)}
+                capability={:batch}
+              />
+              <.capability_badge
+                :if={model_has_capability?(@model, :citations)}
+                capability={:citations}
+              />
+              <.capability_badge
+                :if={model_has_capability?(@model, :code_execution)}
+                capability={:code_execution}
+              />
+              <.capability_badge
+                :if={model_has_capability?(@model, :context_management)}
+                capability={:context_management}
               />
               <.capability_badge :if={has_vision?(@model)} capability={:vision} />
               <.capability_badge
-                :if={get_in(@model.capabilities, [:streaming, :text])}
+                :if={model_has_capability?(@model, :streaming)}
                 capability={:streaming}
               />
               <.capability_badge
@@ -1338,59 +1412,101 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 capability={:embeddings}
               />
               <.capability_badge
-                :if={get_in(@model.capabilities, [:json, :native])}
+                :if={model_has_capability?(@model, :json_output)}
                 capability={:json_output}
               />
+            </div>
+          </div>
+
+          <div :if={@reasoning_metadata_rows != []} class="mb-6">
+            <h3 class="text-sm font-semibold mb-3">Reasoning Metadata</h3>
+            <div class="grid gap-3 md:grid-cols-3">
+              <%= for row <- @reasoning_metadata_rows do %>
+                <div
+                  class="rounded-lg border p-3"
+                  style="border-color: hsl(var(--border)); background-color: hsl(var(--muted) / 0.3);"
+                >
+                  <div class="text-xs mb-1" style="color: hsl(var(--muted-foreground));">
+                    {row.label}
+                  </div>
+                  <div class="text-sm font-medium leading-snug">{row.value}</div>
+                  <div
+                    :if={row.detail}
+                    class="mt-1 text-xs"
+                    style="color: hsl(var(--muted-foreground));"
+                  >
+                    {row.detail}
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <div :if={@advanced_capability_rows != []} class="mb-6">
+            <h3 class="text-sm font-semibold mb-3">Advanced Capabilities</h3>
+            <div
+              class="rounded-lg border divide-y overflow-hidden"
+              style="border-color: hsl(var(--border));"
+            >
+              <%= for row <- @advanced_capability_rows do %>
+                <div
+                  class="grid grid-cols-[9rem_1fr] gap-3 px-3 py-2 text-sm"
+                  style="border-color: hsl(var(--border));"
+                >
+                  <div class="font-medium">{row.label}</div>
+                  <div style="color: hsl(var(--muted-foreground));">{row.value}</div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <div :if={@pricing_component_rows != []} class="mb-6">
+            <h3 class="text-sm font-semibold mb-3">Pricing Components</h3>
+            <div
+              class="rounded-lg border overflow-x-auto"
+              style="border-color: hsl(var(--border));"
+            >
+              <table class="w-full min-w-[640px] text-sm">
+                <thead style="background-color: hsl(var(--table-header));">
+                  <tr class="border-b" style="border-color: hsl(var(--table-border));">
+                    <th class="px-3 py-2 text-left font-medium">Component</th>
+                    <th class="px-3 py-2 text-left font-medium">Price</th>
+                    <th class="px-3 py-2 text-left font-medium">Conditions</th>
+                    <th class="px-3 py-2 text-left font-medium">Source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    :for={row <- @pricing_component_rows}
+                    class="border-b last:border-b-0"
+                    style="border-color: hsl(var(--table-border));"
+                  >
+                    <td class="px-3 py-2 font-mono text-xs">{row.id}</td>
+                    <td class="px-3 py-2 font-mono text-xs">{row.price}</td>
+                    <td class="px-3 py-2 text-xs">{row.conditions}</td>
+                    <td class="px-3 py-2 text-xs" style="color: hsl(var(--muted-foreground));">
+                      {row.source}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
           <div class="mb-6">
             <h3 class="text-sm font-semibold mb-3">Specifications</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div
-                class="rounded-lg border p-3"
-                style="border-color: hsl(var(--border)); background-color: hsl(var(--muted) / 0.3);"
-              >
-                <div class="text-xs mb-1" style="color: hsl(var(--muted-foreground));">
-                  Context Window
+              <%= for row <- @specification_rows do %>
+                <div
+                  class="rounded-lg border p-3"
+                  style="border-color: hsl(var(--border)); background-color: hsl(var(--muted) / 0.3);"
+                >
+                  <div class="text-xs mb-1" style="color: hsl(var(--muted-foreground));">
+                    {row.label}
+                  </div>
+                  <div class="font-mono font-medium text-sm">{row.value}</div>
                 </div>
-                <div class="font-mono font-medium text-sm">
-                  {ModelLive.format_number(get_in(@model.limits, [:context]))} tokens
-                </div>
-              </div>
-              <div
-                class="rounded-lg border p-3"
-                style="border-color: hsl(var(--border)); background-color: hsl(var(--muted) / 0.3);"
-              >
-                <div class="text-xs mb-1" style="color: hsl(var(--muted-foreground));">
-                  Max Output
-                </div>
-                <div class="font-mono font-medium text-sm">
-                  {ModelLive.format_number(get_in(@model.limits, [:output]))} tokens
-                </div>
-              </div>
-              <div
-                class="rounded-lg border p-3"
-                style="border-color: hsl(var(--border)); background-color: hsl(var(--muted) / 0.3);"
-              >
-                <div class="text-xs mb-1" style="color: hsl(var(--muted-foreground));">
-                  Input Cost
-                </div>
-                <div class="font-mono font-medium text-sm">
-                  {ModelLive.format_cost(get_in(@model.cost, [:input]))}/M
-                </div>
-              </div>
-              <div
-                class="rounded-lg border p-3"
-                style="border-color: hsl(var(--border)); background-color: hsl(var(--muted) / 0.3);"
-              >
-                <div class="text-xs mb-1" style="color: hsl(var(--muted-foreground));">
-                  Output Cost
-                </div>
-                <div class="font-mono font-medium text-sm">
-                  {ModelLive.format_cost(get_in(@model.cost, [:output]))}/M
-                </div>
-              </div>
+              <% end %>
             </div>
           </div>
 
@@ -1528,7 +1644,20 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   attr :on_close, :string, default: "close_comparison"
 
   def comparison_modal(assigns) do
-    capabilities = [:chat, :tools, :streaming, :vision, :reasoning, :embeddings, :json_output]
+    capabilities = [
+      :chat,
+      :tools,
+      :batch,
+      :citations,
+      :code_execution,
+      :context_management,
+      :streaming,
+      :vision,
+      :reasoning,
+      :embeddings,
+      :json_output
+    ]
+
     assigns = assign(assigns, :capabilities, capabilities)
 
     ~H"""
@@ -1627,7 +1756,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                     <div class="p-2 text-xs font-medium">Input</div>
                     <%= for model <- @models do %>
                       <div class="p-2 flex gap-1 justify-center flex-wrap">
-                        <%= for mod <- (model.modalities[:input] || []) do %>
+                        <%= for mod <- model_modalities(model, :input) do %>
                           <span
                             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px]"
                             style="background-color: hsl(var(--primary) / 0.1); color: hsl(var(--primary));"
@@ -1646,7 +1775,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                     <div class="p-2 text-xs font-medium">Output</div>
                     <%= for model <- @models do %>
                       <div class="p-2 flex gap-1 justify-center flex-wrap">
-                        <%= for mod <- (model.modalities[:output] || []) do %>
+                        <%= for mod <- model_modalities(model, :output) do %>
                           <span
                             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px]"
                             style="background-color: hsl(var(--secondary)); color: hsl(var(--secondary-foreground));"
@@ -1672,24 +1801,30 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                   <.comparison_spec_row
                     label="Context"
                     models={@models}
-                    getter={fn m -> ModelLive.format_number(get_in(m.limits, [:context])) end}
+                    getter={fn m -> ModelLive.format_number(model_limit(m, :context)) end}
                     bg
+                  />
+                  <.comparison_spec_row
+                    :if={Enum.any?(@models, &(model_limit(&1, :input) != nil))}
+                    label="Max Input"
+                    models={@models}
+                    getter={fn m -> ModelLive.format_number(model_limit(m, :input)) end}
                   />
                   <.comparison_spec_row
                     label="Max Output"
                     models={@models}
-                    getter={fn m -> ModelLive.format_number(get_in(m.limits, [:output])) end}
+                    getter={fn m -> ModelLive.format_number(model_limit(m, :output)) end}
                   />
                   <.comparison_spec_row
                     label="Input Cost"
                     models={@models}
-                    getter={fn m -> "#{ModelLive.format_cost(get_in(m.cost, [:input]))}/M" end}
+                    getter={fn m -> "#{ModelLive.format_cost(model_cost(m, :input))}/M" end}
                     bg
                   />
                   <.comparison_spec_row
                     label="Output Cost"
                     models={@models}
-                    getter={fn m -> "#{ModelLive.format_cost(get_in(m.cost, [:output]))}/M" end}
+                    getter={fn m -> "#{ModelLive.format_cost(model_cost(m, :output))}/M" end}
                   />
                 </div>
               </div>
@@ -1776,23 +1911,433 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     """
   end
 
-  defp model_has_capability?(model, :chat), do: model.capabilities[:chat]
-  defp model_has_capability?(model, :tools), do: get_in(model.capabilities, [:tools, :enabled])
+  defp model_has_capability?(model, :chat), do: capability_enabled?(model.capabilities, [:chat])
+
+  defp model_has_capability?(model, :tools),
+    do: capability_enabled?(model.capabilities, [:tools, :enabled])
+
+  defp model_has_capability?(model, :batch),
+    do: capability_enabled?(model.capabilities, [:batch, :supported])
+
+  defp model_has_capability?(model, :citations),
+    do: capability_enabled?(model.capabilities, [:citations, :supported])
+
+  defp model_has_capability?(model, :code_execution),
+    do: capability_enabled?(model.capabilities, [:code_execution, :supported])
+
+  defp model_has_capability?(model, :context_management),
+    do: capability_enabled?(model.capabilities, [:context_management, :supported])
 
   defp model_has_capability?(model, :streaming),
-    do: get_in(model.capabilities, [:streaming, :text])
+    do: capability_enabled?(model.capabilities, [:streaming, :text])
 
   defp model_has_capability?(model, :vision), do: has_vision?(model)
 
   defp model_has_capability?(model, :reasoning),
-    do: get_in(model.capabilities, [:reasoning, :enabled])
+    do: capability_enabled?(model.capabilities, [:reasoning, :enabled])
 
   defp model_has_capability?(model, :embeddings), do: embeddings_enabled?(model.capabilities)
 
-  defp model_has_capability?(model, :json_output),
-    do: get_in(model.capabilities, [:json, :native])
+  defp model_has_capability?(model, :json_output) do
+    capability_enabled?(model.capabilities, [:json, :native]) ||
+      capability_enabled?(model.capabilities, [:json, :schema])
+  end
 
   defp model_has_capability?(_, _), do: false
+
+  defp specification_rows(nil), do: []
+
+  defp specification_rows(model) do
+    rows = [
+      %{label: "Context Window", value: format_token_metric(model_limit(model, :context))},
+      %{label: "Max Output", value: format_token_metric(model_limit(model, :output))},
+      %{label: "Input Cost", value: "#{ModelLive.format_cost(model_cost(model, :input))}/M"},
+      %{label: "Output Cost", value: "#{ModelLive.format_cost(model_cost(model, :output))}/M"}
+    ]
+
+    case model_limit(model, :input) do
+      nil -> rows
+      input -> List.insert_at(rows, 1, %{label: "Max Input", value: format_token_metric(input)})
+    end
+  end
+
+  defp reasoning_metadata_rows(nil), do: []
+
+  defp reasoning_metadata_rows(model) do
+    reasoning = nested_get(model, [:capabilities, :reasoning])
+
+    [
+      reasoning_effort_row(reasoning),
+      reasoning_thinking_row(reasoning),
+      reasoning_token_budget_row(reasoning)
+    ]
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp reasoning_effort_row(%{} = reasoning) do
+    effort = map_value(reasoning, :effort)
+
+    if is_map(effort) do
+      values = effort |> map_value(:values) |> list_values()
+      default = map_value(effort, :default)
+      supported? = capability_truthy?(map_value(effort, :supported))
+
+      cond do
+        values != [] ->
+          %{
+            label: "Effort",
+            value: Enum.join(values, ", "),
+            detail: detail_value("Default", default)
+          }
+
+        supported? ->
+          %{label: "Effort", value: "Supported", detail: detail_value("Default", default)}
+
+        true ->
+          nil
+      end
+    end
+  end
+
+  defp reasoning_effort_row(_reasoning), do: nil
+
+  defp reasoning_thinking_row(%{} = reasoning) do
+    thinking = map_value(reasoning, :thinking)
+
+    if is_map(thinking) do
+      types = thinking |> map_value(:types) |> list_values()
+      default_type = map_value(thinking, :default_type)
+
+      flags =
+        [
+          {:raw_output_supported, "Raw output"},
+          {:summary_supported, "Summary"},
+          {:encrypted_supported, "Encrypted"},
+          {:disable_supported, "Disable"}
+        ]
+        |> Enum.filter(fn {key, _label} -> capability_truthy?(map_value(thinking, key)) end)
+        |> Enum.map(fn {_key, label} -> label end)
+
+      cond do
+        types != [] ->
+          %{
+            label: "Thinking",
+            value: Enum.join(types, ", "),
+            detail:
+              [detail_value("Default", default_type), join_or_nil(flags)] |> compact_join(" • ")
+          }
+
+        flags != [] ->
+          %{
+            label: "Thinking",
+            value: Enum.join(flags, ", "),
+            detail: detail_value("Default", default_type)
+          }
+
+        true ->
+          nil
+      end
+    end
+  end
+
+  defp reasoning_thinking_row(_reasoning), do: nil
+
+  defp reasoning_token_budget_row(%{} = reasoning) do
+    case map_value(reasoning, :token_budget) do
+      budget when is_integer(budget) ->
+        %{label: "Token Budget", value: ModelLive.format_number(budget), detail: nil}
+
+      %{} = budget ->
+        parts =
+          [
+            budget_part("Min", map_value(budget, :min)),
+            budget_part("Max", map_value(budget, :max)),
+            budget_part("Default", map_value(budget, :default))
+          ]
+          |> Enum.reject(&is_nil/1)
+
+        if parts == [] do
+          nil
+        else
+          %{label: "Token Budget", value: Enum.join(parts, ", "), detail: nil}
+        end
+
+      _ ->
+        nil
+    end
+  end
+
+  defp reasoning_token_budget_row(_reasoning), do: nil
+
+  defp advanced_capability_rows(nil), do: []
+
+  defp advanced_capability_rows(model) do
+    [
+      advanced_capability_row(model, :batch, "Batch"),
+      advanced_capability_row(model, :citations, "Citations"),
+      advanced_capability_row(model, :code_execution, "Code Execution"),
+      advanced_capability_row(model, :context_management, "Context Management")
+    ]
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp advanced_capability_row(model, key, label) do
+    capability = nested_get(model, [:capabilities, key])
+
+    if capability_enabled?(model.capabilities, [key, :supported]) ||
+         capability_enabled?(model.capabilities, [key, :enabled]) ||
+         capability_truthy?(capability) do
+      %{
+        label: label,
+        value: capability_summary(capability)
+      }
+    end
+  end
+
+  defp pricing_component_rows(nil), do: []
+
+  defp pricing_component_rows(model) do
+    model
+    |> nested_get([:pricing, :components])
+    |> case do
+      components when is_list(components) ->
+        components
+        |> Enum.filter(&is_map/1)
+        |> Enum.map(&pricing_component_row/1)
+
+      _ ->
+        []
+    end
+  end
+
+  defp pricing_component_row(component) do
+    %{
+      id: component |> map_value(:id) |> value_or_dash(),
+      price: format_component_price(component),
+      conditions: format_component_conditions(component),
+      source:
+        [map_value(component, :source), map_value(component, :mode), map_value(component, :meter)]
+        |> Enum.reject(&blank?/1)
+        |> Enum.map(&to_string/1)
+        |> compact_join(" • ")
+        |> value_or_dash()
+    }
+  end
+
+  defp model_modalities(model, direction) do
+    case nested_get(model, [:modalities, direction]) do
+      values when is_list(values) -> values
+      _ -> []
+    end
+  end
+
+  defp model_limit(model, key), do: nested_get(model, [:limits, key])
+  defp model_cost(model, key), do: nested_get(model, [:cost, key])
+
+  defp nested_get(value, []), do: value
+
+  defp nested_get(value, [key | rest]) when is_map(value) do
+    case map_value(value, key) do
+      nil -> nil
+      nested -> nested_get(nested, rest)
+    end
+  end
+
+  defp nested_get(_value, _path), do: nil
+
+  defp map_value(map, key) when is_map(map) and is_atom(key) do
+    string_key = Atom.to_string(key)
+
+    cond do
+      Map.has_key?(map, key) -> Map.get(map, key)
+      Map.has_key?(map, string_key) -> Map.get(map, string_key)
+      true -> nil
+    end
+  end
+
+  defp map_value(map, key) when is_map(map) and is_binary(key) do
+    if Map.has_key?(map, key), do: Map.get(map, key)
+  end
+
+  defp map_value(_map, _key), do: nil
+
+  defp capability_enabled?(caps, path) do
+    value = nested_get(caps || %{}, path)
+
+    cond do
+      is_nil(value) and length(path) > 1 ->
+        [root | _rest] = path
+        fallback_capability_enabled?(map_value(caps || %{}, root))
+
+      true ->
+        capability_truthy?(value)
+    end
+  end
+
+  defp fallback_capability_enabled?(%{} = capability) do
+    cond do
+      not is_nil(map_value(capability, :enabled)) ->
+        capability_truthy?(map_value(capability, :enabled))
+
+      not is_nil(map_value(capability, :supported)) ->
+        capability_truthy?(map_value(capability, :supported))
+
+      true ->
+        capability_truthy?(capability)
+    end
+  end
+
+  defp fallback_capability_enabled?(value), do: capability_truthy?(value)
+
+  defp capability_truthy?(nil), do: false
+  defp capability_truthy?(false), do: false
+  defp capability_truthy?(true), do: true
+
+  defp capability_truthy?(%{} = capability) do
+    cond do
+      not is_nil(map_value(capability, :enabled)) ->
+        capability_truthy?(map_value(capability, :enabled))
+
+      not is_nil(map_value(capability, :supported)) ->
+        capability_truthy?(map_value(capability, :supported))
+
+      true ->
+        map_size(capability) > 0
+    end
+  end
+
+  defp capability_truthy?(value), do: value not in [nil, false]
+
+  defp format_token_metric(nil), do: "N/A tokens"
+  defp format_token_metric(value), do: "#{ModelLive.format_number(value)} tokens"
+
+  defp format_component_price(component) do
+    rate = map_value(component, :rate)
+    multiplier = map_value(component, :multiplier)
+
+    cond do
+      is_number(rate) ->
+        "#{ModelLive.format_cost(rate)} / #{format_component_unit(component)}"
+
+      is_number(multiplier) ->
+        "#{:erlang.float_to_binary(multiplier * 1.0, decimals: 2)}x"
+
+      true ->
+        "—"
+    end
+  end
+
+  defp format_component_unit(component) do
+    per = map_value(component, :per)
+    unit = component |> map_value(:unit) |> value_or("unit")
+
+    case per do
+      1_000_000 -> "1M #{unit}s"
+      value when is_integer(value) -> "#{ModelLive.format_number(value)} #{unit}s"
+      _ -> unit
+    end
+  end
+
+  defp format_component_conditions(component) do
+    applies_when = map_value(component, :applies_when)
+    excludes_when = map_value(component, :excludes_when)
+
+    [
+      condition_part(nil, applies_when),
+      condition_part("excludes", excludes_when)
+    ]
+    |> Enum.reject(&blank?/1)
+    |> compact_join(" • ")
+    |> value_or("Standard")
+  end
+
+  defp condition_part(_prefix, nil), do: nil
+  defp condition_part(_prefix, %{} = map) when map_size(map) == 0, do: nil
+
+  defp condition_part(prefix, value) do
+    formatted = format_condition_value(value)
+
+    if prefix do
+      "#{prefix}: #{formatted}"
+    else
+      formatted
+    end
+  end
+
+  defp format_condition_value(%{} = map) do
+    map
+    |> Enum.sort_by(fn {key, _value} -> to_string(key) end)
+    |> Enum.map(fn {key, value} ->
+      "#{format_condition_key(key)}: #{format_condition_value(value)}"
+    end)
+    |> Enum.join(", ")
+  end
+
+  defp format_condition_value(values) when is_list(values) do
+    values
+    |> list_values()
+    |> Enum.join(", ")
+  end
+
+  defp format_condition_value(value) when is_integer(value), do: ModelLive.format_number(value)
+  defp format_condition_value(value), do: value |> to_string() |> String.replace("_", " ")
+
+  defp format_condition_key(key), do: key |> to_string() |> String.replace("_", " ")
+
+  defp capability_summary(true), do: "Supported"
+
+  defp capability_summary(%{} = capability) do
+    features =
+      [map_value(capability, :features), map_value(capability, :types)]
+      |> Enum.flat_map(&list_values/1)
+
+    cond do
+      features != [] -> Enum.join(features, ", ")
+      capability_truthy?(capability) -> "Supported"
+      true -> "—"
+    end
+  end
+
+  defp capability_summary(_capability), do: "Supported"
+
+  defp budget_part(_label, nil), do: nil
+  defp budget_part(label, value), do: "#{label} #{ModelLive.format_number(value)}"
+
+  defp detail_value(_label, nil), do: nil
+  defp detail_value(label, value), do: "#{label}: #{value}"
+
+  defp join_or_nil([]), do: nil
+  defp join_or_nil(values), do: Enum.join(values, ", ")
+
+  defp compact_join(values, joiner) do
+    values
+    |> Enum.reject(&blank?/1)
+    |> Enum.join(joiner)
+  end
+
+  defp list_values(nil), do: []
+
+  defp list_values(values) when is_list(values) do
+    Enum.map(values, &format_list_value/1)
+  end
+
+  defp list_values(value), do: [format_list_value(value)]
+
+  defp format_list_value(value) do
+    value
+    |> to_string()
+    |> String.replace("_", " ")
+  end
+
+  defp value_or(nil, fallback), do: fallback
+  defp value_or("", fallback), do: fallback
+  defp value_or(value, _fallback), do: value
+
+  defp value_or_dash(value), do: value_or(value, "—")
+
+  defp blank?(nil), do: true
+  defp blank?(""), do: true
+  defp blank?(_value), do: false
 
   defp history_event_date(event) do
     event
@@ -2001,8 +2546,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     """
   end
 
-  defp get_capability(caps, [key]), do: Map.get(caps, key)
-  defp get_capability(caps, path), do: get_in(caps, path)
+  defp get_capability(caps, path), do: capability_enabled?(caps, path)
 
   attr :label, :string, required: true
   slot :value, required: true
@@ -2063,16 +2607,16 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
           <div class="grid grid-cols-2 gap-3 pt-3 border-t" style="border-color: hsl(var(--border));">
             <.metric label="Context">
-              <:value>{ModelLive.format_number(get_in(@model.limits, [:context]))}</:value>
+              <:value>{ModelLive.format_number(model_limit(@model, :context))}</:value>
             </.metric>
             <.metric label="Output">
-              <:value>{ModelLive.format_number(get_in(@model.limits, [:output]))}</:value>
+              <:value>{ModelLive.format_number(model_limit(@model, :output))}</:value>
             </.metric>
             <.metric label="Cost In">
-              <:value>{ModelLive.format_cost(get_in(@model.cost, [:input]))}</:value>
+              <:value>{ModelLive.format_cost(model_cost(@model, :input))}</:value>
             </.metric>
             <.metric label="Cost Out">
-              <:value>{ModelLive.format_cost(get_in(@model.cost, [:output]))}</:value>
+              <:value>{ModelLive.format_cost(model_cost(@model, :output))}</:value>
             </.metric>
           </div>
         </div>
@@ -2234,6 +2778,54 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                       />
                       <span class="text-sm">Streaming</span>
                     </label>
+
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="cap_batch"
+                        value="true"
+                        checked={@filters.capabilities.batch}
+                        class="rounded"
+                        style="border-color: hsl(var(--border));"
+                      />
+                      <span class="text-sm">Batch</span>
+                    </label>
+
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="cap_citations"
+                        value="true"
+                        checked={@filters.capabilities.citations}
+                        class="rounded"
+                        style="border-color: hsl(var(--border));"
+                      />
+                      <span class="text-sm">Citations</span>
+                    </label>
+
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="cap_code_execution"
+                        value="true"
+                        checked={@filters.capabilities.code_execution}
+                        class="rounded"
+                        style="border-color: hsl(var(--border));"
+                      />
+                      <span class="text-sm">Code Execution</span>
+                    </label>
+
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="cap_context_management"
+                        value="true"
+                        checked={@filters.capabilities.context_management}
+                        class="rounded"
+                        style="border-color: hsl(var(--border));"
+                      />
+                      <span class="text-sm">Context Management</span>
+                    </label>
                   </div>
                 </div>
 
@@ -2348,7 +2940,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   end
 
   defp lifecycle_status(model) do
-    get_in(model.lifecycle, [:status]) || "active"
+    nested_get(model, [:lifecycle, :status]) || "active"
   end
 
   defp lifecycle_label(model) do
@@ -2385,7 +2977,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   end
 
   defp embeddings_enabled?(caps) do
-    case Map.get(caps || %{}, :embeddings) do
+    case map_value(caps || %{}, :embeddings) do
       true -> true
       %{} = emb -> map_size(emb) > 0
       _ -> false
@@ -2394,8 +2986,8 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   defp has_modalities?(model) do
     modalities = model.modalities || %{}
-    input_list = modalities[:input] || []
-    output_list = modalities[:output] || []
+    input_list = map_value(modalities, :input) || []
+    output_list = map_value(modalities, :output) || []
     length(input_list) > 0 or length(output_list) > 0
   end
 end

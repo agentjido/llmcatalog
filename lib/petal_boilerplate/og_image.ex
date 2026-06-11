@@ -551,12 +551,12 @@ defmodule PetalBoilerplate.OGImage do
 
   defp format_number(num), do: to_string(num)
 
-  defp format_context(nil), do: nil
-  defp format_context(ctx) when ctx >= 1_000_000, do: "#{Float.round(ctx / 1_000_000, 1)}M"
-  defp format_context(ctx) when ctx >= 1_000, do: "#{div(ctx, 1000)}K"
+  defp format_context(ctx) when is_integer(ctx) and ctx >= 1_000_000,
+    do: "#{Float.round(ctx / 1_000_000, 1)}M"
+
+  defp format_context(ctx) when is_integer(ctx) and ctx >= 1_000, do: "#{div(ctx, 1000)}K"
   defp format_context(ctx), do: "#{ctx}"
 
-  defp format_cost(nil), do: nil
   defp format_cost(cost), do: "$#{:erlang.float_to_binary(cost * 1.0, decimals: 2)}/M"
 
   defp truncate_name(name, max_len) when is_binary(name) do

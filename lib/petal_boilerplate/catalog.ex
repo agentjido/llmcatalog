@@ -25,6 +25,12 @@ defmodule PetalBoilerplate.Catalog do
     {:tools_streaming, [:tools, :streaming], nil, nil},
     {:tools_strict, [:tools, :strict], nil, nil},
     {:tools_parallel, [:tools, :parallel], nil, nil},
+    {:batch, [:batch, :supported], "Batch", "Supports provider batch or async batch APIs"},
+    {:citations, [:citations, :supported], "Cite", "Can attach citations or source references"},
+    {:code_execution, [:code_execution, :supported], "Code",
+     "Supports provider-hosted code execution"},
+    {:context_management, [:context_management, :supported], "Ctx Mgmt",
+     "Supports provider context management controls"},
     {:json_native, [:json, :native], "JSON", "Native JSON output mode"},
     {:json_schema, [:json, :schema], nil, nil},
     {:json_strict, [:json, :strict], nil, nil},
@@ -329,8 +335,83 @@ defmodule PetalBoilerplate.Catalog do
     Enum.any?(models) and Enum.all?(models, &is_nil(Map.get(&1, :__last_changed_epoch)))
   end
 
-  defp get_capability(caps, [key]), do: Map.get(caps, key)
-  defp get_capability(caps, path), do: get_in(caps, path)
+  defp get_capability(caps, [root | _rest] = path) do
+    value = get_nested(caps, path)
+
+    if is_nil(value) and length(path) > 1 do
+      caps
+      |> map_value(root)
+      |> fallback_capability_truthy?()
+    else
+      capability_truthy?(value)
+    end
+  end
+
+  defp get_capability(_caps, []), do: false
+
+  defp get_nested(value, []), do: value
+
+  defp get_nested(value, [key | rest]) when is_map(value) do
+    case map_value(value, key) do
+      nil ->
+        nil
+
+      nested ->
+        get_nested(nested, rest)
+    end
+  end
+
+  defp get_nested(_value, _path), do: nil
+
+  defp map_value(map, key) when is_map(map) and is_atom(key) do
+    string_key = Atom.to_string(key)
+
+    cond do
+      Map.has_key?(map, key) -> Map.get(map, key)
+      Map.has_key?(map, string_key) -> Map.get(map, string_key)
+      true -> nil
+    end
+  end
+
+  defp map_value(map, key) when is_map(map) and is_binary(key) do
+    Map.get(map, key)
+  end
+
+  defp map_value(_map, _key), do: nil
+
+  defp capability_truthy?(nil), do: false
+  defp capability_truthy?(false), do: false
+  defp capability_truthy?(true), do: true
+
+  defp capability_truthy?(%{} = capability) do
+    cond do
+      not is_nil(map_value(capability, :enabled)) ->
+        capability_truthy?(map_value(capability, :enabled))
+
+      not is_nil(map_value(capability, :supported)) ->
+        capability_truthy?(map_value(capability, :supported))
+
+      true ->
+        map_size(capability) > 0
+    end
+  end
+
+  defp capability_truthy?(value), do: value not in [nil, false]
+
+  defp fallback_capability_truthy?(%{} = capability) do
+    cond do
+      not is_nil(map_value(capability, :enabled)) ->
+        capability_truthy?(map_value(capability, :enabled))
+
+      not is_nil(map_value(capability, :supported)) ->
+        capability_truthy?(map_value(capability, :supported))
+
+      true ->
+        capability_truthy?(capability)
+    end
+  end
+
+  defp fallback_capability_truthy?(value), do: capability_truthy?(value)
 
   defp filter_models(models, filters) do
     recent_change_cutoff = recent_change_cutoff_epoch(filters.changed_within_days)

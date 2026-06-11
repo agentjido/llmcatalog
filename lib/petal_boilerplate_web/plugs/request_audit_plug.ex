@@ -5,8 +5,6 @@ defmodule PetalBoilerplateWeb.Plug.RequestAudit do
 
   import Plug.Conn
 
-  require Logger
-
   @audited_prefixes ["/models", "/og", "/api/history"]
 
   def init(opts), do: opts
