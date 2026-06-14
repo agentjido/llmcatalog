@@ -56,9 +56,21 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               value={@search_value}
               placeholder="Search..."
               autofocus
-              class="w-full pl-9 h-9 rounded-md border-0 text-sm"
+              class="w-full pl-9 pr-9 h-9 rounded-md border-0 text-sm"
               style="background-color: hsl(var(--secondary)); color: hsl(var(--foreground));"
             />
+            <button
+              :if={@search_value != ""}
+              type="button"
+              phx-click={JS.push("clear_search") |> JS.focus(to: "#search-input")}
+              onclick="document.getElementById('search-input').value = ''"
+              class="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md transition-colors hover:opacity-80"
+              style="color: hsl(var(--muted-foreground));"
+              aria-label="Clear search"
+              title="Clear search"
+            >
+              <.icon name="hero-x-mark" class="h-4 w-4" />
+            </button>
           </div>
         </form>
 
@@ -313,11 +325,11 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             <button
               :if={has_active_filters?(@filters)}
               type="button"
-              phx-click="reset_filters"
+              phx-click="clear_filters"
               class="ml-auto h-8 px-3 text-sm transition-colors hover:opacity-80"
               style="color: hsl(var(--muted-foreground));"
             >
-              Clear all
+              Clear filters
             </button>
           </div>
         </div>
@@ -334,11 +346,11 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             >
               <.icon name="hero-adjustments-horizontal" class="h-4 w-4" /> Filters
               <span
-                :if={active_filter_count(@filters) > 0}
+                :if={filter_count(@filters) > 0}
                 class="h-5 min-w-5 px-1.5 text-xs rounded-full flex items-center justify-center"
                 style="background-color: hsl(var(--secondary)); color: hsl(var(--secondary-foreground));"
               >
-                {active_filter_count(@filters)}
+                {filter_count(@filters)}
               </span>
             </button>
 
@@ -922,13 +934,20 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   defp format_context(value) when value >= 1000, do: "#{div(value, 1000)}K"
   defp format_context(value), do: to_string(value)
 
-  defp active_filter_count(%Filters{} = filters) do
-    Filters.active_filter_count(filters)
+  defp filter_count(%Filters{} = filters) do
+    filters
+    |> Filters.active_filter_count()
+    |> count_without_search(filters.search)
   end
 
-  defp active_filter_count(filters) when is_map(filters) do
-    Catalog.active_filter_count(filters)
+  defp filter_count(filters) when is_map(filters) do
+    filters
+    |> Catalog.active_filter_count()
+    |> count_without_search(Map.get(filters, :search, ""))
   end
+
+  defp count_without_search(count, ""), do: count
+  defp count_without_search(count, _search), do: max(count - 1, 0)
 
   # =============================================================================
   # Task 2.4: Model Table Component

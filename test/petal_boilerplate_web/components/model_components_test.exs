@@ -3,6 +3,14 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
 
   alias PetalBoilerplateWeb.ModelComponents
 
+  test "header only renders search clear button when search has a value" do
+    active_html = render_component(&ModelComponents.header/1, search_value: "gpt")
+    empty_html = render_component(&ModelComponents.header/1, search_value: "")
+
+    assert active_html =~ ~s(aria-label="Clear search")
+    refute empty_html =~ ~s(aria-label="Clear search")
+  end
+
   test "model detail modal renders proposed advanced model metadata" do
     html =
       render_component(&ModelComponents.model_detail_modal/1,
