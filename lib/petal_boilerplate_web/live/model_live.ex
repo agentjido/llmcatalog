@@ -190,6 +190,18 @@ defmodule PetalBoilerplateWeb.ModelLive do
   end
 
   @impl true
+  def handle_event("clear_search", _params, socket) do
+    filters = Filters.set_search(socket.assigns.filters, "")
+    {:noreply, apply_filters(socket, filters, push_url: true)}
+  end
+
+  @impl true
+  def handle_event("clear_filters", _params, socket) do
+    filters = Filters.set_search(Filters.new(), socket.assigns.filters.search)
+    {:noreply, apply_filters(socket, filters, push_url: true)}
+  end
+
+  @impl true
   def handle_event("reset_filters", _params, socket) do
     {:noreply, apply_filters(socket, Filters.new(), push_url: true)}
   end
