@@ -74,7 +74,7 @@ defmodule PetalBoilerplate.MixProject do
       {:phoenix_live_reload, "~> 1.6", only: [:dev, :test]},
       {:floki, "~> 0.35", only: [:dev, :test]},
       {:lazy_html, ">= 0.1.0", only: :test},
-      {:tidewave, "~> 0.5.1", only: [:dev, :test]},
+      {:tidewave, "~> 0.6.0", only: [:dev, :test]},
       {:rename_project, "~> 0.1.0", only: :dev}
     ]
   end
