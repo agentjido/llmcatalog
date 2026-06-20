@@ -81,9 +81,3 @@ config :phoenix, :plug_init_mode, :runtime
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
-
-# Configure Tidewave
-config :tidewave,
-  project_name: "llmdb_xyz",
-  framework_type: "phoenix",
-  tidewave_version: "0.5.1"

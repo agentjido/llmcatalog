@@ -42,7 +42,7 @@ defmodule PetalBoilerplate.MixProject do
       {:plug_canonical_host, "~> 2.0"},
 
       # UI
-      {:petal_components, "~> 3.0"},
+      {:petal_components, "~> 4.0"},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.5",
@@ -74,7 +74,6 @@ defmodule PetalBoilerplate.MixProject do
       {:phoenix_live_reload, "~> 1.6", only: [:dev, :test]},
       {:floki, "~> 0.35", only: [:dev, :test]},
       {:lazy_html, ">= 0.1.0", only: :test},
-      {:tidewave, "~> 0.5.1", only: [:dev, :test]},
       {:rename_project, "~> 0.1.0", only: :dev}
     ]
   end
