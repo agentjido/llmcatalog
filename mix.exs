@@ -42,7 +42,7 @@ defmodule PetalBoilerplate.MixProject do
       {:plug_canonical_host, "~> 2.0"},
 
       # UI
-      {:petal_components, "~> 3.0"},
+      {:petal_components, "~> 4.1"},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.5",
