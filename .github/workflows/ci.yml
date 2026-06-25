@@ -19,6 +19,7 @@ env:
   ELIXIR_VERSION: "1.18.2"
   OTP_VERSION: "27.2.1"
   MIX_ENV: test
+  VIX_COMPILATION_MODE: PLATFORM_PROVIDED_LIBVIPS
 
 jobs:
   phoenix:
@@ -36,15 +37,20 @@ jobs:
           otp-version: ${{ env.OTP_VERSION }}
           hexpm-mirrors: https://cdn.jsdelivr.net/hex
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y pkg-config libvips-dev
+
       - name: Cache Mix dependencies
         uses: actions/cache@v4
         with:
           path: |
             deps
             _build
-          key: mix-${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-${{ hashFiles('mix.lock') }}
+          key: mix-${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-vix-platform-libvips-${{ hashFiles('mix.lock') }}
           restore-keys: |
-            mix-${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-
+            mix-${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-vix-platform-libvips-
 
       - name: Install dependencies
         run: mix deps.get

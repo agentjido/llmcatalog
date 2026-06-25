@@ -22,6 +22,7 @@ FROM ${BUILDER_IMAGE} AS builder
 
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git nodejs npm curl wget openssh-client \
+  pkg-config libvips-dev \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # prepare build dir
@@ -33,6 +34,7 @@ RUN mix local.hex --force && \
 
 # set build ENV
 ENV MIX_ENV="prod"
+ENV VIX_COMPILATION_MODE="PLATFORM_PROVIDED_LIBVIPS"
 
 # install mix dependencies
 COPY mix.exs mix.lock ./

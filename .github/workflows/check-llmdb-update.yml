@@ -17,6 +17,7 @@ jobs:
     env:
       ELIXIR_VERSION: "1.18.2"
       OTP_VERSION: "27.2.1"
+      VIX_COMPILATION_MODE: PLATFORM_PROVIDED_LIBVIPS
 
     steps:
       - uses: actions/checkout@v4
@@ -28,12 +29,17 @@ jobs:
           otp-version: ${{ env.OTP_VERSION }}
           hexpm-mirrors: https://cdn.jsdelivr.net/hex
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y pkg-config libvips-dev
+
       - name: Cache deps
         uses: actions/cache@v4
         with:
           path: deps
-          key: deps-${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}
-          restore-keys: deps-${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-
+          key: deps-${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-vix-platform-libvips-${{ hashFiles('mix.lock') }}
+          restore-keys: deps-${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-vix-platform-libvips-
 
       - name: Get locked llm_db version from mix.lock
         id: locked
