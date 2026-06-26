@@ -27,7 +27,6 @@ jobs:
         with:
           elixir-version: ${{ env.ELIXIR_VERSION }}
           otp-version: ${{ env.OTP_VERSION }}
-          hexpm-mirrors: https://cdn.jsdelivr.net/hex
 
       - name: Install system dependencies
         run: |
