@@ -11,8 +11,8 @@
 #   - https://pkgs.org/ - resource for finding needed packages
 #   - Ex: hexpm/elixir:1.16.0-erlang-26.2.1-debian-bullseye-20231009-slim
 #
-ARG ELIXIR_VERSION=1.19.5
-ARG OTP_VERSION=28.4.1
+ARG ELIXIR_VERSION=1.20.2
+ARG OTP_VERSION=29.0.2
 ARG DEBIAN_VERSION=bookworm-20260610
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
@@ -70,9 +70,10 @@ RUN mix release
 FROM ${RUNNER_IMAGE}
 
 ARG COMMIT
+ARG TARGETARCH
 ENV APP_REVISION=$COMMIT
 
-RUN apt-get update -y && apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
+RUN apt-get update -y && apt-get install -y libstdc++6 openssl libncurses5 libsctp1 locales ca-certificates \
   nodejs npm vim curl wget xz-utils \
   # libvips for OG image generation (SVG to PNG)
   libvips42 \
@@ -95,10 +96,15 @@ ENV MIX_ENV="prod"
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/petal_boilerplate ./
 
 # install hivemind
-RUN wget https://github.com/DarthSim/hivemind/releases/download/v1.1.0/hivemind-v1.1.0-linux-amd64.gz
-RUN gunzip ./hivemind-v1.1.0-linux-amd64.gz
-RUN chmod +x ./hivemind-v1.1.0-linux-amd64
-RUN mv ./hivemind-v1.1.0-linux-amd64 ./bin/hivemind
+RUN set -eux; \
+  case "${TARGETARCH}" in \
+    386 | amd64 | arm | arm64) hivemind_arch="${TARGETARCH}" ;; \
+    *) echo "unsupported Docker target architecture: ${TARGETARCH}" >&2; exit 1 ;; \
+  esac; \
+  wget -O /tmp/hivemind.gz "https://github.com/DarthSim/hivemind/releases/download/v1.1.0/hivemind-v1.1.0-linux-${hivemind_arch}.gz"; \
+  gunzip /tmp/hivemind.gz; \
+  chmod +x /tmp/hivemind; \
+  mv /tmp/hivemind ./bin/hivemind
 
 COPY Procfile ./
 COPY entrypoint ./bin

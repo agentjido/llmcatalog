@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ELIXIR_VERSION: "1.19.5"
-      OTP_VERSION: "28.4.1"
+      ELIXIR_VERSION: "1.20.2"
+      OTP_VERSION: "29.0.2"
       VIX_COMPILATION_MODE: PLATFORM_PROVIDED_LIBVIPS
 
     steps:
