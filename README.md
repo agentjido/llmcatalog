@@ -23,7 +23,7 @@ Add it to your project:
 ```elixir
 def deps do
   [
-    {:llm_db, "~> 2026.6"}
+    {:llm_db, "~> 2026.7"}
   ]
 end
 ```
