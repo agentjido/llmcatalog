@@ -35,6 +35,15 @@ defmodule PetalBoilerplate.History do
   def configure_runtime_directory do
     history_dir = history_dir()
     Application.put_env(:llm_db, :history_dir, history_dir)
+
+    case seed_bundled_history(history_dir) do
+      :ok ->
+        :ok
+
+      error ->
+        Logger.warning("failed to seed bundled llm_db history: #{inspect(error)}")
+    end
+
     history_dir
   end
 
@@ -178,6 +187,49 @@ defmodule PetalBoilerplate.History do
 
   defp history_available_locally?(history_dir) do
     match?({:ok, _meta}, Bundle.read_meta(history_dir))
+  end
+
+  defp seed_bundled_history(history_dir) do
+    bundled_dir = bundled_history_dir()
+
+    cond do
+      bundled_dir == history_dir ->
+        :ok
+
+      history_available_locally?(history_dir) ->
+        :ok
+
+      is_binary(bundled_dir) and history_available_locally?(bundled_dir) ->
+        copy_bundled_history(bundled_dir, history_dir)
+
+      true ->
+        :ok
+    end
+  end
+
+  defp bundled_history_dir do
+    Application.get_env(:petal_boilerplate, :bundled_history_dir) ||
+      case :code.priv_dir(:petal_boilerplate) do
+        path when is_list(path) -> Path.join([List.to_string(path), "llm_db", "history"])
+        _error -> nil
+      end
+  end
+
+  defp copy_bundled_history(bundled_dir, history_dir) do
+    staging_dir = history_dir <> @history_staging_suffix
+    File.rm_rf(staging_dir)
+
+    try do
+      with :ok <- File.mkdir_p(Path.dirname(history_dir)),
+           {:ok, _files} <- File.cp_r(bundled_dir, staging_dir),
+           {:ok, _meta} <- Bundle.read_meta(staging_dir),
+           {:ok, _files} <- File.rm_rf(history_dir),
+           :ok <- File.rename(staging_dir, history_dir) do
+        :ok
+      end
+    after
+      File.rm_rf(staging_dir)
+    end
   end
 
   defp sync_history_bundle(history_dir, archive_url) do

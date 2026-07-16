@@ -59,6 +59,11 @@ RUN mix do assets.setup + assets.build + assets.deploy
 # Compile the release
 RUN mix compile
 
+# Bundle a verified history snapshot into the release so production does not
+# depend on runtime network access before the history UI becomes available.
+RUN LLMDB_HISTORY_DIR=/app/priv/llm_db/history mix run --no-start -e \
+  'case PetalBoilerplate.History.configure_runtime_bundle() do :ok -> :ok; {:error, reason} -> raise "failed to bundle llm_db history: #{inspect(reason)}" end'
+
 # Changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/
 
