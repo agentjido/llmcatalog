@@ -1,13 +1,16 @@
 defmodule PetalBoilerplateWeb.OgMetaTest do
   use PetalBoilerplateWeb.ConnCase
 
+  alias PetalBoilerplate.Catalog
+
   describe "OpenGraph meta tags" do
     test "home page has correct OG tags", %{conn: conn} do
       conn = get(conn, ~p"/")
       html = html_response(conn, 200)
+      model_count = Catalog.format_number(Catalog.total_model_count())
 
       assert html =~ ~s(property="og:title" content="LLM Model Database")
-      assert html =~ ~s(property="og:description" content="Browse and compare 2,000+)
+      assert html =~ ~s(property="og:description" content="Browse and compare #{model_count})
       assert html =~ ~s(property="og:url" content="https://llmdb.xyz/")
       assert html =~ ~s(property="og:type" content="website")
       assert html =~ ~s(property="og:image")

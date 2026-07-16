@@ -4,6 +4,7 @@ defmodule PetalBoilerplateWeb.HistoryLive do
   alias PetalBoilerplate.Catalog
 
   @history_limit 500
+  @page_size 50
 
   @impl true
   def mount(_params, _session, socket) do
@@ -15,6 +16,9 @@ defmodule PetalBoilerplateWeb.HistoryLive do
        history_available: false,
        changed_within_days: nil,
        event_type: nil,
+       page: 1,
+       total: 0,
+       total_pages: 1,
        history_api_url: "/api/history/recent?limit=#{@history_limit}",
        page_title: "Recent History",
        page_description:
@@ -28,7 +32,10 @@ defmodule PetalBoilerplateWeb.HistoryLive do
   def handle_params(params, _uri, socket) do
     changed_within_days = parse_changed_within(Map.get(params, "changed"))
     event_type = parse_event_type(Map.get(params, "type"))
-    {events, history_meta, history_available} = load_history_feed(changed_within_days, event_type)
+    requested_page = parse_page(Map.get(params, "page"))
+
+    {events, total, total_pages, page, history_meta, history_available} =
+      load_history_feed(changed_within_days, event_type, requested_page)
 
     {:noreply,
      assign(socket,
@@ -36,7 +43,10 @@ defmodule PetalBoilerplateWeb.HistoryLive do
        history_meta: history_meta,
        history_available: history_available,
        changed_within_days: changed_within_days,
-       event_type: event_type
+       event_type: event_type,
+       page: page,
+       total: total,
+       total_pages: total_pages
      )}
   end
 
@@ -45,7 +55,15 @@ defmodule PetalBoilerplateWeb.HistoryLive do
     changed_within_days = parse_changed_within(Map.get(params, "changed_within"))
     event_type = parse_event_type(Map.get(params, "type"))
 
-    {:noreply, push_patch(socket, to: history_path(changed_within_days, event_type))}
+    {:noreply, push_patch(socket, to: history_path(changed_within_days, event_type, 1))}
+  end
+
+  @impl true
+  def handle_event("page", %{"page" => page}, socket) do
+    {:noreply,
+     push_patch(socket,
+       to: history_path(socket.assigns.changed_within_days, socket.assigns.event_type, page)
+     )}
   end
 
   @impl true
@@ -76,7 +94,11 @@ defmodule PetalBoilerplateWeb.HistoryLive do
             </p>
           </div>
 
-          <form phx-change="set_filters" class="flex flex-col gap-3 sm:flex-row sm:items-end shrink-0">
+          <form
+            id="history-filters-form"
+            phx-change="set_filters"
+            class="flex flex-col gap-3 sm:flex-row sm:items-end shrink-0"
+          >
             <div>
               <label
                 class="block text-[11px] font-medium uppercase tracking-[0.14em] mb-1.5"
@@ -131,7 +153,7 @@ defmodule PetalBoilerplateWeb.HistoryLive do
             <div>
               <div class="text-sm font-medium" style="color: hsl(var(--foreground));">
                 <%= if @history_available do %>
-                  Showing {length(@events)} events
+                  Showing {page_start(@page, @total)}–{page_end(@page, @total)} of {@total} events
                 <% else %>
                   History unavailable
                 <% end %>
@@ -237,6 +259,34 @@ defmodule PetalBoilerplateWeb.HistoryLive do
                 </article>
               <% end %>
             </div>
+
+            <nav
+              :if={@total_pages > 1}
+              aria-label="History pagination"
+              class="mt-6 flex items-center justify-center gap-3"
+            >
+              <button
+                type="button"
+                phx-click="page"
+                phx-value-page={@page - 1}
+                disabled={@page <= 1}
+                class="rounded-md border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                ← Previous
+              </button>
+              <span class="text-sm" style="color: hsl(var(--muted-foreground));">
+                Page {@page} of {@total_pages}
+              </span>
+              <button
+                type="button"
+                phx-click="page"
+                phx-value-page={@page + 1}
+                disabled={@page >= @total_pages}
+                class="rounded-md border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next →
+              </button>
+            </nav>
           <% end %>
         <% else %>
           <div
@@ -251,7 +301,7 @@ defmodule PetalBoilerplateWeb.HistoryLive do
     """
   end
 
-  defp load_history_feed(changed_within_days, event_type) do
+  defp load_history_feed(changed_within_days, event_type, requested_page) do
     history = history_module()
 
     with {:ok, events} <- history.recent(@history_limit),
@@ -260,11 +310,20 @@ defmodule PetalBoilerplateWeb.HistoryLive do
         events
         |> sort_events_desc()
         |> filter_events(changed_within_days, event_type)
+
+      total = length(filtered_events)
+      total_pages = max(1, ceil(total / @page_size))
+      page = min(max(requested_page, 1), total_pages)
+
+      page_events =
+        filtered_events
+        |> Enum.drop((page - 1) * @page_size)
+        |> Enum.take(@page_size)
         |> Enum.map(&decorate_event/1)
 
-      {filtered_events, meta, true}
+      {page_events, total, total_pages, page, meta, true}
     else
-      _ -> {[], %{}, false}
+      _ -> {[], 0, 1, 1, %{}, false}
     end
   end
 
@@ -506,11 +565,12 @@ defmodule PetalBoilerplateWeb.HistoryLive do
     Application.get_env(:petal_boilerplate, :history_module, PetalBoilerplate.History)
   end
 
-  defp history_path(changed_within_days, event_type) do
+  defp history_path(changed_within_days, event_type, page) do
     query =
       %{}
       |> maybe_put_query_param("changed", changed_within_days)
       |> maybe_put_query_param("type", event_type)
+      |> maybe_put_query_param("page", if(parse_page(page) > 1, do: parse_page(page), else: nil))
 
     case URI.encode_query(query) do
       "" -> "/history"
@@ -522,7 +582,7 @@ defmodule PetalBoilerplateWeb.HistoryLive do
 
   defp model_search_path(search) when is_binary(search) do
     trimmed = String.trim(search)
-    if trimmed == "", do: "/", else: "/?q=#{URI.encode(trimmed)}"
+    if trimmed == "", do: "/", else: "/?q=#{URI.encode_www_form(trimmed)}"
   end
 
   defp parse_changed_within(nil), do: nil
@@ -541,6 +601,21 @@ defmodule PetalBoilerplateWeb.HistoryLive do
   defp parse_event_type("introduced"), do: "introduced"
   defp parse_event_type("changed"), do: "changed"
   defp parse_event_type(_), do: nil
+
+  defp parse_page(page) when is_integer(page) and page > 0, do: page
+
+  defp parse_page(page) when is_binary(page) do
+    case Integer.parse(page) do
+      {parsed, ""} when parsed > 0 -> parsed
+      _ -> 1
+    end
+  end
+
+  defp parse_page(_page), do: 1
+
+  defp page_start(_page, 0), do: 0
+  defp page_start(page, _total), do: (page - 1) * @page_size + 1
+  defp page_end(page, total), do: min(page * @page_size, total)
 
   defp maybe_put_query_param(params, _key, nil), do: params
 

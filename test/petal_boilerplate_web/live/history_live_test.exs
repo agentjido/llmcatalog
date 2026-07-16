@@ -98,6 +98,32 @@ defmodule PetalBoilerplateWeb.HistoryLiveTest do
     assert html =~ "History is not available for this deployment."
   end
 
+  test "history page paginates the rendered event list", %{conn: conn} do
+    Application.put_env(:petal_boilerplate, :history_module, HistoryFeedStub)
+
+    events =
+      for index <- 1..120 do
+        history_event(
+          "provider:model-#{String.pad_leading(Integer.to_string(index), 3, "0")}",
+          DateTime.add(~U[2026-07-16 12:00:00Z], -index, :second)
+        )
+      end
+
+    Application.put_env(:petal_boilerplate, :history_live_recent_events, events)
+
+    {:ok, _view, first_page} = live(conn, "/history")
+    assert first_page =~ "Showing 1–50 of 120 events"
+    assert article_count(first_page) == 50
+
+    {:ok, _view, second_page} = live(conn, "/history?page=2")
+    assert second_page =~ "Showing 51–100 of 120 events"
+    assert article_count(second_page) == 50
+
+    {:ok, _view, last_page} = live(conn, "/history?page=3")
+    assert last_page =~ "Showing 101–120 of 120 events"
+    assert article_count(last_page) == 20
+  end
+
   defp history_event(model_key, captured_at, type \\ "changed") do
     %{
       "model_key" => model_key,
@@ -115,6 +141,13 @@ defmodule PetalBoilerplateWeb.HistoryLiveTest do
       {position, _length} -> position
       :nomatch -> flunk("expected #{inspect(needle)} to appear in rendered HTML")
     end
+  end
+
+  defp article_count(html) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find("article")
+    |> length()
   end
 
   defp restore_env(key, nil), do: Application.delete_env(:petal_boilerplate, key)

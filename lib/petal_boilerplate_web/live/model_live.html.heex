@@ -4,6 +4,7 @@
     filters={@filters}
     providers={@providers}
     active_quick_filters={@active_quick_filters}
+    filters_open={@filters_open}
   />
 
   <PetalBoilerplateWeb.ModelComponents.model_detail_modal
@@ -22,11 +23,11 @@
     <div class="mb-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
       <div class="text-xs sm:text-sm" style="color: hsl(var(--muted-foreground));">
         <span class="font-medium" style="color: hsl(var(--foreground));">{@total}</span>
-        <span class="hidden xs:inline">of {@catalog_total}</span> models
+        of {@catalog_total} models
       </div>
 
       <div class="flex flex-wrap items-center gap-2 xl:justify-end">
-        <form phx-change="set_changed_within">
+        <form id="catalog-recency-form" phx-change="set_changed_within">
           <label class="sr-only" for="changed-within-select">Changed within</label>
           <select
             id="changed-within-select"
@@ -44,7 +45,7 @@
           </select>
         </form>
 
-        <form phx-change="set_sort">
+        <form id="catalog-sort-form" phx-change="set_sort">
           <label class="sr-only" for="sort-select">Sort models</label>
           <select
             id="sort-select"
@@ -53,13 +54,10 @@
             style="border-color: hsl(var(--border)); background-color: hsl(var(--background)); color: hsl(var(--foreground));"
           >
             <option value="default" selected={sort_control_value(@sort) == "default"}>
-              Default order
+              Recommended
             </option>
-            <option
-              value="recently_changed"
-              selected={sort_control_value(@sort) == "recently_changed"}
-            >
-              Recently changed
+            <option value="provider" selected={sort_control_value(@sort) == "provider"}>
+              Provider A–Z
             </option>
             <option value="custom" disabled selected={sort_control_value(@sort) == "custom"}>
               Custom table sort

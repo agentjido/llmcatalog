@@ -1,16 +1,28 @@
 defmodule PetalBoilerplateWeb.AboutLive do
   use PetalBoilerplateWeb, :live_view
 
+  alias PetalBoilerplate.Catalog
+
   @impl true
   def mount(_params, _session, socket) do
+    model_count = Catalog.total_model_count()
+    provider_count = length(Catalog.list_providers())
+
     {:ok,
      assign(socket,
+       model_count: model_count,
+       provider_count: provider_count,
        page_title: "About",
        page_description:
-         "Learn about llmdb.xyz - a comprehensive database of 2,000+ LLM models. Powered by the open-source llm_db Elixir package.",
+         "Learn about llmdb.xyz, a database of #{model_count} LLM models across #{provider_count} providers. Powered by the open-source llm_db Elixir package.",
        og_url: "https://llmdb.xyz/about",
        og_image: "https://llmdb.xyz/og/about.png"
      )}
+  end
+
+  @impl true
+  def handle_event("filter", %{"search" => search}, socket) do
+    {:noreply, push_navigate(socket, to: model_search_path(search))}
   end
 
   @impl true
@@ -65,7 +77,9 @@ defmodule PetalBoilerplateWeb.AboutLive do
             Features
           </h2>
           <ul class="space-y-2 list-disc list-inside" style="color: hsl(var(--muted-foreground));">
-            <li>Browse 2,000+ models from OpenAI, Anthropic, Google, Mistral, and more</li>
+            <li>
+              Browse {Catalog.format_number(@model_count)} models across {@provider_count} providers
+            </li>
             <li>Filter by capabilities: chat, embeddings, reasoning, tool use, streaming</li>
             <li>Compare pricing across providers</li>
             <li>View context windows and output limits</li>
@@ -83,7 +97,7 @@ defmodule PetalBoilerplateWeb.AboutLive do
           </h2>
           <p class="mb-4" style="color: hsl(var(--muted-foreground));">
             The llm_db package aggregates model metadata from multiple sources to build a comprehensive catalog
-            spanning 127+ providers. Data is collected through a build-time ETL pipeline that ingests, normalizes,
+            spanning {@provider_count} providers. Data is collected through a build-time ETL pipeline that ingests, normalizes,
             validates, and merges records from each source:
           </p>
           <ul
@@ -321,5 +335,10 @@ defmodule PetalBoilerplateWeb.AboutLive do
       </div>
     </div>
     """
+  end
+
+  defp model_search_path(search) do
+    query = String.trim(search)
+    if query == "", do: "/", else: "/?q=#{URI.encode_www_form(query)}"
   end
 end

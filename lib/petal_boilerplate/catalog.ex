@@ -184,7 +184,7 @@ defmodule PetalBoilerplate.Catalog do
   Returns the default sort configuration.
   """
   def default_sort do
-    %{by: :provider, dir: :asc}
+    %{by: :recently_changed, dir: :desc}
   end
 
   @doc """

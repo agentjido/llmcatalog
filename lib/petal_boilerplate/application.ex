@@ -13,25 +13,28 @@ defmodule PetalBoilerplate.Application do
       {:error, _} -> LLMDB.load_empty()
     end
 
-    PetalBoilerplate.History.configure_runtime_bundle()
+    PetalBoilerplate.History.configure_runtime_directory()
 
     # Pre-warm the model cache for fast initial load
     PetalBoilerplate.Catalog.init_cache()
 
-    children = [
-      # Start the Telemetry supervisor
-      PetalBoilerplateWeb.Telemetry,
-      # Start the Ecto repository
-      # PetalBoilerplate.Repo,
-      # Start the PubSub system
-      {Phoenix.PubSub, name: PetalBoilerplate.PubSub},
-      # Start Finch
-      {Finch, name: PetalBoilerplate.Finch},
-      # Start OG image cache (uses Image/libvips for SVG->PNG)
-      PetalBoilerplate.OGImage,
-      # Start the Endpoint (http/https)
-      PetalBoilerplateWeb.Endpoint
-    ]
+    children =
+      [
+        # Start the Telemetry supervisor
+        PetalBoilerplateWeb.Telemetry,
+        # Start the Ecto repository
+        # PetalBoilerplate.Repo,
+        # Start the PubSub system
+        {Phoenix.PubSub, name: PetalBoilerplate.PubSub},
+        # Start Finch
+        {Finch, name: PetalBoilerplate.Finch},
+        # Start OG image cache (uses Image/libvips for SVG->PNG)
+        PetalBoilerplate.OGImage,
+        # Start the Endpoint (http/https)
+        PetalBoilerplateWeb.Endpoint,
+        history_sync_child()
+      ]
+      |> Enum.reject(&is_nil/1)
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -45,5 +48,11 @@ defmodule PetalBoilerplate.Application do
   def config_change(changed, _new, removed) do
     PetalBoilerplateWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp history_sync_child do
+    if Application.get_env(:petal_boilerplate, :sync_history_on_start, true) do
+      PetalBoilerplate.HistorySync
+    end
   end
 end

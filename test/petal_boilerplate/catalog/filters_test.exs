@@ -311,7 +311,7 @@ defmodule PetalBoilerplate.Catalog.FiltersTest do
       map = Filters.to_filter_map(filters)
 
       assert is_map(map)
-      refute is_struct(map)
+      refute Map.has_key?(map, :__struct__)
       assert Map.has_key?(map, :search)
       assert Map.has_key?(map, :provider_ids)
       assert Map.has_key?(map, :capabilities)

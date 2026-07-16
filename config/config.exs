@@ -9,7 +9,8 @@ import Config
 
 config :petal_boilerplate,
   ecto_repos: [],
-  history_module: PetalBoilerplate.History
+  history_module: PetalBoilerplate.History,
+  sync_history_on_start: true
 
 # Configures the endpoint
 config :petal_boilerplate, PetalBoilerplateWeb.Endpoint,

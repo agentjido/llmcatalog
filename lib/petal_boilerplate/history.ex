@@ -17,8 +17,7 @@ defmodule PetalBoilerplate.History do
   Configures a writable history directory and syncs the published bundle when needed.
   """
   def configure_runtime_bundle do
-    history_dir = history_dir()
-    Application.put_env(:llm_db, :history_dir, history_dir)
+    history_dir = configure_runtime_directory()
 
     case ensure_local_bundle(history_dir) do
       :ok ->
@@ -28,6 +27,15 @@ defmodule PetalBoilerplate.History do
         Logger.warning("llm_db history bundle unavailable: #{inspect(reason)}")
         :ok
     end
+  end
+
+  @doc """
+  Configures the writable history directory without performing network access.
+  """
+  def configure_runtime_directory do
+    history_dir = history_dir()
+    Application.put_env(:llm_db, :history_dir, history_dir)
+    history_dir
   end
 
   @doc """

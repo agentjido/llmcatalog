@@ -24,6 +24,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       <div class="w-full max-w-full flex h-14 items-center gap-3 px-4">
         <a
           href="/"
+          aria-label="LLM Model DB home"
           class="flex items-center gap-2 shrink-0 transition-opacity hover:opacity-80"
           title="Go to home page"
         >
@@ -39,6 +40,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         <div class="flex-1" />
 
         <form
+          id="model-search-form"
           phx-change="filter"
           phx-debounce="300"
           class="w-full max-w-[200px] sm:max-w-xs md:max-w-sm"
@@ -107,7 +109,8 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             target="_blank"
             rel="noopener noreferrer"
             title="Join Discord"
-            class="p-2 rounded-md transition-colors hover:opacity-80"
+            aria-label="Join Discord"
+            class="hidden sm:block p-2 rounded-md transition-colors hover:opacity-80"
             style="color: hsl(var(--foreground));"
           >
             <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -119,7 +122,8 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             target="_blank"
             rel="noopener noreferrer"
             title="GitHub"
-            class="p-2 rounded-md transition-colors hover:opacity-80"
+            aria-label="View llm_db on GitHub"
+            class="hidden sm:block p-2 rounded-md transition-colors hover:opacity-80"
             style="color: hsl(var(--foreground));"
           >
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -130,12 +134,56 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             type="button"
             onclick="toggleScheme()"
             title="Toggle theme"
+            aria-label="Toggle theme"
             class="p-2 rounded-md transition-colors hover:opacity-80"
             style="color: hsl(var(--foreground));"
           >
             <.icon name="hero-moon" class="h-4 w-4 color-scheme-dark-icon" />
             <.icon name="hero-sun" class="h-4 w-4 color-scheme-light-icon hidden" />
           </button>
+
+          <details class="relative sm:hidden">
+            <summary
+              aria-label="Open navigation"
+              class="flex list-none items-center justify-center p-2 rounded-md transition-colors hover:opacity-80 [&::-webkit-details-marker]:hidden"
+              style="color: hsl(var(--foreground));"
+            >
+              <.icon name="hero-bars-3" class="h-4 w-4" />
+            </summary>
+            <nav
+              aria-label="Mobile navigation"
+              class="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-md border shadow-lg"
+              style="border-color: hsl(var(--border)); background-color: hsl(var(--popover)); color: hsl(var(--popover-foreground));"
+            >
+              <a href="/" class="block px-4 py-2.5 text-sm hover:opacity-80">Models</a>
+              <a href="/history" class="block px-4 py-2.5 text-sm hover:opacity-80">History</a>
+              <a href="/about" class="block px-4 py-2.5 text-sm hover:opacity-80">About</a>
+              <a
+                href="https://hex.pm/packages/llm_db"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block px-4 py-2.5 text-sm hover:opacity-80"
+              >
+                llm_db v{llm_db_version()}
+              </a>
+              <a
+                href="https://github.com/agentjido/llm_db"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block px-4 py-2.5 text-sm hover:opacity-80"
+              >
+                GitHub
+              </a>
+              <a
+                href="https://agentjido.xyz/discord"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block px-4 py-2.5 text-sm hover:opacity-80"
+              >
+                Discord
+              </a>
+            </nav>
+          </details>
         </div>
       </div>
     </header>
@@ -231,6 +279,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   attr :filters, :any, required: true
   attr :providers, :list, required: true
   attr :active_quick_filters, :list, default: []
+  attr :filters_open, :boolean, required: true
 
   def filter_bar(assigns) do
     quick_filters = Filters.quick_filters()
@@ -273,7 +322,11 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               label={"Provider #{provider_count_label(@filters)}"}
               active={MapSet.size(@filters.provider_ids) > 0}
             >
-              <.provider_filter_content providers={@providers} filters={@filters} />
+              <.provider_filter_content
+                providers={@providers}
+                filters={@filters}
+                form_id="provider-search-form"
+              />
             </.filter_dropdown>
 
             <.filter_dropdown
@@ -281,7 +334,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               label="Capabilities"
               active={has_capability_filters?(@filters.capabilities)}
             >
-              <.capabilities_filter_content filters={@filters} />
+              <.capabilities_filter_content
+                filters={@filters}
+                form_id="capabilities-filter-form"
+              />
             </.filter_dropdown>
 
             <.filter_dropdown
@@ -289,7 +345,11 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               label={"Input #{modality_count_label(@filters.modalities_in)}"}
               active={MapSet.size(@filters.modalities_in) > 0}
             >
-              <.modalities_filter_content filters={@filters} direction={:input} />
+              <.modalities_filter_content
+                filters={@filters}
+                direction={:input}
+                form_id="input-modalities-filter-form"
+              />
             </.filter_dropdown>
 
             <.filter_dropdown
@@ -297,7 +357,11 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               label={"Output #{modality_count_label(@filters.modalities_out)}"}
               active={MapSet.size(@filters.modalities_out) > 0}
             >
-              <.modalities_filter_content filters={@filters} direction={:output} />
+              <.modalities_filter_content
+                filters={@filters}
+                direction={:output}
+                form_id="output-modalities-filter-form"
+              />
             </.filter_dropdown>
 
             <.filter_dropdown
@@ -341,6 +405,8 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             <button
               type="button"
               phx-click="toggle_filters"
+              aria-expanded={to_string(@filters_open)}
+              aria-controls="mobile-filters-dialog"
               class="h-9 px-3 flex items-center gap-2 rounded-md border text-sm"
               style="border-color: hsl(var(--border));"
             >
@@ -362,6 +428,132 @@ defmodule PetalBoilerplateWeb.ModelComponents do
           </div>
         </div>
       </div>
+    </div>
+
+    <div :if={@filters_open} class="fixed inset-0 top-14 z-[60] md:hidden">
+      <button
+        type="button"
+        phx-click="toggle_filters"
+        class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        aria-label="Close filters"
+      ></button>
+      <.focus_wrap
+        id="mobile-filters-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mobile-filters-title"
+        phx-window-keydown="toggle_filters"
+        phx-key="escape"
+        class="absolute inset-y-0 left-0 w-[min(90vw,24rem)] overflow-y-auto border-r shadow-xl"
+        style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
+      >
+        <div
+          class="sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3"
+          style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
+        >
+          <h2 id="mobile-filters-title" class="text-lg font-semibold">Filters</h2>
+          <button
+            type="button"
+            phx-click="toggle_filters"
+            class="p-2 rounded-md hover:opacity-80"
+            aria-label="Close filters"
+          >
+            <.icon name="hero-x-mark" class="h-5 w-5" />
+          </button>
+        </div>
+
+        <div class="space-y-5 p-4 pb-10">
+          <section aria-labelledby="mobile-quick-filters-title">
+            <h3 id="mobile-quick-filters-title" class="mb-2 text-sm font-semibold">
+              Quick filters
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              <%= for qf <- @quick_filters do %>
+                <.quick_filter_pill
+                  label={qf.label}
+                  icon={qf.icon}
+                  kind={to_string(qf.key)}
+                  active={qf.key in @active_quick_filters}
+                />
+              <% end %>
+            </div>
+          </section>
+
+          <section aria-labelledby="mobile-provider-filters-title">
+            <h3 id="mobile-provider-filters-title" class="text-sm font-semibold">Providers</h3>
+            <div class="mt-2 overflow-hidden rounded-md border">
+              <.provider_filter_content
+                providers={@providers}
+                filters={@filters}
+                form_id="mobile-provider-search-form"
+              />
+            </div>
+          </section>
+
+          <section aria-labelledby="mobile-capability-filters-title">
+            <h3 id="mobile-capability-filters-title" class="text-sm font-semibold">
+              Capabilities
+            </h3>
+            <div class="mt-2 overflow-hidden rounded-md border">
+              <.capabilities_filter_content
+                filters={@filters}
+                form_id="mobile-capabilities-filter-form"
+              />
+            </div>
+          </section>
+
+          <section aria-labelledby="mobile-input-filters-title">
+            <h3 id="mobile-input-filters-title" class="text-sm font-semibold">
+              Input modalities
+            </h3>
+            <div class="mt-2 overflow-hidden rounded-md border">
+              <.modalities_filter_content
+                filters={@filters}
+                direction={:input}
+                form_id="mobile-input-modalities-filter-form"
+              />
+            </div>
+          </section>
+
+          <section aria-labelledby="mobile-output-filters-title">
+            <h3 id="mobile-output-filters-title" class="text-sm font-semibold">
+              Output modalities
+            </h3>
+            <div class="mt-2 overflow-hidden rounded-md border">
+              <.modalities_filter_content
+                filters={@filters}
+                direction={:output}
+                form_id="mobile-output-modalities-filter-form"
+              />
+            </div>
+          </section>
+
+          <section aria-labelledby="mobile-context-filters-title">
+            <h3 id="mobile-context-filters-title" class="text-sm font-semibold">
+              Context window
+            </h3>
+            <div class="mt-2 overflow-hidden rounded-md border">
+              <.context_filter_content filters={@filters} />
+            </div>
+          </section>
+
+          <section aria-labelledby="mobile-cost-filters-title">
+            <h3 id="mobile-cost-filters-title" class="text-sm font-semibold">Input cost</h3>
+            <div class="mt-2 overflow-hidden rounded-md border">
+              <.cost_filter_content filters={@filters} />
+            </div>
+          </section>
+
+          <button
+            :if={has_active_filters?(@filters)}
+            type="button"
+            phx-click="clear_filters"
+            class="w-full rounded-md border px-4 py-2 text-sm font-medium"
+          >
+            Clear all filters
+          </button>
+        </div>
+      </.focus_wrap>
     </div>
     """
   end
@@ -434,6 +626,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   attr :providers, :list, required: true
   attr :filters, :map, required: true
+  attr :form_id, :string, required: true
 
   defp provider_filter_content(assigns) do
     ~H"""
@@ -445,7 +638,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             class="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5"
             style="color: hsl(var(--muted-foreground));"
           />
-          <form phx-change="provider_search" phx-debounce="200">
+          <form id={@form_id} phx-change="provider_search" phx-debounce="200">
             <input
               type="text"
               name="provider_search"
@@ -479,22 +672,30 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       </div>
       <div class="max-h-[280px] overflow-y-auto p-1">
         <%= for provider <- filtered_providers(@providers, @filters.provider_search) do %>
-          <div
-            class="flex items-center gap-2 cursor-pointer rounded px-2 py-1.5 hover:opacity-80"
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={to_string(MapSet.member?(@filters.provider_ids, to_string(provider.id)))}
+            class="flex w-full items-center gap-2 cursor-pointer rounded px-2 py-1.5 text-left hover:opacity-80"
             style="background-color: transparent;"
             onmouseover="this.style.backgroundColor='hsl(var(--accent))'"
             onmouseout="this.style.backgroundColor='transparent'"
             phx-click="toggle_provider"
             phx-value-id={provider.id}
           >
-            <input
-              type="checkbox"
-              checked={MapSet.member?(@filters.provider_ids, to_string(provider.id))}
-              class="rounded pointer-events-none"
+            <span
+              aria-hidden="true"
+              class="flex h-4 w-4 shrink-0 items-center justify-center rounded border"
               style="border-color: hsl(var(--border));"
-            />
+            >
+              <.icon
+                :if={MapSet.member?(@filters.provider_ids, to_string(provider.id))}
+                name="hero-check"
+                class="h-3 w-3"
+              />
+            </span>
             <span class="text-sm truncate">{provider.name}</span>
-          </div>
+          </button>
         <% end %>
       </div>
     </div>
@@ -502,6 +703,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   end
 
   attr :filters, :map, required: true
+  attr :form_id, :string, required: true
 
   defp capabilities_filter_content(assigns) do
     capabilities = [
@@ -521,7 +723,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
     ~H"""
     <div class="w-56 p-2">
-      <form phx-change="filter">
+      <form id={@form_id} phx-change="filter">
         <%= for {cap_key, cap_label} <- @capabilities do %>
           <label
             class="flex items-center gap-2 cursor-pointer rounded px-2 py-1 hover:opacity-80"
@@ -564,6 +766,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   attr :filters, :map, required: true
   attr :direction, :atom, values: [:input, :output], required: true
+  attr :form_id, :string, required: true
 
   defp modalities_filter_content(assigns) do
     assigns =
@@ -574,7 +777,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
     ~H"""
     <div class="w-48 p-2">
-      <form phx-change="filter">
+      <form id={@form_id} phx-change="filter">
         <%= for {modality_key, label} <- @modality_options do %>
           <label
             class="flex items-center gap-2 cursor-pointer rounded px-2 py-1 hover:opacity-80"
@@ -617,8 +820,8 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       <div class="text-xs font-medium mb-2">Minimum context window</div>
       <div class="grid grid-cols-3 gap-1">
         <%= for {val, label} <- @context_options do %>
-          <div
-            role="button"
+          <button
+            type="button"
             phx-click="set_min_context"
             phx-value-value={val}
             class="px-2 py-1.5 text-xs rounded transition-colors cursor-pointer text-center"
@@ -629,7 +832,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             }
           >
             {label}
-          </div>
+          </button>
         <% end %>
       </div>
     </div>
@@ -655,8 +858,8 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       <div class="text-xs font-medium mb-2">Max input cost (per 1M tokens)</div>
       <div class="grid grid-cols-2 gap-1">
         <%= for {val, label} <- @cost_options do %>
-          <div
-            role="button"
+          <button
+            type="button"
             phx-click="set_max_cost"
             phx-value-value={val || ""}
             class="px-2 py-1.5 text-xs rounded transition-colors cursor-pointer text-center"
@@ -667,7 +870,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             }
           >
             {label}
-          </div>
+          </button>
         <% end %>
       </div>
     </div>
@@ -761,6 +964,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         phx-value-kind={@kind}
         phx-value-filter_value={@filter_value}
         class="hover:opacity-70 ml-0.5"
+        aria-label={"Remove #{@label} filter"}
       >
         <.icon name="hero-x-mark" class="h-3 w-3" />
       </button>
@@ -1006,14 +1210,17 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 do: "this.style.backgroundColor='transparent'"
             }
           >
-            <td class="px-3 py-2" phx-click="toggle_select" phx-value-id={model.id}>
+            <td class="px-3 py-2">
               <input
+                id={"compare-desktop-#{model.id}"}
                 type="checkbox"
                 checked={MapSet.member?(@selected_ids, model.id)}
                 disabled={!MapSet.member?(@selected_ids, model.id) && !@can_add_more}
+                phx-click="toggle_select"
+                phx-value-id={model.id}
                 class="rounded"
                 style="border-color: hsl(var(--border));"
-                onclick="event.stopPropagation()"
+                aria-label={"Select #{model.name} for comparison"}
               />
             </td>
             <td class="px-3 py-2" style="color: hsl(var(--muted-foreground));">
@@ -1022,7 +1229,12 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             <td class="px-3 py-2">
               <div class="flex items-center gap-2">
                 <div>
-                  <div class="font-medium">{model.name}</div>
+                  <.link
+                    patch={model_detail_path(model)}
+                    class="font-medium hover:underline"
+                  >
+                    {model.name}
+                  </.link>
                   <div class="text-xs font-mono" style="color: hsl(var(--muted-foreground));">
                     {model.model_id}
                     <span :if={model.__last_changed_at}>
@@ -1110,19 +1322,27 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             phx-value-id={model.id}
           >
             <div class="flex items-start gap-3">
-              <div class="pt-0.5" phx-click="toggle_select" phx-value-id={model.id}>
+              <div class="pt-0.5">
                 <input
+                  id={"compare-mobile-#{model.id}"}
                   type="checkbox"
                   checked={MapSet.member?(@selected_ids, model.id)}
                   disabled={!MapSet.member?(@selected_ids, model.id) && !@can_add_more}
+                  phx-click="toggle_select"
+                  phx-value-id={model.id}
                   class="rounded"
                   style="border-color: hsl(var(--border));"
-                  onclick="event.stopPropagation()"
+                  aria-label={"Select #{model.name} for comparison"}
                 />
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-medium truncate">{model.name}</span>
+                  <.link
+                    patch={model_detail_path(model)}
+                    class="font-medium truncate hover:underline"
+                  >
+                    {model.name}
+                  </.link>
                   <%= if model.deprecated || lifecycle_status(model) != "active" do %>
                     <span
                       class="text-[10px] px-1 py-0 rounded"
@@ -1210,12 +1430,16 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
     ~H"""
     <th
-      phx-click="sort"
-      phx-value-by={@field}
-      class={"px-3 py-3 font-medium cursor-pointer transition-colors select-none hover:opacity-80 #{if @align == "right", do: "text-right", else: "text-left"}"}
+      aria-sort={sortable_header_aria_sort(@is_active, @sort.dir)}
+      class={"px-3 py-3 font-medium #{if @align == "right", do: "text-right", else: "text-left"}"}
       style="color: hsl(var(--muted-foreground));"
     >
-      <div class={"flex items-center gap-1 #{if @align == "right", do: "justify-end", else: ""}"}>
+      <button
+        type="button"
+        phx-click="sort"
+        phx-value-by={@field}
+        class={"flex w-full items-center gap-1 transition-colors select-none hover:opacity-80 #{if @align == "right", do: "justify-end", else: ""}"}
+      >
         <span>{@label}</span>
         <%= if @is_active do %>
           <%= if @sort.dir == :asc do %>
@@ -1226,10 +1450,14 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         <% else %>
           <.icon name="hero-arrows-up-down" class="h-3.5 w-3.5 opacity-30" />
         <% end %>
-      </div>
+      </button>
     </th>
     """
   end
+
+  defp sortable_header_aria_sort(false, _direction), do: "none"
+  defp sortable_header_aria_sort(true, :asc), do: "ascending"
+  defp sortable_header_aria_sort(true, :desc), do: "descending"
 
   attr :model, :map, required: true
 
@@ -1243,8 +1471,13 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
     ~H"""
     <div class="flex gap-0.5">
-      <span :for={mod <- @modalities} class="title={mod}" style="color: hsl(var(--muted-foreground));">
+      <span
+        :for={mod <- @modalities}
+        title={mod_label(mod)}
+        style="color: hsl(var(--muted-foreground));"
+      >
         <.modality_icon modality={mod} />
+        <span class="sr-only">{mod_label(mod)}</span>
       </span>
     </div>
     """
@@ -1275,6 +1508,18 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     :image in input_list
   end
 
+  defp model_detail_path(model) do
+    provider = URI.encode(to_string(model.provider))
+
+    model_id =
+      model.model_id
+      |> String.split("/")
+      |> Enum.map(&URI.encode/1)
+      |> Enum.join("/")
+
+    "/models/#{provider}/#{model_id}"
+  end
+
   # =============================================================================
   # Task 2.5: Model Detail Modal Component
   # =============================================================================
@@ -1299,11 +1544,22 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       id="model-detail-modal"
       class="fixed inset-0 z-50 flex items-center justify-center"
     >
-      <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" phx-click="close_model" />
       <div
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        phx-click="close_model"
+        aria-hidden="true"
+      />
+      <.focus_wrap
+        id="model-detail-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="model-detail-title"
+        tabindex="-1"
         class="relative z-10 w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-lg border shadow-lg m-4"
         style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
         phx-click-away="close_model"
+        phx-window-keydown="close_model"
+        phx-key="escape"
       >
         <div class="p-6">
           <div class="flex items-center gap-2 mb-1">
@@ -1325,7 +1581,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             </span>
           </div>
 
-          <h2 class="text-2xl font-semibold mb-2">{@model.name}</h2>
+          <h2 id="model-detail-title" class="text-2xl font-semibold mb-2">{@model.name}</h2>
 
           <div class="mb-4">
             <div class="text-xs mb-1" style="color: hsl(var(--muted-foreground));">Model Spec</div>
@@ -1341,6 +1597,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 onclick={"navigator.clipboard.writeText('#{@model.provider}:#{@model.model_id}'); this.querySelector('.spec-copy-icon').classList.add('hidden'); this.querySelector('.spec-check-icon').classList.remove('hidden'); setTimeout(() => { this.querySelector('.spec-copy-icon').classList.remove('hidden'); this.querySelector('.spec-check-icon').classList.add('hidden'); }, 2000);"}
                 class="p-1 rounded hover:opacity-80"
                 title="Copy model spec"
+                aria-label="Copy model spec"
               >
                 <.icon name="hero-clipboard" class="h-3 w-3 spec-copy-icon" />
                 <.icon name="hero-check" class="h-3 w-3 spec-check-icon hidden" />
@@ -1643,11 +1900,12 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             phx-click="close_model"
             class="absolute top-4 right-4 p-2 rounded-md hover:opacity-80"
             style="color: hsl(var(--muted-foreground));"
+            aria-label="Close model details"
           >
             <.icon name="hero-x-mark" class="h-5 w-5" />
           </button>
         </div>
-      </div>
+      </.focus_wrap>
     </div>
     """
   end
@@ -1684,18 +1942,29 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       :if={@is_open}
       id="comparison-modal"
       class="fixed inset-0 z-50 flex items-center justify-center"
-      phx-click={@on_close}
     >
-      <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" />
       <div
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        phx-click={@on_close}
+        aria-hidden="true"
+      />
+      <.focus_wrap
+        id="comparison-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="comparison-title"
+        tabindex="-1"
         class="relative z-10 w-full max-w-5xl max-h-[85vh] overflow-y-auto rounded-lg border shadow-lg m-4"
         style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
         phx-click-away={@on_close}
-        onclick="event.stopPropagation()"
+        phx-window-keydown={@on_close}
+        phx-key="escape"
       >
         <div class="p-6">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold">Compare Models ({length(@models)})</h2>
+            <h2 id="comparison-title" class="text-xl font-semibold">
+              Compare Models ({length(@models)})
+            </h2>
             <div class="flex gap-2">
               <button
                 type="button"
@@ -1731,6 +2000,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                       phx-click={@on_remove}
                       phx-value-id={model.id}
                       class="absolute top-1 right-1 h-6 w-6 flex items-center justify-center rounded hover:opacity-80"
+                      aria-label={"Remove #{model.name} from comparison"}
                     >
                       <.icon name="hero-x-mark" class="h-3 w-3" />
                     </button>
@@ -1874,11 +2144,12 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             phx-click={@on_close}
             class="absolute top-4 right-4 p-2 rounded-md hover:opacity-80"
             style="color: hsl(var(--muted-foreground));"
+            aria-label="Close comparison"
           >
             <.icon name="hero-x-mark" class="h-5 w-5" />
           </button>
         </div>
-      </div>
+      </.focus_wrap>
     </div>
     """
   end
@@ -2660,14 +2931,19 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         <div class="lg:sticky lg:top-4 p-4 lg:p-0">
           <div class="flex items-center justify-between mb-4 lg:hidden">
             <h2 class="text-lg font-semibold">Filters</h2>
-            <button phx-click="toggle_filters" class="p-2 hover:opacity-80">
+            <button
+              type="button"
+              phx-click="toggle_filters"
+              class="p-2 hover:opacity-80"
+              aria-label="Close filters"
+            >
               <.icon name="hero-x-mark" class="w-6 h-6" />
             </button>
           </div>
 
           <.card variant="outline" class="border-0 lg:border shadow-none lg:shadow">
             <.card_content category="Filters">
-              <form phx-change="filter" phx-debounce="200">
+              <form id="legacy-filters-form" phx-change="filter" phx-debounce="200">
                 <div class="mb-6">
                   <.form_label>Providers</.form_label>
                   <.input

@@ -91,6 +91,21 @@ defmodule PetalBoilerplate.CatalogTest do
     assert Catalog.query_models(filters, sort, 2) == expected
   end
 
+  test "default sort prioritizes recently changed models" do
+    older = build_model("older", [:text], [:text]) |> Map.put(:__last_changed_epoch, 100)
+    newer = build_model("newer", [:text], [:text]) |> Map.put(:__last_changed_epoch, 200)
+    unchanged = build_model("unchanged", [:text], [:text]) |> Map.put(:__last_changed_epoch, nil)
+
+    result =
+      Catalog.list_models(
+        [older, unchanged, newer],
+        Catalog.default_filters(),
+        Catalog.default_sort()
+      )
+
+    assert Enum.map(result, & &1.id) == ["newer", "older", "unchanged"]
+  end
+
   test "list_models filters by required input and output modalities" do
     filters = %{
       Catalog.default_filters()

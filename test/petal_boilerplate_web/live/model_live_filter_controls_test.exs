@@ -31,6 +31,21 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
     refute has_element?(view, "button", "Clear filters")
   end
 
+  test "mobile filter control opens a labelled filter dialog", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/")
+
+    refute has_element?(view, "#mobile-filters-dialog")
+
+    render_click(view, "toggle_filters", %{})
+
+    assert has_element?(view, ~s(#mobile-filters-dialog[role="dialog"][aria-modal="true"]))
+    assert has_element?(view, "#mobile-provider-search-form")
+    assert has_element?(view, "#mobile-capabilities-filter-form")
+
+    render_click(view, "toggle_filters", %{})
+    refute has_element?(view, "#mobile-filters-dialog")
+  end
+
   defp first_provider_id do
     Catalog.list_providers()
     |> List.first()

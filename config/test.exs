@@ -22,7 +22,8 @@ config :petal_boilerplate, PetalBoilerplateWeb.Endpoint,
 
 config :petal_boilerplate,
   canonical_host: nil,
-  enable_analytics: false
+  enable_analytics: false,
+  sync_history_on_start: false
 
 # In test we don't send emails.
 config :petal_boilerplate, PetalBoilerplate.Mailer, adapter: Swoosh.Adapters.Test

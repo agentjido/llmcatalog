@@ -333,8 +333,8 @@ defmodule PetalBoilerplateWeb.ModelLive do
   def handle_event("set_sort", %{"sort" => sort_key}, socket) do
     sort =
       case sort_key do
-        "recently_changed" -> %{by: :recently_changed, dir: :desc}
         "default" -> Catalog.default_sort()
+        "provider" -> %{by: :provider, dir: :asc}
         _ -> socket.assigns.sort
       end
 
@@ -481,10 +481,12 @@ defmodule PetalBoilerplateWeb.ModelLive do
     end)
   end
 
-  defp sort_control_value(%{by: :recently_changed}), do: "recently_changed"
-
   defp sort_control_value(sort) do
-    if sort == Catalog.default_sort(), do: "default", else: "custom"
+    cond do
+      sort == Catalog.default_sort() -> "default"
+      sort == %{by: :provider, dir: :asc} -> "provider"
+      true -> "custom"
+    end
   end
 
   defp parse_int_value(""), do: nil
@@ -568,10 +570,12 @@ defmodule PetalBoilerplateWeb.ModelLive do
   def format_cost(value), do: Catalog.format_cost(value)
 
   defp assign_og_meta(socket, :index, _model) do
+    model_count = Catalog.total_model_count()
+
     assign(socket,
       page_title: "LLM Model Database",
       page_description:
-        "Browse and compare 2,000+ LLM models from OpenAI, Anthropic, Google, Mistral, and more. Filter by capabilities, pricing, and context windows.",
+        "Browse and compare #{format_number(model_count)} LLM models. Filter by provider, capabilities, pricing, modalities, and context windows.",
       og_url: "https://llmdb.xyz/",
       og_image: "https://llmdb.xyz/og/home.png"
     )
