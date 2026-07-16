@@ -100,7 +100,7 @@
       style="border-color: hsl(var(--border)); background-color: hsl(var(--card));"
     >
       <PetalBoilerplateWeb.ModelComponents.model_table
-        models={@streams.models}
+        models={@models}
         sort={@sort}
         total={@total}
         selected_ids={@selected_ids}
@@ -160,8 +160,9 @@
               Clear
             </button>
             <button
+              id="comparison-trigger"
               type="button"
-              phx-click="open_comparison"
+              phx-click={JS.push_focus() |> JS.push("open_comparison")}
               class="px-3 py-1.5 text-sm rounded-md flex items-center gap-1.5 transition-colors"
               style="background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground));"
             >

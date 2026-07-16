@@ -25,7 +25,7 @@ defmodule PetalBoilerplate.History do
 
       {:error, reason} ->
         Logger.warning("llm_db history bundle unavailable: #{inspect(reason)}")
-        :ok
+        {:error, reason}
     end
   end
 

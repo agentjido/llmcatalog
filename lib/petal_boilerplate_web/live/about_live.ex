@@ -78,7 +78,7 @@ defmodule PetalBoilerplateWeb.AboutLive do
           </h2>
           <ul class="space-y-2 list-disc list-inside" style="color: hsl(var(--muted-foreground));">
             <li>
-              Browse {Catalog.format_number(@model_count)} models across {@provider_count} providers
+              Explore a catalog of {Catalog.format_number(@model_count)} models across {@provider_count} providers
             </li>
             <li>Filter by capabilities: chat, embeddings, reasoning, tool use, streaming</li>
             <li>Compare pricing across providers</li>

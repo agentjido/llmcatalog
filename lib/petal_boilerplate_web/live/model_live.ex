@@ -37,10 +37,17 @@ defmodule PetalBoilerplateWeb.ModelLive do
     filters = Filters.from_params(params)
     sort = sort_from_params(params)
 
-    socket
-    |> assign(selected_model: nil)
-    |> clear_history_assigns()
-    |> apply_filters(filters, sort: sort)
+    socket =
+      socket
+      |> assign_og_meta(:index, nil)
+      |> assign(selected_model: nil)
+      |> clear_history_assigns()
+
+    if socket.assigns.filters == filters and socket.assigns.sort == sort do
+      socket
+    else
+      apply_filters(socket, filters, sort: sort)
+    end
   end
 
   @sort_fields %{
@@ -67,6 +74,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
      |> assign_og_meta(:index, nil)
      |> assign(
        providers: providers,
+       models: page_models,
        catalog_total: Catalog.total_model_count(),
        filters: filters,
        sort: sort,
@@ -84,8 +92,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
        history_api_url: nil,
        selected_ids: MapSet.new(),
        comparison_open: false
-     )
-     |> stream(:models, page_models, reset: true)}
+     )}
   end
 
   @impl true
@@ -122,9 +129,12 @@ defmodule PetalBoilerplateWeb.ModelLive do
       Catalog.query_models(socket.assigns.filters, socket.assigns.sort, page)
 
     {:noreply,
-     socket
-     |> assign(page: page, total: total, total_pages: total_pages)
-     |> stream(:models, page_models, reset: true)}
+     assign(socket,
+       models: page_models,
+       page: page,
+       total: total,
+       total_pages: total_pages
+     )}
   end
 
   @impl true
@@ -352,6 +362,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
     socket =
       socket
       |> assign(
+        models: page_models,
         filters: filters,
         sort: sort,
         total: total,
@@ -361,7 +372,6 @@ defmodule PetalBoilerplateWeb.ModelLive do
         active_filter_count: Filters.active_filter_count(filters),
         active_quick_filters: Filters.active_quick_filters(filters)
       )
-      |> stream(:models, page_models, reset: true)
 
     if Keyword.get(opts, :push_url, false) do
       push_patch(socket, to: index_path(filters, sort), replace: true)

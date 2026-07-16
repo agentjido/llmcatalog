@@ -46,6 +46,24 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
     refute has_element?(view, "#mobile-filters-dialog")
   end
 
+  test "mobile navigation exposes primary and project links", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/")
+
+    assert has_element?(
+             view,
+             ~s(nav[aria-label="Mobile navigation"] a[href="/history"]),
+             "History"
+           )
+
+    assert has_element?(view, ~s(nav[aria-label="Mobile navigation"] a[href="/about"]), "About")
+
+    assert has_element?(
+             view,
+             ~s(nav[aria-label="Mobile navigation"] a[href="https://github.com/agentjido/llm_db"]),
+             "GitHub"
+           )
+  end
+
   defp first_provider_id do
     Catalog.list_providers()
     |> List.first()

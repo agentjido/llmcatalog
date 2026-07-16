@@ -2,6 +2,8 @@ defmodule PetalBoilerplate.HistorySmokeTest do
   use ExUnit.Case, async: false
 
   test "llm_db is pinned to a Hex release and runtime history artifacts are available" do
+    assert :ok = PetalBoilerplate.History.configure_runtime_bundle()
+
     lock = Mix.Dep.Lock.read()
     assert {:hex, :llm_db, version, _checksum, _managers, _deps, "hexpm", _hash} = lock[:llm_db]
     assert {:ok, _version} = Version.parse(version)

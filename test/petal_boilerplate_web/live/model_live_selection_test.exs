@@ -25,5 +25,40 @@ defmodule PetalBoilerplateWeb.ModelLiveSelectionTest do
     assert html =~ ~s(id="comparison-dialog")
     assert html =~ ~s(role="dialog")
     assert html =~ ~s(aria-modal="true")
+
+    html = render_click(view, "close_comparison", %{})
+    assert element_count(html, "#models-table-body tr") == 50
+    assert element_count(html, ~s([id^="mobile-model-"])) == 50
+  end
+
+  test "model details render as a labelled modal dialog", %{conn: conn} do
+    [model | _] =
+      Catalog.query_models(Catalog.default_filters(), Catalog.default_sort(), 1)
+      |> elem(0)
+
+    {:ok, view, _html} = live(conn, "/")
+    assert page_title(view) =~ "LLM Model Database"
+    html = render_click(view, "show_model", %{"id" => model.id})
+
+    assert html =~ ~s(id="model-detail-dialog")
+    assert html =~ ~s(role="dialog")
+    assert html =~ ~s(aria-modal="true")
+    assert html =~ ~s(aria-labelledby="model-detail-title")
+    assert html =~ ~s(aria-label="Close model details")
+    refute page_title(view) =~ "LLM Model Database"
+
+    render_click(view, "close_model", %{})
+
+    assert_patch(view, "/")
+    assert page_title(view) == "LLM Model Database"
+    refute has_element?(view, "#model-detail-dialog")
+    assert has_element?(view, "##{model.id}")
+  end
+
+  defp element_count(html, selector) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find(selector)
+    |> length()
   end
 end

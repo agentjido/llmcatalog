@@ -11,10 +11,15 @@ defmodule PetalBoilerplate.HistorySync do
     }
   end
 
-  def start_link(_opts) do
+  def start_link(opts) when is_list(opts) do
+    history_module = Keyword.get(opts, :history_module, History)
+    catalog_module = Keyword.get(opts, :catalog_module, Catalog)
+
     Task.start_link(fn ->
-      History.configure_runtime_bundle()
-      Catalog.refresh_cache()
+      case history_module.configure_runtime_bundle() do
+        :ok -> catalog_module.refresh_cache()
+        {:error, _reason} -> :ok
+      end
     end)
   end
 end

@@ -98,6 +98,15 @@ defmodule PetalBoilerplateWeb.HistoryLiveTest do
     assert html =~ "History is not available for this deployment."
   end
 
+  test "history header search navigates to the catalog", %{conn: conn} do
+    Application.put_env(:petal_boilerplate, :history_module, HistoryUnavailableStub)
+
+    {:ok, view, _html} = live(conn, "/history")
+
+    render_change(view, "filter", %{"search" => "claude 4"})
+    assert_redirect(view, "/?q=claude+4")
+  end
+
   test "history page paginates the rendered event list", %{conn: conn} do
     Application.put_env(:petal_boilerplate, :history_module, HistoryFeedStub)
 
@@ -122,6 +131,14 @@ defmodule PetalBoilerplateWeb.HistoryLiveTest do
     {:ok, _view, last_page} = live(conn, "/history?page=3")
     assert last_page =~ "Showing 101–120 of 120 events"
     assert article_count(last_page) == 20
+
+    {:ok, _view, clamped_page} = live(conn, "/history?page=999")
+    assert clamped_page =~ "Showing 101–120 of 120 events"
+    assert article_count(clamped_page) == 20
+
+    {:ok, _view, malformed_page} = live(conn, "/history?page=not-a-page")
+    assert malformed_page =~ "Showing 1–50 of 120 events"
+    assert article_count(malformed_page) == 50
   end
 
   defp history_event(model_key, captured_at, type \\ "changed") do

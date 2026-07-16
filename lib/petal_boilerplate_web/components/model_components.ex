@@ -403,8 +403,9 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         <div class="w-full max-w-full py-2.5 px-4">
           <div class="flex items-center gap-2">
             <button
+              id="mobile-filters-trigger"
               type="button"
-              phx-click="toggle_filters"
+              phx-click={JS.push_focus() |> JS.push("toggle_filters")}
               aria-expanded={to_string(@filters_open)}
               aria-controls="mobile-filters-dialog"
               class="h-9 px-3 flex items-center gap-2 rounded-md border text-sm"
@@ -430,7 +431,11 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       </div>
     </div>
 
-    <div :if={@filters_open} class="fixed inset-0 top-14 z-[60] md:hidden">
+    <div
+      :if={@filters_open}
+      class="fixed inset-0 top-14 z-[60] md:hidden"
+      phx-remove={JS.pop_focus()}
+    >
       <button
         type="button"
         phx-click="toggle_filters"
@@ -442,6 +447,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         role="dialog"
         aria-modal="true"
         aria-labelledby="mobile-filters-title"
+        phx-mounted={JS.focus_first(to: "#mobile-filters-dialog")}
         phx-window-keydown="toggle_filters"
         phx-key="escape"
         class="absolute inset-y-0 left-0 w-[min(90vw,24rem)] overflow-y-auto border-r shadow-xl"
@@ -457,6 +463,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             phx-click="toggle_filters"
             class="p-2 rounded-md hover:opacity-80"
             aria-label="Close filters"
+            autofocus
           >
             <.icon name="hero-x-mark" class="h-5 w-5" />
           </button>
@@ -1193,10 +1200,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             </td>
           </tr>
         </tbody>
-        <tbody :if={@total > 0} id="models-table-body" phx-update="stream">
+        <tbody :if={@total > 0} id="models-table-body">
           <tr
-            :for={{dom_id, model} <- @models}
-            id={dom_id}
+            :for={model <- @models}
+            id={model.id}
             phx-click="show_model"
             phx-value-id={model.id}
             class="border-b cursor-pointer transition-colors"
@@ -1310,8 +1317,8 @@ defmodule PetalBoilerplateWeb.ModelComponents do
           </div>
         <% else %>
           <div
-            :for={{dom_id, model} <- @models}
-            id={"mobile-#{dom_id}"}
+            :for={model <- @models}
+            id={"mobile-#{model.id}"}
             class="p-3 transition-colors cursor-pointer"
             style={
               if MapSet.member?(@selected_ids, model.id),
@@ -1555,6 +1562,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         aria-modal="true"
         aria-labelledby="model-detail-title"
         tabindex="-1"
+        phx-mounted={JS.focus_first(to: "#model-detail-dialog")}
         class="relative z-10 w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-lg border shadow-lg m-4"
         style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
         phx-click-away="close_model"
@@ -1901,6 +1909,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             class="absolute top-4 right-4 p-2 rounded-md hover:opacity-80"
             style="color: hsl(var(--muted-foreground));"
             aria-label="Close model details"
+            autofocus
           >
             <.icon name="hero-x-mark" class="h-5 w-5" />
           </button>
@@ -1942,6 +1951,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       :if={@is_open}
       id="comparison-modal"
       class="fixed inset-0 z-50 flex items-center justify-center"
+      phx-remove={JS.pop_focus()}
     >
       <div
         class="fixed inset-0 bg-black/50 backdrop-blur-sm"
@@ -1954,6 +1964,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         aria-modal="true"
         aria-labelledby="comparison-title"
         tabindex="-1"
+        phx-mounted={JS.focus_first(to: "#comparison-dialog")}
         class="relative z-10 w-full max-w-5xl max-h-[85vh] overflow-y-auto rounded-lg border shadow-lg m-4"
         style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
         phx-click-away={@on_close}
@@ -2145,6 +2156,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             class="absolute top-4 right-4 p-2 rounded-md hover:opacity-80"
             style="color: hsl(var(--muted-foreground));"
             aria-label="Close comparison"
+            autofocus
           >
             <.icon name="hero-x-mark" class="h-5 w-5" />
           </button>
