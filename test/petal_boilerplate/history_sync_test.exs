@@ -21,6 +21,18 @@ defmodule PetalBoilerplate.HistorySyncTest do
     defp test_pid, do: Application.fetch_env!(:petal_boilerplate, :history_sync_test_pid)
   end
 
+  defmodule HistoryRetryStub do
+    def configure_runtime_bundle do
+      attempt = Process.get(__MODULE__, 0) + 1
+      Process.put(__MODULE__, attempt)
+      send(test_pid(), {:history_sync_attempt, attempt})
+
+      if attempt == 1, do: {:error, :offline}, else: :ok
+    end
+
+    defp test_pid, do: Application.fetch_env!(:petal_boilerplate, :history_sync_test_pid)
+  end
+
   defmodule CatalogStub do
     def refresh_cache do
       send(test_pid(), :catalog_refreshed)
@@ -48,10 +60,30 @@ defmodule PetalBoilerplate.HistorySyncTest do
 
   test "keeps the current catalog when history sync fails" do
     {:ok, pid} =
-      HistorySync.start_link(history_module: HistoryFailureStub, catalog_module: CatalogStub)
+      HistorySync.start_link(
+        history_module: HistoryFailureStub,
+        catalog_module: CatalogStub,
+        max_attempts: 1
+      )
 
     assert_receive :history_sync_failed
     refute_receive :catalog_refreshed, 50
+    assert is_pid(pid)
+  end
+
+  test "retries a transient history sync failure and refreshes after recovery" do
+    {:ok, pid} =
+      HistorySync.start_link(
+        history_module: HistoryRetryStub,
+        catalog_module: CatalogStub,
+        retry_delay: 0,
+        max_retry_delay: 0,
+        max_attempts: 2
+      )
+
+    assert_receive {:history_sync_attempt, 1}
+    assert_receive {:history_sync_attempt, 2}
+    assert_receive :catalog_refreshed
     assert is_pid(pid)
   end
 
