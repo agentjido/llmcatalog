@@ -107,7 +107,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
       Regex.scan(~r/<lastmod>(.*?)<\/lastmod>/, body, capture: :all_but_first)
       |> Enum.map(fn [value] -> value end)
 
-    assert values != []
+    refute body =~ "<lastmod></lastmod>"
 
     assert Enum.all?(values, fn value ->
              match?({:ok, _date_time, _offset}, DateTime.from_iso8601(value))
