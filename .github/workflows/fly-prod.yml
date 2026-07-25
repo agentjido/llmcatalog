@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 concurrency:
   # Prevent overlapping prod deploys from racing on the same Fly machine.
   group: deploy-fly-prod
@@ -23,4 +26,4 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         with:
-          args: "deploy -c build/llmdb-prod.toml -a llmdb-prod --remote-only"
+          args: "deploy -c build/llmdb-prod.toml -a llmdb-prod --remote-only --build-secret GITHUB_TOKEN=${{ github.token }}"

@@ -5,6 +5,9 @@ on:
   #   branches:
   #     - main
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Deploy
@@ -17,4 +20,4 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         with:
-          args: "deploy -c build/llmdb-stage.toml -a llmdb-stage --remote-only"
+          args: "deploy -c build/llmdb-stage.toml -a llmdb-stage --remote-only --build-secret GITHUB_TOKEN=${{ github.token }}"

@@ -290,7 +290,19 @@ defmodule PetalBoilerplate.History do
     repo = ReleaseStore.config().repo
     url = "https://api.github.com/repos/#{repo}/releases?per_page=100"
 
-    fetch_json(url, headers: [{"accept", "application/vnd.github+json"}])
+    fetch_json(url, headers: github_request_headers())
+  end
+
+  defp github_request_headers do
+    headers = [
+      {"accept", "application/vnd.github+json"},
+      {"user-agent", "llmdb.xyz"}
+    ]
+
+    case System.get_env("GH_TOKEN") || System.get_env("GITHUB_TOKEN") do
+      nil -> headers
+      token -> [{"authorization", "Bearer #{token}"} | headers]
+    end
   end
 
   defp history_release?(%{"draft" => true}), do: false
