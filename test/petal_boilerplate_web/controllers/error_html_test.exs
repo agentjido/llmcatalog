@@ -5,7 +5,11 @@ defmodule PetalBoilerplateWeb.ErrorHTMLTest do
   import Phoenix.Template
 
   test "renders 404.html" do
-    assert render_to_string(PetalBoilerplateWeb.ErrorHTML, "404", "html", []) == "Not Found"
+    html = render_to_string(PetalBoilerplateWeb.ErrorHTML, "404", "html", [])
+
+    assert html =~ "Page not found"
+    assert html =~ ~s(name="robots" content="noindex, nofollow")
+    refute html =~ ~s(rel="canonical")
   end
 
   test "renders 500.html" do

@@ -23,6 +23,7 @@ config :petal_boilerplate, PetalBoilerplateWeb.Endpoint,
 config :petal_boilerplate,
   canonical_host: nil,
   enable_analytics: false,
+  seo_indexing_enabled: true,
   sync_history_on_start: false
 
 # In test we don't send emails.

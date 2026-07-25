@@ -2,6 +2,7 @@ defmodule PetalBoilerplateWeb.Router do
   use PetalBoilerplateWeb, :router
 
   pipeline :browser do
+    plug PetalBoilerplateWeb.Plugs.LLMAcceptCompat
     plug :accepts, ["html"]
     plug PetalBoilerplateWeb.Plug.RequestAudit
     plug :fetch_session
@@ -9,6 +10,11 @@ defmodule PetalBoilerplateWeb.Router do
     plug :put_root_layout, {PetalBoilerplateWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug PetalBoilerplateWeb.Plugs.LLMResponse
+  end
+
+  pipeline :model_page do
+    plug PetalBoilerplateWeb.Plugs.ModelExists
   end
 
   pipeline :api do
@@ -21,14 +27,24 @@ defmodule PetalBoilerplateWeb.Router do
 
     live "/", ModelLive, :index
     live "/history", HistoryLive, :index
-    live "/models/:provider/*id", ModelLive, :show
     live "/about", AboutLive, :index
+
+    get "/robots.txt", DiscoveryController, :robots
+    get "/sitemap.xml", DiscoveryController, :sitemap
+    get "/llms.txt", DiscoveryController, :llms
+    get "/feed", DiscoveryController, :feed
 
     # OG image endpoints (PNG images for social sharing)
     get "/og/default.png", OGImageController, :default
     get "/og/home.png", OGImageController, :home
     get "/og/about.png", OGImageController, :about
     get "/og/model/:provider/*id", OGImageController, :model
+  end
+
+  scope "/", PetalBoilerplateWeb do
+    pipe_through [:browser, :model_page]
+
+    live "/models/:provider/*id", ModelLive, :show
   end
 
   # Other scopes may use custom stacks.
@@ -55,5 +71,11 @@ defmodule PetalBoilerplateWeb.Router do
       live_dashboard "/dashboard", metrics: PetalBoilerplateWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
+  end
+
+  scope "/", PetalBoilerplateWeb do
+    pipe_through :browser
+
+    match :*, "/*path", ErrorController, :not_found
   end
 end

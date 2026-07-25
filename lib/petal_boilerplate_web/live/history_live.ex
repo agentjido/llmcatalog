@@ -2,12 +2,17 @@ defmodule PetalBoilerplateWeb.HistoryLive do
   use PetalBoilerplateWeb, :live_view
 
   alias PetalBoilerplate.Catalog
+  alias PetalBoilerplateWeb.PublicRoutes
+  alias PetalBoilerplateWeb.SEO
 
   @history_limit 500
   @page_size 50
 
   @impl true
   def mount(_params, _session, socket) do
+    description =
+      "Track recent llm_db model metadata changes across providers, including introductions, updates, and lineage-aware history."
+
     {:ok,
      assign(socket,
        search_value: "",
@@ -21,10 +26,10 @@ defmodule PetalBoilerplateWeb.HistoryLive do
        total_pages: 1,
        history_api_url: "/api/history/recent?limit=#{@history_limit}",
        page_title: "Recent History",
-       page_description:
-         "Track recent llm_db model metadata changes across providers, including introductions, updates, and lineage-aware history.",
-       og_url: "https://llmdb.xyz/history",
-       og_image: "https://llmdb.xyz/og/default.png"
+       page_description: description,
+       canonical_url: PublicRoutes.absolute("/history"),
+       og_image: PublicRoutes.absolute("/og/default.png"),
+       structured_data: SEO.history_structured_data(description)
      )}
   end
 
@@ -359,15 +364,7 @@ defmodule PetalBoilerplateWeb.HistoryLive do
   defp model_name(_model, _model_id, model_key), do: model_key || "unknown:model"
 
   defp model_path(provider, model_id) when is_binary(provider) and is_binary(model_id) do
-    encoded_provider = URI.encode(provider)
-
-    encoded_model_id =
-      model_id
-      |> String.split("/")
-      |> Enum.map(&URI.encode/1)
-      |> Enum.join("/")
-
-    "/models/#{encoded_provider}/#{encoded_model_id}"
+    PublicRoutes.model_path(provider, model_id)
   end
 
   defp model_path(_provider, _model_id), do: nil

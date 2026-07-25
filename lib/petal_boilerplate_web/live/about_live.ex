@@ -2,21 +2,26 @@ defmodule PetalBoilerplateWeb.AboutLive do
   use PetalBoilerplateWeb, :live_view
 
   alias PetalBoilerplate.Catalog
+  alias PetalBoilerplateWeb.PublicRoutes
+  alias PetalBoilerplateWeb.SEO
 
   @impl true
   def mount(_params, _session, socket) do
     model_count = Catalog.total_model_count()
     provider_count = length(Catalog.list_providers())
 
+    description =
+      "Learn about llmdb.xyz, a database of #{model_count} LLM models across #{provider_count} providers. Powered by the open-source llm_db Elixir package."
+
     {:ok,
      assign(socket,
        model_count: model_count,
        provider_count: provider_count,
        page_title: "About",
-       page_description:
-         "Learn about llmdb.xyz, a database of #{model_count} LLM models across #{provider_count} providers. Powered by the open-source llm_db Elixir package.",
-       og_url: "https://llmdb.xyz/about",
-       og_image: "https://llmdb.xyz/og/about.png"
+       page_description: description,
+       canonical_url: PublicRoutes.absolute("/about"),
+       og_image: PublicRoutes.absolute("/og/about.png"),
+       structured_data: SEO.about_structured_data(description)
      )}
   end
 

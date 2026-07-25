@@ -21,8 +21,14 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() != :test do
+  seo_indexing_enabled =
+    System.get_env("SEO_INDEXING_ENABLED", "false")
+    |> String.downcase()
+    |> then(&(&1 in ["true", "1", "yes"]))
+
   config :petal_boilerplate,
     canonical_host: System.get_env("CANONICAL_HOST"),
+    seo_indexing_enabled: seo_indexing_enabled,
     # Set to true/false to control Plausible analytics loading, only in production
     enable_analytics: System.get_env("ENABLE_ANALYTICS")
 end

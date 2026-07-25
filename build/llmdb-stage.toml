@@ -20,6 +20,7 @@ strategy = "bluegreen"
 FLY_APP_NAME = 'llmdb-stage'
 PHX_HOST = 'stage.llmdb.xyz'
 CANONICAL_HOST = 'stage.llmdb.xyz'
+SEO_INDEXING_ENABLED = 'false'
 PORT = '8080'
 PRIMARY_REGION = "ord"
 
