@@ -1,8 +1,8 @@
 defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
   use PetalBoilerplateWeb.ConnCase, async: false
 
-  alias PetalBoilerplate.Catalog
   alias PetalBoilerplateWeb.PublicRoutes
+  alias PetalBoilerplateWeb.SEO
 
   defmodule FeedHistory do
     def recent(50) do
@@ -38,7 +38,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     :ok
   end
 
-  test "production robots allows crawling and names the sitemap", %{conn: conn} do
+  test "production robots allows crawling and names the curated sitemap", %{conn: conn} do
     Application.put_env(:petal_boilerplate, :seo_indexing_enabled, true)
 
     conn = get(conn, "/robots.txt")
@@ -48,6 +48,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert body =~ "Allow: /"
     assert body =~ "Sitemap: #{PublicRoutes.absolute("/sitemap.xml")}"
     refute body =~ "Disallow: /"
+    refute body =~ "Disallow: /models/"
     assert get_resp_header(conn, "content-type") |> hd() =~ "text/plain"
   end
 
@@ -63,7 +64,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     refute body =~ "Sitemap:"
   end
 
-  test "sitemap contains static pages and every model in stable order", %{conn: conn} do
+  test "sitemap contains only approved search landing pages in stable order", %{conn: conn} do
     body =
       conn
       |> get("/sitemap.xml")
@@ -78,40 +79,14 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
       Regex.scan(~r/<loc>(.*?)<\/loc>/, body, capture: :all_but_first)
       |> Enum.map(fn [location] -> location end)
 
-    assert length(locations) == Catalog.total_model_count() + 3
+    expected_locations =
+      Enum.map(SEO.search_indexable_paths(), &PublicRoutes.absolute/1)
 
-    assert Enum.take(locations, 3) == [
-             PublicRoutes.absolute("/"),
-             PublicRoutes.absolute("/about"),
-             PublicRoutes.absolute("/history")
-           ]
-
-    expected_models =
-      Catalog.list_all_models()
-      |> Enum.sort_by(fn model -> {to_string(model.provider), model.model_id} end)
-      |> Enum.map(fn model -> PublicRoutes.absolute(PublicRoutes.model_path(model)) end)
-
-    assert Enum.drop(locations, 3) == expected_models
-
-    nested_model = Enum.find(Catalog.list_all_models(), &String.contains?(&1.model_id, "/"))
-    assert body =~ PublicRoutes.absolute(PublicRoutes.model_path(nested_model))
-  end
-
-  test "sitemap emits only valid optional lastmod values", %{conn: conn} do
-    body =
-      conn
-      |> get("/sitemap.xml")
-      |> response(200)
-
-    values =
-      Regex.scan(~r/<lastmod>(.*?)<\/lastmod>/, body, capture: :all_but_first)
-      |> Enum.map(fn [value] -> value end)
-
-    refute body =~ "<lastmod></lastmod>"
-
-    assert Enum.all?(values, fn value ->
-             match?({:ok, _date_time, _offset}, DateTime.from_iso8601(value))
-           end)
+    assert SEO.search_indexable_paths() == ["/", "/about"]
+    assert locations == expected_locations
+    refute body =~ "/models/"
+    refute body =~ "/history"
+    refute body =~ "<lastmod>"
   end
 
   test "llms.txt documents Markdown, discovery, and MCP interfaces", %{conn: conn} do

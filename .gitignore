@@ -36,3 +36,6 @@ npm-debug.log
 .elixir_ls
 
 lovable_design
+
+# Local SEO research data, reports, and paid-tool results.
+/seo/

@@ -36,6 +36,7 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert html =~ ~s(property="og:title" content="Recent History")
       assert html =~ ~s(property="og:description" content="Track recent llm_db)
       assert html =~ ~s(property="og:url" content="#{endpoint_url}/history")
+      assert html =~ ~s(name="robots" content="noindex, follow")
     end
 
     test "model detail page has correct OG tags", %{conn: conn} do
@@ -46,6 +47,7 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert html =~ ~s(property="og:title" content="GPT-4o - openai")
       assert html =~ ~s(property="og:description")
       assert html =~ ~s(property="og:url" content="#{endpoint_url}/models/openai/gpt-4o")
+      assert html =~ ~s(name="robots" content="noindex, follow")
     end
 
     test "non-existent model returns a noindex 404 without a canonical", %{conn: conn} do

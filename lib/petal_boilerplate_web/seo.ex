@@ -18,6 +18,7 @@ defmodule PetalBoilerplateWeb.SEO do
   alias PetalBoilerplateWeb.PublicRoutes
 
   @default_description "Browse and compare large language models by provider, capabilities, pricing, modalities, and context windows."
+  @search_indexable_paths ["/", "/about"]
 
   @spec default_description() :: String.t()
   def default_description, do: @default_description
@@ -30,6 +31,22 @@ defmodule PetalBoilerplateWeb.SEO do
       "1",
       "yes"
     ]
+  end
+
+  @doc """
+  Returns the public HTML paths approved for search indexing.
+
+  This list is also the source for the XML sitemap. Add a path only after
+  its page has enough unique content and a clear search purpose.
+  """
+  @spec search_indexable_paths() :: [String.t()]
+  def search_indexable_paths, do: @search_indexable_paths
+
+  @spec search_indexable_path?(String.t()) :: boolean()
+  def search_indexable_path?(path) when is_binary(path) do
+    path
+    |> PublicRoutes.normalize_path()
+    |> then(&Enum.member?(@search_indexable_paths, &1))
   end
 
   def site_config(_conn) do

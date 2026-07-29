@@ -5,7 +5,6 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
 
   use PetalBoilerplateWeb, :controller
 
-  alias PetalBoilerplate.Catalog
   alias PetalBoilerplateWeb.PublicRoutes
   alias PetalBoilerplateWeb.SEO
 
@@ -35,11 +34,8 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
 
   def sitemap(conn, _params) do
     entries =
-      [
-        sitemap_entry("/", nil),
-        sitemap_entry("/about", nil),
-        sitemap_entry("/history", nil)
-      ] ++ model_sitemap_entries()
+      SEO.search_indexable_paths()
+      |> Enum.map(&sitemap_entry/1)
 
     body = """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -126,33 +122,9 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     |> send_resp(200, body)
   end
 
-  defp model_sitemap_entries do
-    Catalog.list_all_models()
-    |> Enum.sort_by(fn model -> {to_string(model.provider), model.model_id} end)
-    |> Enum.map(fn model ->
-      sitemap_entry(
-        PublicRoutes.model_path(model),
-        valid_iso8601(Map.get(model, :__last_changed_at))
-      )
-    end)
-  end
-
-  defp sitemap_entry(path, nil) do
+  defp sitemap_entry(path) do
     "  <url><loc>#{xml_escape(PublicRoutes.absolute(path))}</loc></url>"
   end
-
-  defp sitemap_entry(path, last_modified) do
-    "  <url><loc>#{xml_escape(PublicRoutes.absolute(path))}</loc><lastmod>#{xml_escape(last_modified)}</lastmod></url>"
-  end
-
-  defp valid_iso8601(value) when is_binary(value) do
-    case DateTime.from_iso8601(value) do
-      {:ok, date_time, _offset} -> DateTime.to_iso8601(date_time)
-      _ -> nil
-    end
-  end
-
-  defp valid_iso8601(_value), do: nil
 
   defp feed_item(event) do
     provider = map_get(event, "provider", :provider) || "unknown"

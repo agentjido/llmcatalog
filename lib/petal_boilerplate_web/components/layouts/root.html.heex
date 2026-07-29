@@ -14,6 +14,7 @@
     <% indexing_enabled? = PetalBoilerplateWeb.SEO.indexing_enabled?()
     canonical_status? = is_nil(@conn.status) or @conn.status == 200
     request_path = PetalBoilerplateWeb.PublicRoutes.normalize_path(@conn.request_path)
+    search_indexable_path? = PetalBoilerplateWeb.SEO.search_indexable_path?(request_path)
 
     canonical_url =
       if indexing_enabled? and canonical_status? do
@@ -31,6 +32,9 @@
           |> Enum.map_join(", ", &to_string/1)
 
         @conn.query_string != "" ->
+          "noindex, follow"
+
+        not search_indexable_path? ->
           "noindex, follow"
 
         true ->
