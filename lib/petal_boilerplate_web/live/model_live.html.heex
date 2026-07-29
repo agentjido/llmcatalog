@@ -1,5 +1,35 @@
 <div class="min-h-screen flex flex-col" style="background-color: hsl(var(--background));">
+  <div
+    id="live-seo-metadata"
+    phx-hook="PageMetadata"
+    data-indexing-enabled={to_string(PetalBoilerplateWeb.SEO.indexing_enabled?())}
+    data-page-title={@page_title}
+    data-page-description={@page_description}
+    data-canonical-url={@canonical_url}
+    data-robots={if @robots, do: Enum.map_join(@robots, ", ", &to_string/1)}
+    data-og-image={@og_image}
+    data-structured-data={Jason.encode!(List.wrap(@structured_data))}
+    hidden
+    aria-hidden="true"
+  />
+
   <PetalBoilerplateWeb.ModelComponents.header search_value={@search_value} />
+
+  <section
+    :if={@live_action == :index}
+    class="border-b px-4 py-4 sm:px-6"
+    style="border-color: hsl(var(--border));"
+    aria-labelledby="catalog-heading"
+  >
+    <h1 id="catalog-heading" class="text-xl font-semibold sm:text-2xl">
+      LLM Model Database
+    </h1>
+    <p class="mt-1 max-w-4xl text-sm" style="color: hsl(var(--muted-foreground));">
+      Compare {format_number(@catalog_total)} LLM and AI models across {length(@providers)} providers.
+      Explore pricing, context windows, input and output modalities, and model capabilities.
+    </p>
+  </section>
+
   <PetalBoilerplateWeb.ModelComponents.filter_bar
     filters={@filters}
     providers={@providers}

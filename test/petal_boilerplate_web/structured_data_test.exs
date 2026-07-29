@@ -1,5 +1,5 @@
 defmodule PetalBoilerplateWeb.StructuredDataTest do
-  use PetalBoilerplateWeb.ConnCase, async: true
+  use PetalBoilerplateWeb.ConnCase, async: false
 
   test "home page emits WebSite and Dataset JSON-LD", %{conn: conn} do
     html =
@@ -48,7 +48,7 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
   end
 
   defp json_ld(html) do
-    ~r/<script type="application\/ld\+json">\s*(.*?)\s*<\/script>/s
+    ~r/<script type="application\/ld\+json"[^>]*>\s*(.*?)\s*<\/script>/s
     |> Regex.scan(html, capture: :all_but_first)
     |> Enum.map(fn [json] -> Jason.decode!(json) end)
   end

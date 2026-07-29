@@ -1582,7 +1582,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             </span>
           </div>
 
-          <h2 id="model-detail-title" class="text-2xl font-semibold mb-2">{@model.name}</h2>
+          <h1 id="model-detail-title" class="text-2xl font-semibold mb-2">{@model.name}</h1>
 
           <div class="mb-4">
             <div class="text-xs mb-1" style="color: hsl(var(--muted-foreground));">Model Spec</div>
