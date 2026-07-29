@@ -1,5 +1,5 @@
 defmodule PetalBoilerplateWeb.StructuredDataTest do
-  use PetalBoilerplateWeb.ConnCase, async: true
+  use PetalBoilerplateWeb.ConnCase, async: false
 
   test "home page emits WebSite and Dataset JSON-LD", %{conn: conn} do
     html =
