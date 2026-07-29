@@ -3,6 +3,8 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   alias PetalBoilerplate.Catalog
   alias PetalBoilerplate.Catalog.Filters
+  alias PetalBoilerplateWeb.PublicRoutes
+  alias PetalBoilerplateWeb.SEO
 
   @impl true
   def handle_params(params, _uri, socket) do
@@ -422,15 +424,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
   end
 
   defp model_show_path(model) do
-    provider = URI.encode(to_string(model.provider))
-
-    encoded_model_id =
-      model.model_id
-      |> String.split("/")
-      |> Enum.map(&URI.encode/1)
-      |> Enum.join("/")
-
-    "/models/#{provider}/#{encoded_model_id}"
+    PublicRoutes.model_path(model)
   end
 
   defp history_module do
@@ -581,13 +575,15 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   defp assign_og_meta(socket, :index, _model) do
     model_count = Catalog.total_model_count()
+    provider_count = length(Catalog.list_providers())
 
     assign(socket,
       page_title: "LLM Model Database",
       page_description:
         "Browse and compare #{format_number(model_count)} LLM models. Filter by provider, capabilities, pricing, modalities, and context windows.",
-      og_url: "https://llmdb.xyz/",
-      og_image: "https://llmdb.xyz/og/home.png"
+      canonical_url: PublicRoutes.absolute("/"),
+      og_image: PublicRoutes.absolute("/og/home.png"),
+      structured_data: SEO.home_structured_data(model_count, provider_count)
     )
   end
 
@@ -595,8 +591,10 @@ defmodule PetalBoilerplateWeb.ModelLive do
     assign(socket,
       page_title: "Model Not Found",
       page_description: "The requested model could not be found.",
-      og_url: "https://llmdb.xyz/",
-      og_image: "https://llmdb.xyz/og/default.png"
+      robots: ["noindex", "nofollow"],
+      canonical_url: nil,
+      og_image: PublicRoutes.absolute("/og/default.png"),
+      structured_data: []
     )
   end
 
@@ -610,8 +608,9 @@ defmodule PetalBoilerplateWeb.ModelLive do
     assign(socket,
       page_title: title,
       page_description: description,
-      og_url: "https://llmdb.xyz/models/#{model.provider}/#{model_id}",
-      og_image: "https://llmdb.xyz/og/model/#{model.provider}/#{model_id}.png"
+      canonical_url: PublicRoutes.absolute(PublicRoutes.model_path(model.provider, model_id)),
+      og_image: PublicRoutes.absolute(PublicRoutes.model_og_path(model.provider, model_id)),
+      structured_data: SEO.model_structured_data(model, description)
     )
   end
 
@@ -632,14 +631,14 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
     parts =
       if cost_in do
-        parts ++ ["$#{Catalog.format_cost(cost_in)}/M input"]
+        parts ++ ["#{Catalog.format_cost(cost_in)}/M input"]
       else
         parts
       end
 
     parts =
       if cost_out do
-        parts ++ ["$#{Catalog.format_cost(cost_out)}/M output"]
+        parts ++ ["#{Catalog.format_cost(cost_out)}/M output"]
       else
         parts
       end

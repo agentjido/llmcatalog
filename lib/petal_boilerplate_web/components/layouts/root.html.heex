@@ -11,33 +11,81 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <.live_title suffix=" · llmdb.xyz">
-      {assigns[:page_title] || "LLM Model Database"}
-    </.live_title>
+    <% indexing_enabled? = PetalBoilerplateWeb.SEO.indexing_enabled?()
+    canonical_status? = is_nil(@conn.status) or @conn.status == 200
+    request_path = PetalBoilerplateWeb.PublicRoutes.normalize_path(@conn.request_path)
+    search_indexable_path? = PetalBoilerplateWeb.SEO.search_indexable_path?(request_path)
 
-    <%!-- OpenGraph / Social Media Tags --%>
-    <meta property="og:title" content={assigns[:page_title] || "LLM Model Database"} />
-    <meta property="og:description" content={assigns[:page_description] || "LLM Model Database"} />
-    <meta property="og:type" content={assigns[:og_type] || "website"} />
-    <meta property="og:url" content={assigns[:og_url] || "https://llmdb.xyz"} />
-    <meta
-      property="og:image"
-      content={assigns[:og_image] || "https://llmdb.xyz/images/og-image.png"}
+    canonical_url =
+      if indexing_enabled? and canonical_status? do
+        assigns[:canonical_url] || PetalBoilerplateWeb.PublicRoutes.absolute(request_path)
+      end
+
+    robots =
+      cond do
+        not indexing_enabled? ->
+          "noindex, nofollow"
+
+        value = assigns[:robots] ->
+          value
+          |> List.wrap()
+          |> Enum.map_join(", ", &to_string/1)
+
+        @conn.query_string != "" ->
+          "noindex, follow"
+
+        not search_indexable_path? ->
+          "noindex, follow"
+
+        true ->
+          nil
+      end
+
+    page_title = assigns[:page_title]
+    page_description = assigns[:page_description] || PetalBoilerplateWeb.SEO.default_description()
+
+    seo_item = %{
+      title: page_title,
+      description: page_description,
+      canonical_url: canonical_url,
+      url: canonical_url,
+      robots: robots
+    }
+
+    og_image =
+      assigns[:og_image] ||
+        PetalBoilerplateWeb.PublicRoutes.absolute("/og/default.png")
+
+    structured_data =
+      assigns
+      |> Map.get(:structured_data, [])
+      |> List.wrap()
+      |> Enum.reject(&is_nil/1)
+      |> Enum.map(&Jason.encode!/1) %>
+
+    <SEO.juice
+      conn={@conn}
+      config={PetalBoilerplateWeb.SEO.config()}
+      page_title={page_title}
+      item={seo_item}
     />
+
+    <meta property="og:image" content={og_image} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-
-    <%!-- Twitter Card Tags --%>
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={assigns[:page_title] || "LLM Model Database"} />
-    <meta name="twitter:description" content={assigns[:page_description] || "LLM Model Database"} />
-    <meta
-      name="twitter:image"
-      content={assigns[:og_image] || "https://llmdb.xyz/images/og-image.png"}
+    <meta name="twitter:image" content={og_image} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="llmdb.xyz Model History"
+      href={PetalBoilerplateWeb.PublicRoutes.absolute("/feed")}
     />
 
-    <%!-- Standard Meta Tags --%>
-    <meta name="description" content={assigns[:page_description] || "LLM Model Database"} />
+    <%= for json <- structured_data do %>
+      <script type="application/ld+json">
+        <%= Phoenix.HTML.raw(json) %>
+      </script>
+    <% end %>
 
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
 

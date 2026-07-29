@@ -12,6 +12,7 @@ defmodule PetalBoilerplateWeb.Endpoint do
   ]
   plug PetalBoilerplateWeb.Plug.Heartbeat
   plug(:canonical_host)
+  plug PetalBoilerplateWeb.Plugs.SearchIndexing
 
   defp canonical_host(conn, _opts) do
     :petal_boilerplate

@@ -4,6 +4,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   alias PetalBoilerplate.Catalog
   alias PetalBoilerplate.Catalog.Filters
   alias PetalBoilerplateWeb.ModelLive
+  alias PetalBoilerplateWeb.PublicRoutes
 
   # =============================================================================
   # Task 2.1: Header Component
@@ -1516,15 +1517,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   end
 
   defp model_detail_path(model) do
-    provider = URI.encode(to_string(model.provider))
-
-    model_id =
-      model.model_id
-      |> String.split("/")
-      |> Enum.map(&URI.encode/1)
-      |> Enum.join("/")
-
-    "/models/#{provider}/#{model_id}"
+    PublicRoutes.model_path(model)
   end
 
   # =============================================================================
