@@ -41,7 +41,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
     socket =
       socket
-      |> assign_og_meta(:index, nil)
+      |> assign_og_meta(:index, nil, params)
       |> assign(selected_model: nil)
       |> clear_history_assigns()
 
@@ -73,7 +73,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
     {:ok,
      socket
-     |> assign_og_meta(:index, nil)
+     |> assign_og_meta(:index, nil, params)
      |> assign(
        providers: providers,
        models: page_models,
@@ -573,7 +573,9 @@ defmodule PetalBoilerplateWeb.ModelLive do
   def format_number(value), do: Catalog.format_number(value)
   def format_cost(value), do: Catalog.format_cost(value)
 
-  defp assign_og_meta(socket, :index, _model) do
+  defp assign_og_meta(socket, action, model), do: assign_og_meta(socket, action, model, %{})
+
+  defp assign_og_meta(socket, :index, _model, params) do
     model_count = Catalog.total_model_count()
     provider_count = length(Catalog.list_providers())
 
@@ -583,11 +585,12 @@ defmodule PetalBoilerplateWeb.ModelLive do
         "Browse and compare #{format_number(model_count)} LLM models. Filter by provider, capabilities, pricing, modalities, and context windows.",
       canonical_url: PublicRoutes.absolute("/"),
       og_image: PublicRoutes.absolute("/og/home.png"),
+      robots: if(map_size(params) > 0, do: ["noindex", "follow"]),
       structured_data: SEO.home_structured_data(model_count, provider_count)
     )
   end
 
-  defp assign_og_meta(socket, :show, nil) do
+  defp assign_og_meta(socket, :show, nil, _params) do
     assign(socket,
       page_title: "Model Not Found",
       page_description: "The requested model could not be found.",
@@ -598,7 +601,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
     )
   end
 
-  defp assign_og_meta(socket, :show, model) do
+  defp assign_og_meta(socket, :show, model, _params) do
     model_id = Map.get(model, :model_id) || model.id
     title = "#{model.name || model_id} - #{model.provider}"
 
@@ -610,6 +613,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
       page_description: description,
       canonical_url: PublicRoutes.absolute(PublicRoutes.model_path(model.provider, model_id)),
       og_image: PublicRoutes.absolute(PublicRoutes.model_og_path(model.provider, model_id)),
+      robots: ["noindex", "follow"],
       structured_data: SEO.model_structured_data(model, description)
     )
   end

@@ -48,7 +48,7 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
   end
 
   defp json_ld(html) do
-    ~r/<script type="application\/ld\+json">\s*(.*?)\s*<\/script>/s
+    ~r/<script type="application\/ld\+json"[^>]*>\s*(.*?)\s*<\/script>/s
     |> Regex.scan(html, capture: :all_but_first)
     |> Enum.map(fn [json] -> Jason.decode!(json) end)
   end

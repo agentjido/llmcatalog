@@ -82,7 +82,7 @@
     />
 
     <%= for json <- structured_data do %>
-      <script type="application/ld+json">
+      <script type="application/ld+json" data-seo-structured-data>
         <%= Phoenix.HTML.raw(json) %>
       </script>
     <% end %>

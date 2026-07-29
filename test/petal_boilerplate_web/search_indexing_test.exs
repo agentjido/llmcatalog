@@ -19,6 +19,7 @@ defmodule PetalBoilerplateWeb.SearchIndexingTest do
 
     assert get_resp_header(conn, "x-robots-tag") == ["noindex, nofollow"]
     assert html =~ ~s(name="robots" content="noindex, nofollow")
+    assert html =~ ~s(data-indexing-enabled="false")
     refute html =~ ~s(rel="canonical")
   end
 

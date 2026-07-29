@@ -16,6 +16,8 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert html =~ ~s(property="og:type" content="website")
       assert html =~ ~s(property="og:image")
       assert html =~ ~s(rel="canonical" href="#{endpoint_url}/")
+      assert heading_texts(html, "h1") == ["LLM Model Database"]
+      assert html =~ "LLM and AI models across"
     end
 
     test "about page has correct OG tags", %{conn: conn} do
@@ -48,6 +50,7 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert html =~ ~s(property="og:description")
       assert html =~ ~s(property="og:url" content="#{endpoint_url}/models/openai/gpt-4o")
       assert html =~ ~s(name="robots" content="noindex, follow")
+      assert heading_texts(html, "h1") == ["GPT-4o"]
     end
 
     test "non-existent model returns a noindex 404 without a canonical", %{conn: conn} do
@@ -97,5 +100,12 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert length(Regex.scan(~r/<link rel="canonical"/, html)) == 1
       assert length(Regex.scan(~r/<meta name="twitter:card"/, html)) == 1
     end
+  end
+
+  defp heading_texts(html, selector) do
+    html
+    |> Floki.parse_document!()
+    |> Floki.find(selector)
+    |> Enum.map(&(&1 |> Floki.text() |> String.trim()))
   end
 end
