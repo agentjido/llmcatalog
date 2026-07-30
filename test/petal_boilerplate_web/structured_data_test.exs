@@ -47,6 +47,48 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     assert Enum.map(history, & &1["@type"]) == ["CollectionPage"]
   end
 
+  test "LLM models list emits a CollectionPage with an ItemList", %{conn: conn} do
+    [schema, breadcrumb] =
+      conn
+      |> get("/llm-models")
+      |> html_response(200)
+      |> json_ld()
+
+    assert schema["@type"] == "CollectionPage"
+    assert schema["url"] == PetalBoilerplateWeb.Endpoint.url() <> "/llm-models"
+    assert "LLM models list" in schema["keywords"]
+    assert schema["mainEntity"]["@type"] == "ItemList"
+    assert schema["mainEntity"]["numberOfItems"] > 0
+    assert length(schema["mainEntity"]["itemListElement"]) == 50
+    assert breadcrumb["@type"] == "BreadcrumbList"
+
+    assert Enum.map(breadcrumb["itemListElement"], & &1["name"]) == [
+             "LLM Model Database",
+             "LLM Models List"
+           ]
+  end
+
+  test "catalog landing pages emit CollectionPage and ItemList data", %{conn: conn} do
+    [schema, breadcrumb] =
+      conn
+      |> get("/models/vision")
+      |> html_response(200)
+      |> json_ld()
+
+    assert schema["@type"] == "CollectionPage"
+    assert schema["url"] == PetalBoilerplateWeb.Endpoint.url() <> "/models/vision"
+    assert schema["mainEntity"]["@type"] == "ItemList"
+    assert schema["mainEntity"]["numberOfItems"] > 0
+    assert length(schema["mainEntity"]["itemListElement"]) == 50
+    assert breadcrumb["@type"] == "BreadcrumbList"
+
+    assert Enum.map(breadcrumb["itemListElement"], & &1["name"]) == [
+             "LLM Model Database",
+             "LLM Models List",
+             "Vision LLM Models"
+           ]
+  end
+
   defp json_ld(html) do
     ~r/<script type="application\/ld\+json"[^>]*>\s*(.*?)\s*<\/script>/s
     |> Regex.scan(html, capture: :all_but_first)

@@ -2,6 +2,7 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
   use PetalBoilerplateWeb.ConnCase, async: true
 
   alias PetalBoilerplate.Catalog
+  alias PetalBoilerplate.Catalog.LandingPages
   alias PetalBoilerplateWeb.PublicRoutes
 
   test "HTML pages advertise llms.txt and their Markdown copy", %{conn: conn} do
@@ -44,6 +45,7 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
   test "explicit Markdown routes return deterministic page equivalents", %{conn: conn} do
     for {path, expected} <- [
           {"/index.md", "# LLM Model Database"},
+          {"/llm-models.md", "# LLM Models List"},
           {"/about.md", "# About llmdb.xyz"},
           {"/history.md", "# Recent LLM Model History"}
         ] do
@@ -53,6 +55,8 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
       assert get_resp_header(response_conn, "content-type") |> hd() =~ "text/markdown"
       assert get_resp_header(response_conn, "x-robots-tag") == ["noindex"]
     end
+
+    assert get(conn, "/llm-models.md") |> response(200) =~ "## Limits of the data"
   end
 
   test "explicit Markdown supports model IDs with nested path segments", %{conn: conn} do
@@ -63,6 +67,19 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
 
     assert response(response_conn, 200) =~ "Model ID: `#{model.model_id}`"
     assert get_resp_header(response_conn, "content-type") |> hd() =~ "text/markdown"
+  end
+
+  test "all catalog landing pages provide explicit Markdown copies", %{conn: conn} do
+    for route <- LandingPages.routes() do
+      response_conn = conn |> recycle() |> get(route <> ".md")
+      body = response(response_conn, 200)
+
+      assert get_resp_header(response_conn, "content-type") |> hd() =~ "text/markdown"
+      assert get_resp_header(response_conn, "x-robots-tag") == ["noindex"]
+      assert body =~ "## Sources"
+      assert body =~ "## Related LLM model lists"
+      assert body =~ "Canonical URL: #{PublicRoutes.absolute(route)}"
+    end
   end
 
   test "query variants negotiate the base Markdown representation", %{conn: conn} do

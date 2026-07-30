@@ -89,6 +89,22 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         </a>
 
         <a
+          href="/llm-models"
+          class="text-sm hidden sm:block transition-colors hover:opacity-80"
+          style="color: hsl(var(--muted-foreground));"
+        >
+          LLM list
+        </a>
+
+        <a
+          href="/rankings/ai-models"
+          class="text-sm hidden lg:block transition-colors hover:opacity-80"
+          style="color: hsl(var(--muted-foreground));"
+        >
+          Rankings
+        </a>
+
+        <a
           href="/history"
           class="text-sm hidden sm:block transition-colors hover:opacity-80"
           style="color: hsl(var(--muted-foreground));"
@@ -156,7 +172,16 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               class="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-md border shadow-lg"
               style="border-color: hsl(var(--border)); background-color: hsl(var(--popover)); color: hsl(var(--popover-foreground));"
             >
-              <a href="/" class="block px-4 py-2.5 text-sm hover:opacity-80">Models</a>
+              <a href="/" class="block px-4 py-2.5 text-sm hover:opacity-80">Catalog</a>
+              <a href="/llm-models" class="block px-4 py-2.5 text-sm hover:opacity-80">
+                LLM models list
+              </a>
+              <a
+                href="/rankings/ai-models"
+                class="block px-4 py-2.5 text-sm hover:opacity-80"
+              >
+                AI model rankings
+              </a>
               <a href="/history" class="block px-4 py-2.5 text-sm hover:opacity-80">History</a>
               <a href="/about" class="block px-4 py-2.5 text-sm hover:opacity-80">About</a>
               <a

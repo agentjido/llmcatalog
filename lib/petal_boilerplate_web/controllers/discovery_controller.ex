@@ -67,6 +67,14 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     ## Public content
 
     - Catalog: #{endpoint_url}/
+    - Deduplicated LLM models list: #{endpoint_url}/llm-models
+    - AI model rankings: #{endpoint_url}/rankings/ai-models
+    - Cheapest LLM APIs: #{endpoint_url}/rankings/cheapest-llm-api
+    - Vision LLM models: #{endpoint_url}/models/vision
+    - Tool-calling LLM models: #{endpoint_url}/models/tool-calling
+    - Largest context window LLMs: #{endpoint_url}/models/long-context
+    - Open-weight LLM models: #{endpoint_url}/models/open-weights
+    - Video AI models: #{endpoint_url}/models/video
     - About: #{endpoint_url}/about
     - Recent history: #{endpoint_url}/history
     - Model pages: #{endpoint_url}/models/:provider/:model_id

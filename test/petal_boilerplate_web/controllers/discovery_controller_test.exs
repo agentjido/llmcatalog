@@ -3,6 +3,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
 
   alias PetalBoilerplateWeb.PublicRoutes
   alias PetalBoilerplateWeb.SEO
+  alias PetalBoilerplate.Catalog.LandingPages
 
   defmodule FeedHistory do
     def recent(50) do
@@ -82,11 +83,26 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     expected_locations =
       Enum.map(SEO.search_indexable_paths(), &PublicRoutes.absolute/1)
 
-    assert SEO.search_indexable_paths() == ["/", "/about"]
+    assert SEO.search_indexable_paths() == [
+             "/",
+             "/about",
+             "/llm-models",
+             "/rankings/ai-models",
+             "/rankings/cheapest-llm-api",
+             "/models/vision",
+             "/models/tool-calling",
+             "/models/long-context",
+             "/models/open-weights",
+             "/models/video"
+           ]
+
     assert locations == expected_locations
-    refute body =~ "/models/"
     refute body =~ "/history"
     refute body =~ "<lastmod>"
+
+    for route <- LandingPages.routes() do
+      assert body =~ PublicRoutes.absolute(route)
+    end
   end
 
   test "llms.txt documents Markdown, discovery, and MCP interfaces", %{conn: conn} do
@@ -96,6 +112,14 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert body =~ "Accept: text/markdown"
     assert body =~ PublicRoutes.absolute("/sitemap.xml")
     assert body =~ PublicRoutes.absolute("/feed")
+    assert body =~ PublicRoutes.absolute("/llm-models")
+    assert body =~ PublicRoutes.absolute("/rankings/ai-models")
+    assert body =~ PublicRoutes.absolute("/rankings/cheapest-llm-api")
+    assert body =~ PublicRoutes.absolute("/models/vision")
+    assert body =~ PublicRoutes.absolute("/models/tool-calling")
+    assert body =~ PublicRoutes.absolute("/models/long-context")
+    assert body =~ PublicRoutes.absolute("/models/open-weights")
+    assert body =~ PublicRoutes.absolute("/models/video")
     assert body =~ PublicRoutes.absolute("/api/mcp")
     assert body =~ "query_models"
     assert get_resp_header(conn, "x-robots-tag") == ["noindex"]

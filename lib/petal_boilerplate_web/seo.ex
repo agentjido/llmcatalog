@@ -15,10 +15,23 @@ defmodule PetalBoilerplateWeb.SEO do
       ),
     twitter: SEO.Twitter.build(card: :summary_large_image)
 
+  alias PetalBoilerplate.SEOContent.Page
+  alias PetalBoilerplateWeb.LandingLinks
   alias PetalBoilerplateWeb.PublicRoutes
 
   @default_description "Browse and compare large language models by provider, capabilities, pricing, modalities, and context windows."
-  @search_indexable_paths ["/", "/about"]
+  @search_indexable_paths [
+    "/",
+    "/about",
+    "/llm-models",
+    "/rankings/ai-models",
+    "/rankings/cheapest-llm-api",
+    "/models/vision",
+    "/models/tool-calling",
+    "/models/long-context",
+    "/models/open-weights",
+    "/models/video"
+  ]
 
   @spec default_description() :: String.t()
   def default_description, do: @default_description
@@ -118,6 +131,87 @@ defmodule PetalBoilerplateWeb.SEO do
     ]
   end
 
+  @spec llm_models_list_structured_data(map(), PetalBoilerplate.SEOContent.Page.t()) ::
+          [map()]
+  def llm_models_list_structured_data(snapshot, page) do
+    page_url = PublicRoutes.absolute("/llm-models")
+    description = Page.seo_description(page)
+    title = Page.seo_title(page)
+
+    items =
+      snapshot.entries
+      |> Enum.with_index(1)
+      |> Enum.map(fn {entry, position} ->
+        %{
+          "@type" => "ListItem",
+          "position" => position,
+          "name" => entry.name,
+          "url" => PublicRoutes.absolute(PublicRoutes.model_path(entry.representative))
+        }
+      end)
+
+    collection_page =
+      compact_map(%{
+        "@context" => "https://schema.org",
+        "@type" => "CollectionPage",
+        "name" => title,
+        "description" => description,
+        "url" => page_url,
+        "dateModified" => snapshot.last_updated,
+        "keywords" => page.seo.related_terms,
+        "mainEntity" => %{
+          "@type" => "ItemList",
+          "name" => title,
+          "numberOfItems" => snapshot.model_identity_count,
+          "itemListElement" => items
+        }
+      })
+
+    [collection_page, breadcrumb_structured_data("/llm-models")]
+  end
+
+  @spec catalog_landing_structured_data(map(), PetalBoilerplate.SEOContent.Page.t()) ::
+          [map()]
+  def catalog_landing_structured_data(snapshot, page) do
+    page_url = PublicRoutes.absolute(page.route)
+
+    items =
+      snapshot.sections
+      |> Enum.flat_map(& &1.entries)
+      |> Enum.uniq_by(fn entry ->
+        {entry.representative.provider, entry.representative.model_id}
+      end)
+      |> Enum.take(50)
+      |> Enum.with_index(1)
+      |> Enum.map(fn {entry, position} ->
+        %{
+          "@type" => "ListItem",
+          "position" => position,
+          "name" => entry.name,
+          "url" => PublicRoutes.absolute(PublicRoutes.model_path(entry.representative))
+        }
+      end)
+
+    collection_page =
+      compact_map(%{
+        "@context" => "https://schema.org",
+        "@type" => "CollectionPage",
+        "name" => Page.seo_title(page),
+        "description" => Page.seo_description(page),
+        "url" => page_url,
+        "dateModified" => snapshot.last_updated,
+        "keywords" => page.seo.related_terms,
+        "mainEntity" => %{
+          "@type" => "ItemList",
+          "name" => page.title,
+          "numberOfItems" => snapshot.total_count,
+          "itemListElement" => items
+        }
+      })
+
+    [collection_page, breadcrumb_structured_data(page.route)]
+  end
+
   @spec model_structured_data(map(), String.t()) :: [map()]
   def model_structured_data(model, description) do
     model_url = PublicRoutes.absolute(PublicRoutes.model_path(model))
@@ -181,6 +275,27 @@ defmodule PetalBoilerplateWeb.SEO do
       |> Phoenix.Naming.humanize()
     end)
     |> Enum.sort()
+  end
+
+  defp breadcrumb_structured_data(route) do
+    items =
+      route
+      |> LandingLinks.breadcrumbs_for()
+      |> Enum.with_index(1)
+      |> Enum.map(fn {item, position} ->
+        %{
+          "@type" => "ListItem",
+          "position" => position,
+          "name" => item.label,
+          "item" => PublicRoutes.absolute(item.route)
+        }
+      end)
+
+    %{
+      "@context" => "https://schema.org",
+      "@type" => "BreadcrumbList",
+      "itemListElement" => items
+    }
   end
 
   defp compact_map(map) do

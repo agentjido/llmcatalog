@@ -26,6 +26,14 @@ defmodule PetalBoilerplateWeb.Router do
     pipe_through :browser
 
     live "/", ModelLive, :index
+    live "/llm-models", LLMModelsLive, :index
+    live "/rankings/cheapest-llm-api", CatalogLandingLive, :cheapest
+    live "/rankings/ai-models", CatalogLandingLive, :ai_models
+    live "/models/vision", CatalogLandingLive, :vision
+    live "/models/tool-calling", CatalogLandingLive, :tool_calling
+    live "/models/long-context", CatalogLandingLive, :long_context
+    live "/models/open-weights", CatalogLandingLive, :open_weights
+    live "/models/video", CatalogLandingLive, :video
     live "/history", HistoryLive, :index
     live "/about", AboutLive, :index
 

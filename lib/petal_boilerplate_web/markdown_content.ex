@@ -4,26 +4,41 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
   """
 
   alias PetalBoilerplate.Catalog
+  alias PetalBoilerplate.Catalog.LandingPages
+  alias PetalBoilerplate.Catalog.LLMModelsList
+  alias PetalBoilerplate.SEOContent
+  alias PetalBoilerplateWeb.LandingLinks
   alias PetalBoilerplateWeb.PublicRoutes
 
   @history_limit 50
 
   @spec eligible_public_path?(String.t()) :: boolean()
-  def eligible_public_path?(path) when path in ["/", "/about", "/history"], do: true
+  def eligible_public_path?(path) when path in ["/", "/about", "/history", "/llm-models"],
+    do: true
 
   def eligible_public_path?(path) when is_binary(path) do
-    match?({:ok, _model}, PublicRoutes.model_from_path(path))
+    not is_nil(SEOContent.get_page(path)) or
+      match?({:ok, _model}, PublicRoutes.model_from_path(path))
   end
 
   @spec resolve(String.t(), String.t()) :: {:ok, String.t()} | :no_match
   def resolve("/", canonical_url), do: {:ok, home_markdown(canonical_url)}
   def resolve("/about", canonical_url), do: {:ok, about_markdown(canonical_url)}
   def resolve("/history", canonical_url), do: {:ok, history_markdown(canonical_url)}
+  def resolve("/llm-models", canonical_url), do: {:ok, llm_models_markdown(canonical_url)}
 
   def resolve(path, canonical_url) do
-    case PublicRoutes.model_from_path(path) do
-      {:ok, model} -> {:ok, model_markdown(model, canonical_url)}
-      :error -> :no_match
+    with nil <- SEOContent.get_page(path) do
+      case PublicRoutes.model_from_path(path) do
+        {:ok, model} -> {:ok, model_markdown(model, canonical_url)}
+        :error -> :no_match
+      end
+    else
+      page ->
+        case LandingPages.action_for_route(page.route) do
+          {:ok, action} -> {:ok, catalog_landing_markdown(action, page, canonical_url)}
+          :error -> :no_match
+        end
     end
   end
 
@@ -40,6 +55,14 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     Filter models by provider, capabilities, pricing, modalities, context windows, and output limits.
 
     - [Browse models](#{canonical_url})
+    - [Deduplicated LLM models list](#{endpoint_url}/llm-models)
+    - [AI model rankings](#{endpoint_url}/rankings/ai-models)
+    - [Cheapest LLM APIs](#{endpoint_url}/rankings/cheapest-llm-api)
+    - [Vision LLM models](#{endpoint_url}/models/vision)
+    - [Tool-calling LLM models](#{endpoint_url}/models/tool-calling)
+    - [Largest context window LLMs](#{endpoint_url}/models/long-context)
+    - [Open-weight LLM models](#{endpoint_url}/models/open-weights)
+    - [Video AI models](#{endpoint_url}/models/video)
     - [About llmdb.xyz](#{endpoint_url}/about)
     - [Recent model history](#{endpoint_url}/history)
     - [XML sitemap](#{endpoint_url}/sitemap.xml)
@@ -97,6 +120,52 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     """
   end
 
+  defp llm_models_markdown(canonical_url) do
+    snapshot = LLMModelsList.snapshot()
+    page = SEOContent.get_page!("/llm-models")
+
+    rows =
+      snapshot.entries
+      |> Enum.map(fn entry ->
+        model_url = PublicRoutes.absolute(PublicRoutes.model_path(entry.representative))
+
+        "| [#{markdown_escape(entry.name)}](#{model_url}) | `#{markdown_escape(entry.model_id)}` | #{entry.provider_count} | #{number_or_na(entry.context)} | #{cost_or_na(entry.cost_in)} / #{cost_or_na(entry.cost_out)} | #{value_or_na(entry.last_updated)} |"
+      end)
+      |> Enum.join("\n")
+
+    """
+    # #{page.title}
+
+    #{page.description}
+
+    - Active LLM model IDs: #{Catalog.format_number(snapshot.model_identity_count)}
+    - Executable provider offers: #{Catalog.format_number(snapshot.eligible_offer_count)}
+    - API providers: #{snapshot.provider_count}
+    - Complete catalog records: #{Catalog.format_number(snapshot.catalog_offer_count)}
+    - Latest recorded update: #{value_or_na(snapshot.last_updated)}
+
+    #{methodology_markdown(page.methodology)}
+
+    #{String.trim(page.markdown)}
+
+    #{sources_markdown(page.sources)}
+
+    ## Recently updated models
+
+    | Model | Model ID | Offers | Context | Input / output per 1M tokens | Updated |
+    | --- | --- | ---: | ---: | ---: | --- |
+    #{rows}
+
+    #{LandingLinks.markdown_for(page.route)}
+
+    Canonical URL: #{canonical_url}
+
+    Full catalog: #{PetalBoilerplateWeb.Endpoint.url()}/
+
+    MCP endpoint: `#{PetalBoilerplateWeb.Endpoint.url()}/api/mcp`
+    """
+  end
+
   defp model_markdown(model, canonical_url) do
     model_id = model.model_id
     title = model.name || model_id
@@ -123,6 +192,130 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     Canonical URL: #{canonical_url}
     """
   end
+
+  defp catalog_landing_markdown(action, page, canonical_url) do
+    snapshot = LandingPages.snapshot(action, 1)
+
+    sections =
+      snapshot.sections
+      |> Enum.map_join("\n\n", fn section ->
+        rows =
+          section.entries
+          |> Enum.map_join("\n", fn entry ->
+            model_url = PublicRoutes.absolute(PublicRoutes.model_path(entry.representative))
+            providers = entry.providers |> Enum.join(", ") |> markdown_escape()
+
+            "| [#{markdown_escape(entry.name)}](#{model_url}) | `#{markdown_escape(entry.model_id)}` | #{providers} | #{markdown_escape(entry.reason)} | #{number_or_na(entry.context)} | #{landing_price(entry, action)} | #{value_or_na(entry.last_updated)} |"
+          end)
+
+        """
+        ## #{section.title}
+
+        #{section.description}
+
+        Showing #{length(section.entries)} of #{section.total_count} records.
+
+        | Model | Model ID | Providers | Why listed | Context | Input / output price | Updated |
+        | --- | --- | --- | --- | ---: | ---: | --- |
+        #{rows}
+        """
+        |> String.trim()
+      end)
+
+    """
+    # #{page.title}
+
+    #{page.description}
+
+    - #{page.search.primary_keyword}
+    - Records in this view: #{Catalog.format_number(snapshot.total_count)}
+    - Providers shown: #{snapshot.provider_count}
+    - Latest recorded update: #{value_or_na(snapshot.last_updated)}
+
+    #{methodology_markdown(page.methodology)}
+
+    #{String.trim(page.markdown)}
+
+    #{sections}
+
+    #{sources_markdown(page.sources)}
+
+    #{LandingLinks.markdown_for(page.route)}
+
+    Canonical URL: #{canonical_url}
+
+    MCP endpoint: `#{PetalBoilerplateWeb.Endpoint.url()}/api/mcp`
+    """
+  end
+
+  defp landing_price(_entry, :video), do: "See model record"
+
+  defp landing_price(entry, _action) do
+    "#{cost_or_na(entry.cost_in)} / #{cost_or_na(entry.cost_out)}"
+  end
+
+  defp methodology_markdown(methodology) do
+    inclusion = markdown_list(methodology.inclusion_criteria)
+    exclusions = optional_markdown_section("### Exclusions", methodology.exclusion_criteria)
+
+    rules =
+      methodology.rules
+      |> Enum.map_join("\n", fn rule ->
+        "- **#{rule.label}:** #{rule.description}"
+      end)
+
+    caveats = optional_markdown_section("### Limits of the data", methodology.caveats)
+
+    """
+    ## #{methodology.name}
+
+    #{methodology.summary}
+
+    ### Inclusion criteria
+
+    #{inclusion}
+
+    #{exclusions}
+
+    ### Data rules
+
+    #{rules}
+
+    #{caveats}
+    """
+    |> String.trim()
+  end
+
+  defp sources_markdown(sources) do
+    items =
+      Enum.map_join(sources, "\n", fn source ->
+        note = if source.note, do: " — #{source.note}", else: ""
+
+        "- [#{source.name}](#{source.url})#{note} Checked #{Date.to_iso8601(source.retrieved_at)}."
+      end)
+
+    """
+    ## Sources
+
+    #{items}
+
+    See [About llmdb.xyz](#{PetalBoilerplateWeb.Endpoint.url()}/about) for more information about the data.
+    """
+    |> String.trim()
+  end
+
+  defp optional_markdown_section(_heading, []), do: ""
+
+  defp optional_markdown_section(heading, items) do
+    """
+    #{heading}
+
+    #{markdown_list(items)}
+    """
+    |> String.trim()
+  end
+
+  defp markdown_list(items), do: Enum.map_join(items, "\n", &"- #{&1}")
 
   defp format_history_event(event) do
     provider = map_get(event, "provider", :provider) || "unknown"
@@ -154,7 +347,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
   defp number_or_na(value) when is_integer(value) and value > 0, do: Catalog.format_number(value)
   defp number_or_na(_value), do: "N/A"
 
-  defp cost_or_na(value) when is_number(value), do: Catalog.format_cost(value)
+  defp cost_or_na(value) when is_number(value) and value >= 0, do: Catalog.format_cost(value)
   defp cost_or_na(_value), do: "N/A"
 
   defp yes_no(true), do: "Yes"
@@ -165,6 +358,14 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
   defp list_or_na(nil), do: "N/A"
   defp list_or_na(values) when is_list(values), do: values |> Enum.map_join(", ", &to_string/1)
   defp list_or_na(value), do: to_string(value)
+
+  defp markdown_escape(value) do
+    value
+    |> to_string()
+    |> String.replace("\\", "\\\\")
+    |> String.replace("|", "\\|")
+    |> String.replace("`", "\\`")
+  end
 
   defp map_get(nil, _string_key, _atom_key), do: nil
 

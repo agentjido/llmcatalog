@@ -70,6 +70,10 @@ defmodule PetalBoilerplate.MixProject do
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
 
+      # Editorial content
+      {:nimble_publisher, "~> 2.0"},
+      {:zoi, "~> 0.18"},
+
       # Domain
       {:llm_db, "~> 2026.7"},
 
