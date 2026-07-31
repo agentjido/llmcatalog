@@ -61,7 +61,7 @@
     rules: [
       %{
         label: "Grouping",
-        description: "Provider offers are grouped conservatively by normalized model ID. A vendor prefix is removed only when the remaining ID is specific and agrees with the model name."
+        description: "Provider offers are grouped by a conservative normalized model ID and by explicit aliases from the model database. A vendor prefix is removed only when the remaining ID is specific and agrees with the model name."
       },
       %{
         label: "Context limits",

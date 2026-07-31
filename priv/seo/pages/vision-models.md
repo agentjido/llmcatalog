@@ -49,7 +49,7 @@
       },
       %{
         label: "Grouping",
-        description: "Provider offers are grouped by the conservative model identity rule used by the LLM models directory."
+        description: "Provider offers are grouped by the conservative model ID and database alias rules used by the LLM models directory."
       }
     ],
     caveats: [

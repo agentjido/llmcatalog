@@ -41,6 +41,65 @@ defmodule PetalBoilerplate.Catalog.LLMModelsListTest do
     assert LLMModelsList.identity_key(plain) == "claude-opus-5"
   end
 
+  test "uses database aliases to connect dated and punctuation variants" do
+    model = hd(LLMModelsList.eligible_offers())
+
+    dated =
+      Map.merge(model, %{
+        provider: :anthropic,
+        model_id: "claude-haiku-4-5-20251001",
+        name: "Claude Haiku 4.5",
+        aliases: ["claude-haiku-4.5"]
+      })
+
+    dotted =
+      Map.merge(model, %{
+        provider: :openrouter,
+        model_id: "anthropic/claude-haiku-4.5",
+        name: "Anthropic: Claude Haiku 4.5",
+        aliases: []
+      })
+
+    [entry] = LLMModelsList.grouped_entries([dated, dotted])
+
+    assert entry.providers == ["anthropic", "openrouter"]
+    assert entry.provider_count == 2
+  end
+
+  test "groups the published Claude Fable offers by database aliases" do
+    entries =
+      LLMModelsList.eligible_offers()
+      |> LLMModelsList.grouped_entries()
+
+    fable = Enum.find(entries, &(&1.model_id == "claude-fable-5"))
+
+    assert fable
+    assert MapSet.subset?(MapSet.new(["anthropic", "openrouter"]), MapSet.new(fable.providers))
+    assert fable.provider_count > 1
+  end
+
+  test "does not group matching names without model ID or alias evidence" do
+    model = hd(LLMModelsList.eligible_offers())
+
+    first =
+      Map.merge(model, %{
+        provider: :first_provider,
+        model_id: "first-model-1",
+        name: "Shared Display Name",
+        aliases: []
+      })
+
+    second =
+      Map.merge(model, %{
+        provider: :second_provider,
+        model_id: "second-model-2",
+        name: "Shared Display Name",
+        aliases: []
+      })
+
+    assert length(LLMModelsList.grouped_entries([first, second])) == 2
+  end
+
   test "requires a typed text execution path for each included provider offer" do
     image_offer = Catalog.get_model("openrouter", "google/gemini-3.1-flash-lite-image")
     text_offer = Catalog.get_model("google", "gemini-3.1-flash-lite-image")

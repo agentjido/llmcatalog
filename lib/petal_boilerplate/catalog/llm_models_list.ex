@@ -3,8 +3,8 @@ defmodule PetalBoilerplate.Catalog.LLMModelsList do
   Builds the active language-model list used by the SEO landing page.
 
   The source catalog contains provider offers. This module groups those offers by
-  a conservative normalized model ID and keeps only active offers with known text
-  execution.
+  conservative normalized model IDs and explicit database aliases. It keeps only
+  active offers with known text execution.
   """
 
   alias PetalBoilerplate.Catalog
@@ -58,12 +58,17 @@ defmodule PetalBoilerplate.Catalog.LLMModelsList do
 
   @doc """
   Groups provider offers into conservative model identities.
+
+  An explicit alias can connect IDs that use different provider punctuation or
+  a dated canonical ID. Alias connections are transitive.
   """
   @spec grouped_entries([map()]) :: [entry()]
   def grouped_entries(offers) when is_list(offers) do
     offers
-    |> Enum.group_by(&identity_key/1)
-    |> Enum.map(fn {model_id, model_offers} -> build_entry(model_id, model_offers) end)
+    |> connected_offer_groups()
+    |> Enum.map(fn model_offers ->
+      build_entry(preferred_identity_key(model_offers), model_offers)
+    end)
     |> Enum.sort(&entry_before?/2)
   end
 
@@ -96,6 +101,82 @@ defmodule PetalBoilerplate.Catalog.LLMModelsList do
     else
       model_id
     end
+  end
+
+  defp connected_offer_groups(offers) do
+    indexed_offers = Enum.with_index(offers)
+    initial_parents = Map.new(indexed_offers, fn {_offer, index} -> {index, index} end)
+
+    {parents, _token_owners} =
+      Enum.reduce(indexed_offers, {initial_parents, %{}}, fn {offer, index},
+                                                             {parents, token_owners} ->
+        Enum.reduce(identity_tokens(offer), {parents, token_owners}, fn token,
+                                                                        {parents, token_owners} ->
+          case Map.fetch(token_owners, token) do
+            {:ok, owner_index} ->
+              {union(parents, index, owner_index), token_owners}
+
+            :error ->
+              {parents, Map.put(token_owners, token, index)}
+          end
+        end)
+      end)
+
+    indexed_offers
+    |> Enum.group_by(fn {_offer, index} -> find_root(parents, index) end, &elem(&1, 0))
+    |> Map.values()
+  end
+
+  defp identity_tokens(model) do
+    aliases =
+      case Map.get(model, :aliases) do
+        values when is_list(values) -> values
+        _other -> []
+      end
+
+    [identity_key(model) | Enum.map(aliases, &alias_identity_key/1)]
+    |> Enum.filter(&(is_binary(&1) and &1 != ""))
+    |> Enum.uniq()
+  end
+
+  defp alias_identity_key(alias_id) when is_binary(alias_id) do
+    model_id = String.trim_leading(alias_id, "~")
+    leaf_id = model_id |> String.split("/") |> List.last()
+
+    if leaf_id != model_id and specific_model_id?(leaf_id) do
+      leaf_id
+    else
+      model_id
+    end
+  end
+
+  defp alias_identity_key(_alias_id), do: nil
+
+  defp union(parents, left, right) do
+    left_root = find_root(parents, left)
+    right_root = find_root(parents, right)
+
+    if left_root == right_root do
+      parents
+    else
+      Map.put(parents, right_root, left_root)
+    end
+  end
+
+  defp find_root(parents, index) do
+    case Map.fetch!(parents, index) do
+      ^index -> index
+      parent -> find_root(parents, parent)
+    end
+  end
+
+  defp preferred_identity_key(offers) do
+    offers
+    |> Enum.map(&identity_key/1)
+    |> Enum.frequencies()
+    |> Enum.sort_by(fn {model_id, count} -> {-count, String.length(model_id), model_id} end)
+    |> hd()
+    |> elem(0)
   end
 
   defp build_entry(model_id, offers) do
