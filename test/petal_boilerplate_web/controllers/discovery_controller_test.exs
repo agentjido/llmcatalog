@@ -73,6 +73,10 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
 
     assert body =~ ~s(<?xml version="1.0" encoding="UTF-8"?>)
     assert body =~ ~s(<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">)
+
+    assert {:xmlElement, _, _, _, _, _, _, _, _, _, _, _} =
+             body |> String.to_charlist() |> :xmerl_scan.string() |> elem(0)
+
     refute body =~ "<priority>"
     refute body =~ "<changefreq>"
 
@@ -82,6 +86,14 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
 
     expected_locations =
       Enum.map(SEO.search_indexable_paths(), &PublicRoutes.absolute/1)
+
+    lastmods =
+      Regex.scan(~r/<lastmod>(.*?)<\/lastmod>/, body, capture: :all_but_first)
+      |> Enum.map(fn [lastmod] -> lastmod end)
+
+    expected_lastmods =
+      SEO.search_indexable_entries()
+      |> Enum.map(fn %{lastmod: lastmod} -> Date.to_iso8601(lastmod) end)
 
     assert SEO.search_indexable_paths() == [
              "/",
@@ -97,8 +109,10 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
            ]
 
     assert locations == expected_locations
+    assert lastmods == expected_lastmods
+    assert length(lastmods) == length(locations)
+    assert Enum.all?(lastmods, &match?({:ok, _date}, Date.from_iso8601(&1)))
     refute body =~ "/history"
-    refute body =~ "<lastmod>"
 
     for route <- LandingPages.routes() do
       assert body =~ PublicRoutes.absolute(route)

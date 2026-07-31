@@ -15,6 +15,7 @@ defmodule PetalBoilerplateWeb.SEO do
       ),
     twitter: SEO.Twitter.build(card: :summary_large_image)
 
+  alias PetalBoilerplate.SEOContent
   alias PetalBoilerplate.SEOContent.Page
   alias PetalBoilerplateWeb.LandingLinks
   alias PetalBoilerplateWeb.PublicRoutes
@@ -54,6 +55,24 @@ defmodule PetalBoilerplateWeb.SEO do
   """
   @spec search_indexable_paths() :: [String.t()]
   def search_indexable_paths, do: @search_indexable_paths
+
+  @doc """
+  Returns the approved sitemap paths and their last significant change date.
+
+  Catalog build dates cover data-driven changes. A later human review date
+  covers an editorial change on a published landing page.
+  """
+  @spec search_indexable_entries() :: [%{path: String.t(), lastmod: Date.t() | nil}]
+  def search_indexable_entries do
+    catalog_date = catalog_modified_on()
+
+    Enum.map(@search_indexable_paths, fn path ->
+      %{
+        path: path,
+        lastmod: latest_date(catalog_date, editorial_modified_on(path))
+      }
+    end)
+  end
 
   @spec search_indexable_path?(String.t()) :: boolean()
   def search_indexable_path?(path) when is_binary(path) do
@@ -302,5 +321,46 @@ defmodule PetalBoilerplateWeb.SEO do
     map
     |> Enum.reject(fn {_key, value} -> value in [nil, "", []] end)
     |> Map.new()
+  end
+
+  defp catalog_modified_on do
+    with %{meta: meta} when is_map(meta) <- LLMDB.Store.snapshot(),
+         value when is_binary(value) <-
+           Map.get(meta, :source_generated_at) || Map.get(meta, "source_generated_at") do
+      parse_date(value)
+    else
+      _other -> nil
+    end
+  end
+
+  defp editorial_modified_on(path) do
+    case SEOContent.get_page(path) do
+      %Page{review: %{reviewed_at: %Date{} = reviewed_at}} -> reviewed_at
+      _other -> nil
+    end
+  end
+
+  defp parse_date(value) do
+    case DateTime.from_iso8601(value) do
+      {:ok, date_time, _offset} ->
+        DateTime.to_date(date_time)
+
+      _other ->
+        case Date.from_iso8601(value) do
+          {:ok, date} -> date
+          _other -> nil
+        end
+    end
+  end
+
+  defp latest_date(nil, nil), do: nil
+  defp latest_date(%Date{} = date, nil), do: date
+  defp latest_date(nil, %Date{} = date), do: date
+
+  defp latest_date(%Date{} = left, %Date{} = right) do
+    case Date.compare(left, right) do
+      :lt -> right
+      _other -> left
+    end
   end
 end

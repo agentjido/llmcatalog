@@ -34,7 +34,7 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
 
   def sitemap(conn, _params) do
     entries =
-      SEO.search_indexable_paths()
+      SEO.search_indexable_entries()
       |> Enum.map(&sitemap_entry/1)
 
     body = """
@@ -130,9 +130,16 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     |> send_resp(200, body)
   end
 
-  defp sitemap_entry(path) do
-    "  <url><loc>#{xml_escape(PublicRoutes.absolute(path))}</loc></url>"
+  defp sitemap_entry(%{path: path, lastmod: lastmod}) do
+    """
+      <url>
+        <loc>#{xml_escape(PublicRoutes.absolute(path))}</loc>
+    #{sitemap_lastmod(lastmod)}  </url>
+    """
   end
+
+  defp sitemap_lastmod(%Date{} = date), do: "    <lastmod>#{Date.to_iso8601(date)}</lastmod>\n"
+  defp sitemap_lastmod(_date), do: ""
 
   defp feed_item(event) do
     provider = map_get(event, "provider", :provider) || "unknown"
