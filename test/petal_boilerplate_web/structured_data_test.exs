@@ -8,9 +8,20 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
       |> html_response(200)
 
     schemas = json_ld(html)
+    dataset = Enum.find(schemas, &(&1["@type"] == "Dataset"))
 
     assert Enum.map(schemas, & &1["@type"]) == ["WebSite", "Dataset"]
     assert Enum.all?(schemas, &(&1["url"] == PetalBoilerplateWeb.Endpoint.url() <> "/"))
+
+    assert dataset["creator"] == %{
+             "@type" => "Organization",
+             "name" => "Jidoka Labs",
+             "url" => "https://jidokahq.com"
+           }
+
+    assert dataset["license"] == "https://www.apache.org/licenses/LICENSE-2.0"
+    assert dataset["isAccessibleForFree"] == true
+    assert dataset["version"] == to_string(Application.spec(:llm_db, :vsn))
   end
 
   test "model page emits WebPage, breadcrumb, and application JSON-LD", %{conn: conn} do

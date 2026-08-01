@@ -92,6 +92,7 @@ defmodule PetalBoilerplateWeb.SEO do
   @spec home_structured_data(non_neg_integer(), non_neg_integer()) :: [map()]
   def home_structured_data(model_count, provider_count) do
     home_url = PublicRoutes.absolute("/")
+    dataset_version = Application.spec(:llm_db, :vsn) |> to_string()
 
     [
       %{
@@ -109,6 +110,14 @@ defmodule PetalBoilerplateWeb.SEO do
         "description" =>
           "A catalog of #{model_count} large language models from #{provider_count} providers.",
         "url" => home_url,
+        "creator" => %{
+          "@type" => "Organization",
+          "name" => "Jidoka Labs",
+          "url" => "https://jidokahq.com"
+        },
+        "license" => "https://www.apache.org/licenses/LICENSE-2.0",
+        "isAccessibleForFree" => true,
+        "version" => dataset_version,
         "keywords" => [
           "large language models",
           "LLM pricing",
