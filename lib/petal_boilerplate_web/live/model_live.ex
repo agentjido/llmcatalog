@@ -64,6 +64,28 @@ defmodule PetalBoilerplateWeb.ModelLive do
     "recently_changed" => :recently_changed
   }
 
+  @analytics_search_max_length 100
+  @analytics_private_search_patterns [
+    ~r/@/u,
+    ~r/\b(?:https?:\/\/|www\.)/iu,
+    ~r/\b(?:\+?\d[\d\s().-]{7,}\d)\b/u,
+    ~r/\b(?:\d{1,3}\.){3}\d{1,3}\b/u
+  ]
+  @analytics_filter_changes [
+    {"q", "search"},
+    {"providers", "providers"},
+    {"caps", "capabilities"},
+    {"in", "input_modalities"},
+    {"out", "output_modalities"},
+    {"changed", "changed_within"},
+    {"ctx", "min_context"},
+    {"min_output", "min_output"},
+    {"cost", "max_input_cost"},
+    {"max_cost_out", "max_output_cost"},
+    {"show_deprecated", "show_deprecated"},
+    {"allowed_only", "allowed_only"}
+  ]
+
   @impl true
   def mount(params, _session, socket) do
     filters = Filters.from_params(params)
@@ -357,6 +379,8 @@ defmodule PetalBoilerplateWeb.ModelLive do
   defp toggle_direction(:desc), do: :asc
 
   defp apply_filters(socket, %Filters{} = filters, opts \\ []) do
+    previous_filters = socket.assigns.filters
+    previous_sort = socket.assigns.sort
     sort = Keyword.get(opts, :sort, socket.assigns.sort)
     page = Keyword.get(opts, :page, 1)
     {page_models, total, total_pages, page} = Catalog.query_models(filters, sort, page)
@@ -376,11 +400,128 @@ defmodule PetalBoilerplateWeb.ModelLive do
       )
 
     if Keyword.get(opts, :push_url, false) do
-      push_patch(socket, to: index_path(filters, sort), replace: true)
+      socket
+      |> maybe_track_catalog_change(previous_filters, previous_sort, filters, sort, total)
+      |> push_patch(to: index_path(filters, sort), replace: true)
     else
       socket
     end
   end
+
+  defp maybe_track_catalog_change(
+         socket,
+         previous_filters,
+         previous_sort,
+         filters,
+         sort,
+         total
+       ) do
+    changes = analytics_changes(previous_filters, previous_sort, filters, sort)
+
+    with true <- Application.get_env(:petal_boilerplate, :enable_analytics, false),
+         event_name when is_binary(event_name) <- analytics_event_name(changes, filters) do
+      push_event(socket, "plausible-event", %{
+        name: event_name,
+        props: analytics_event_props(filters, sort, total, changes)
+      })
+    else
+      _ -> socket
+    end
+  end
+
+  defp analytics_changes(previous_filters, previous_sort, filters, sort) do
+    previous_params = Filters.to_params(previous_filters)
+    current_params = Filters.to_params(filters)
+
+    changes =
+      Enum.flat_map(@analytics_filter_changes, fn {param, change} ->
+        if Map.get(previous_params, param) == Map.get(current_params, param) do
+          []
+        else
+          [change]
+        end
+      end)
+
+    if previous_sort == sort, do: changes, else: changes ++ ["sort"]
+  end
+
+  defp analytics_event_name([], _filters), do: nil
+
+  defp analytics_event_name(changes, filters) do
+    cond do
+      "search" in changes and String.trim(filters.search) != "" -> "Model Search"
+      Enum.any?(changes, &(&1 != "search")) -> "Model Filter"
+      true -> nil
+    end
+  end
+
+  defp analytics_event_props(filters, sort, total, changes) do
+    %{
+      action: Enum.join(changes, ","),
+      query: analytics_search_value(filters.search),
+      providers: analytics_list_value(filters.provider_ids),
+      provider_count: MapSet.size(filters.provider_ids),
+      capabilities: analytics_capabilities_value(filters.capabilities),
+      input_modalities: analytics_list_value(filters.modalities_in),
+      output_modalities: analytics_list_value(filters.modalities_out),
+      changed_within_days: analytics_scalar_value(filters.changed_within_days),
+      min_context: analytics_scalar_value(filters.min_context),
+      min_output: analytics_scalar_value(filters.min_output),
+      max_input_cost: analytics_scalar_value(filters.max_cost_in),
+      max_output_cost: analytics_scalar_value(filters.max_cost_out),
+      show_deprecated: filters.show_deprecated,
+      allowed_only: filters.allowed_only,
+      sort_by: Atom.to_string(sort.by),
+      sort_direction: Atom.to_string(sort.dir),
+      result_count: total,
+      active_filter_count: Filters.active_filter_count(filters)
+    }
+  end
+
+  defp analytics_search_value(search) do
+    normalized_search =
+      search
+      |> String.trim()
+      |> String.replace(~r/\s+/u, " ")
+
+    cond do
+      normalized_search == "" ->
+        "none"
+
+      Enum.any?(@analytics_private_search_patterns, &Regex.match?(&1, normalized_search)) ->
+        "redacted"
+
+      true ->
+        String.slice(normalized_search, 0, @analytics_search_max_length)
+    end
+  end
+
+  defp analytics_capabilities_value(capabilities) do
+    capabilities
+    |> Enum.filter(fn {_capability, enabled} -> enabled end)
+    |> Enum.map(fn {capability, _enabled} -> capability end)
+    |> analytics_list_value()
+  end
+
+  defp analytics_list_value(values) do
+    values =
+      values
+      |> Enum.map(&to_string/1)
+      |> Enum.sort()
+
+    case values do
+      [] ->
+        "none"
+
+      values ->
+        joined_values = Enum.join(values, ",")
+
+        if String.length(joined_values) > 500, do: "many", else: joined_values
+    end
+  end
+
+  defp analytics_scalar_value(nil), do: "none"
+  defp analytics_scalar_value(value), do: value
 
   defp selected_models(assigns) do
     assigns.selected_ids

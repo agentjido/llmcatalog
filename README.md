@@ -86,6 +86,13 @@ The application is configured for deployment to standard Phoenix hosting platfor
 - `PORT` - The port to listen on (default: 4000)
 - `ENABLE_ANALYTICS` - Set to `true`, `1`, or `yes` to enable Plausible analytics; all other values disable it
 
+When analytics are enabled, the model catalog sends these custom events through the first-party Plausible proxy:
+
+- `Model Search` - Search term, active filter state, and result count
+- `Model Filter` - Changed control, active filter state, sort state, and result count
+
+Search values are limited to 100 characters. Values that look like an email address, URL, phone number, or IP address are sent as `redacted`. Configure the event goals and custom properties in the Plausible site settings after the first events arrive.
+
 ## License
 
 Apache-2.0
