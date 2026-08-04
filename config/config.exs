@@ -12,6 +12,13 @@ config :petal_boilerplate,
   history_module: PetalBoilerplate.History,
   sync_history_on_start: true
 
+config :petal_boilerplate, :plausible_proxy,
+  site_domain: "llmdb.xyz",
+  script_path: "/_q/s.js",
+  event_path: "/_q/e",
+  script_url: "https://plausible.io/js/pa--janBeogK9G9oaeuCbmPP.js",
+  event_url: "https://plausible.io/api/event"
+
 # Configures the endpoint
 config :petal_boilerplate, PetalBoilerplateWeb.Endpoint,
   url: [host: "localhost"],

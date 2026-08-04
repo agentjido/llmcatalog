@@ -84,7 +84,7 @@ The application is configured for deployment to standard Phoenix hosting platfor
 - `SECRET_KEY_BASE` - Required for production
 - `HOST` - The hostname (default: llmdb.xyz)
 - `PORT` - The port to listen on (default: 4000)
-- `ENABLE_ANALYTICS` - Set to "true" to enable Plausible analytics
+- `ENABLE_ANALYTICS` - Set to `true`, `1`, or `yes` to enable Plausible analytics; all other values disable it
 
 ## License
 

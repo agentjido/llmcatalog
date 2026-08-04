@@ -97,11 +97,11 @@
     <script defer src="https://unpkg.com/js-cookie@3.x.x/dist/js.cookie.min.js">
     </script>
     <%= if Application.get_env(:petal_boilerplate, :enable_analytics) do %>
-      <script async src="https://plausible.io/js/pa--janBeogK9G9oaeuCbmPP.js">
+      <script async src={PetalBoilerplateWeb.Plugs.PlausibleProxy.script_path()}>
       </script>
       <script>
         window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-        plausible.init()
+        plausible.init({endpoint: <%= Phoenix.HTML.raw(Jason.encode!(PetalBoilerplateWeb.Plugs.PlausibleProxy.event_path())) %>})
       </script>
     <% end %>
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>

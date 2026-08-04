@@ -26,11 +26,17 @@ if config_env() != :test do
     |> String.downcase()
     |> then(&(&1 in ["true", "1", "yes"]))
 
+  analytics_enabled =
+    System.get_env("ENABLE_ANALYTICS", "false")
+    |> String.trim()
+    |> String.downcase()
+    |> then(&(&1 in ["true", "1", "yes"]))
+
   config :petal_boilerplate,
     canonical_host: System.get_env("CANONICAL_HOST"),
     seo_indexing_enabled: seo_indexing_enabled,
-    # Set to true/false to control Plausible analytics loading, only in production
-    enable_analytics: System.get_env("ENABLE_ANALYTICS")
+    # Keep this false or unset in local and staging environments.
+    enable_analytics: analytics_enabled
 end
 
 if config_env() == :prod do
