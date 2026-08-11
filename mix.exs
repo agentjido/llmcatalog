@@ -75,7 +75,7 @@ defmodule PetalBoilerplate.MixProject do
       {:zoi, "~> 0.18"},
 
       # Domain
-      {:llm_db, "~> 2026.7"},
+      {:llm_db, "~> 2026.8"},
 
       # Dev & test
       {:phoenix_live_reload, "~> 1.6", only: [:dev, :test]},
