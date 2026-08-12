@@ -3,6 +3,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   alias PetalBoilerplate.Catalog
   alias PetalBoilerplate.Catalog.Filters
+  alias PetalBoilerplateWeb.ModelMetadataFeedback
   alias PetalBoilerplateWeb.ModelLive
   alias PetalBoilerplateWeb.PublicRoutes
 
@@ -17,6 +18,8 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   attr :search_value, :string, required: true
 
   def header(assigns) do
+    assigns = assign(assigns, :metadata_issue_url, ModelMetadataFeedback.issue_url())
+
     ~H"""
     <header
       class="sticky top-0 z-50 border-b backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background)/0.6)]"
@@ -122,6 +125,18 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
         <div class="flex items-center gap-0.5 shrink-0">
           <a
+            href={@metadata_issue_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="See incorrect model data? Report it on GitHub"
+            aria-label="Report incorrect model data on GitHub"
+            class="hidden sm:inline-flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
+            style="border-color: hsl(var(--border)); color: hsl(var(--muted-foreground));"
+          >
+            <.icon name="hero-flag" class="h-3.5 w-3.5" />
+            <span class="hidden xl:inline">Data issue?</span>
+          </a>
+          <a
             href="https://agentjido.xyz/discord"
             target="_blank"
             rel="noopener noreferrer"
@@ -207,6 +222,15 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 class="block px-4 py-2.5 text-sm hover:opacity-80"
               >
                 Discord
+              </a>
+              <a
+                href={@metadata_issue_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block border-t px-4 py-2.5 text-sm font-medium hover:opacity-80"
+                style="border-color: hsl(var(--border)); color: hsl(var(--primary));"
+              >
+                Report incorrect model data
               </a>
             </nav>
           </details>
@@ -1752,6 +1776,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       |> assign(:reasoning_metadata_rows, reasoning_metadata_rows(assigns.model))
       |> assign(:advanced_capability_rows, advanced_capability_rows(assigns.model))
       |> assign(:pricing_component_rows, pricing_component_rows(assigns.model))
+      |> assign(:metadata_issue_url, model_metadata_issue_url(assigns.model))
 
     ~H"""
     <div
@@ -2112,6 +2137,27 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             </div>
           </div>
 
+          <div
+            class="flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between"
+            style="border-color: hsl(var(--border));"
+          >
+            <p class="max-w-xl text-sm" style="color: hsl(var(--muted-foreground));">
+              <span class="font-medium" style="color: hsl(var(--foreground));">
+                See incorrect model data?
+              </span>
+              Help us improve it.
+            </p>
+            <a
+              href={@metadata_issue_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex shrink-0 items-center gap-1.5 self-start rounded-md px-3 py-2 text-sm font-medium transition-colors hover:opacity-80 sm:self-auto"
+              style="background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground));"
+            >
+              Submit Fix on GitHub <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+            </a>
+          </div>
+
           <button
             type="button"
             phx-click="close_model"
@@ -2127,6 +2173,9 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     </div>
     """
   end
+
+  defp model_metadata_issue_url(nil), do: ModelMetadataFeedback.issue_url()
+  defp model_metadata_issue_url(model), do: ModelMetadataFeedback.issue_url(model)
 
   # =============================================================================
   # Task 2.6: Comparison Modal Component
