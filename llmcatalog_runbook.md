@@ -35,7 +35,8 @@ and links to pull requests or dashboards as work is completed.
 - [x] Keep the internal Phoenix application and module names unchanged.
 - [x] Keep `llmdb.xyz` registered and active for at least one year. An
   indefinite redirect is preferred.
-- [ ] If `llmdb.dev` is kept, redirect it to `llmcatalog.dev` too.
+- [x] Keep `llmdb.dev` out of scope. Do not change its DNS or application
+  support during this migration.
 - [x] Keep `POST /api/mcp` operational on `llmdb.xyz`. Do not depend on a
   client following a redirect for this endpoint.
 
@@ -49,6 +50,8 @@ Recommended public description:
 - [x] LiveView navigation and WebSocket connections work on the new domain.
 - [x] Every public GET and HEAD URL on `llmdb.xyz` redirects to the same path
   and query on `llmcatalog.dev`.
+- [x] Every public GET and HEAD URL on `www.llmdb.xyz` redirects to the same
+  path and query on `llmcatalog.dev`.
 - [x] `POST https://llmdb.xyz/api/mcp` still returns an MCP response without a
   redirect.
 - [x] `www.llmcatalog.dev` redirects to `llmcatalog.dev` in one hop.
@@ -66,8 +69,8 @@ Recommended public description:
 - Fly region: `ord`
 - Fly IPv4 address: `66.241.124.27`
 - Fly IPv6 address: `2a09:8280:1::ad:9b93:0`
-- Current Fly certificates: `llmdb.xyz`, `llmcatalog.dev`, and
-  `www.llmcatalog.dev`; all three are issued.
+- Current Fly certificates: `llmdb.xyz`, `www.llmdb.xyz`, `llmcatalog.dev`,
+  and `www.llmcatalog.dev`; all four are issued.
 - Current production image at audit time:
   `llmdb-prod:deployment-01KZTVTK1KZJHF0D77JT5H7GQD`
 - Current production machine version at audit time: `98`
@@ -82,7 +85,8 @@ Recommended public description:
   - Apex AAAA record: `2a09:8280:1::ad:9b93:0`
   - `www` CNAME: `o2depm5.llmdb-prod.fly.dev`
   - Fly ownership and ACME validation records are present.
-- `llmdb.xyz` already uses Cloudflare nameservers.
+- `llmdb.xyz` uses Cloudflare nameservers. `www.llmdb.xyz` has DNS-only Fly
+  routing, ACME validation, and ownership records.
 - The production site uses the LLM Catalog brand and `llmcatalog.dev` URLs.
 - Production source-data links use `agentjido/llmdb`.
 - `build/llmdb-stage.toml` now refers to `stage.llmcatalog.dev`, but the
@@ -220,7 +224,8 @@ client to change a POST request to a GET request.
   logic.
 - [x] Let requests to `llmcatalog.dev` continue normally.
 - [x] Send a permanent redirect for normal requests on `llmdb.xyz`.
-- [ ] Add `llmdb.dev` to the legacy-host list when that domain is in scope.
+- [x] Include `www.llmdb.xyz` in the explicit legacy-host list.
+- [x] Keep `llmdb.dev` out of the legacy-host list while it is out of scope.
 - [x] Preserve the request path and query string.
 - [x] Use `308` in application code when the HTTP method must be preserved.
 - [x] Let `POST /api/mcp` continue on the configured legacy domains without a
@@ -371,7 +376,7 @@ The application sends `www.llmcatalog.dev` to `llmcatalog.dev` with status
 
 - [x] Add the application redirect.
 - [x] Add automated tests for the path, query string, and status.
-- [ ] Verify the behavior after production cutover.
+- [x] Verify the behavior after production cutover.
 
 ### 4.2 `llmdb.xyz` browser and crawler redirect
 
@@ -382,11 +387,11 @@ without a redirect.
 - [x] Add the normal-request redirect.
 - [x] Add the legacy MCP exception.
 - [x] Add automated tests for both behaviors.
-- [ ] Verify both behaviors after production cutover.
+- [x] Verify both behaviors after production cutover.
 
-### 4.3 Optional `llmdb.dev` redirect
+### 4.3 Deferred `llmdb.dev` redirect
 
-If `llmdb.dev` is retained:
+No action is planned for `llmdb.dev`. If it becomes part of a later change:
 
 - [ ] Add the domain to Cloudflare.
 - [ ] Add valid proxied DNS records.
@@ -406,19 +411,18 @@ Plausible keeps historical data when a site domain changes. It accepts events
 for both the old and new domain for 72 hours after the change. Complete the
 code deployment during this period.
 
-- [ ] In Plausible, open site settings for `llmdb.xyz`.
-- [ ] Go to **General** -> **Site domain** -> **Change domain**.
-- [ ] Enter `llmcatalog.dev` without `https://` or `www`.
-- [ ] Record the time when the 72-hour transition starts:
-  ____________________
-- [ ] Confirm that the script configuration is still valid.
-- [ ] Update any Stats API integration that uses `llmdb.xyz` as its domain
-  argument.
+- [x] In Plausible, change the site domain from `llmdb.xyz` to
+  `llmcatalog.dev`.
+- [x] Confirm that the script configuration is still valid. The site uses
+  `plausible.init` and the proxied `/_q/e` endpoint.
+- [x] Confirm that this repository has no Stats API integration that uses
+  `llmdb.xyz` as its domain argument.
 - [ ] Update bookmarked, shared, or embedded dashboard URLs. Plausible does not
   redirect old dashboard URLs.
 - [ ] Confirm that existing goals and custom properties remain present.
-- [ ] After deployment, send a page view and a custom filter event.
-- [ ] Confirm both events in the real-time dashboard.
+- [x] After deployment, send a page view and a custom filter event.
+- [x] Confirm live traffic in the renamed dashboard. Both event requests
+  returned `202` without `x-plausible-dropped`.
 
 Reference: [Plausible domain change](https://plausible.io/docs/change-domain-name)
 
@@ -437,8 +441,8 @@ Reference: [Plausible domain change](https://plausible.io/docs/change-domain-nam
   description and homepage URL on GitHub.
 - [x] Update the `agentjido/llmdb` repository homepage URL and README links in
   [pull request 298](https://github.com/agentjido/llmdb/pull/298).
-- [ ] Update the Hex package website link in the next normal `llm_db` release,
-  if its metadata still uses the old site.
+- [x] Update the Hex package website metadata in the `llmdb` source. The fix is
+  complete but is not released. Publish it with the next normal release.
 - [ ] Update AgentJido organization pages and documentation.
 - [ ] Update active ReqLLM documentation and examples that link to
   `llmdb.xyz`.
@@ -455,7 +459,7 @@ Complete these tasks in this order.
 - [x] Confirm Fly certificates for the apex and `www` names are valid.
 - [x] Keep the new web records in DNS-only mode during this migration.
 - [x] Confirm the code pull requests are merged and all CI checks pass.
-- [ ] Change the Plausible domain. This starts the 72-hour transition.
+- [x] Change the Plausible domain. This starts the 72-hour transition.
 - [x] Deploy the merged code to `llmdb-prod`.
 - [x] Confirm that GitHub Actions used `build/llmdb-prod.toml`.
 - [x] Set the production host secrets to the new domain:
@@ -471,6 +475,9 @@ Complete these tasks in this order.
 - [x] Confirm `fly status -a llmdb-prod` reports one passing health check.
 - [x] Verify the application `www` redirect.
 - [x] Verify the application `llmdb.xyz` redirect and MCP exception.
+- [x] Add Cloudflare DNS and a Fly certificate for `www.llmdb.xyz`.
+- [x] Verify that `www.llmdb.xyz` redirects to `llmcatalog.dev` with the path
+  and query string unchanged.
 - [x] Record the deployed image and machine version:
   `llmdb-prod:deployment-01KZV26891BPS6FCTTR4CJP6RK`, version `101`.
 - [x] Record the exact cutover time: `2026-08-12 13:16 UTC`.
@@ -567,6 +574,8 @@ Do not remove the old Fly certificate or old DNS records during cutover.
 - [x] Check at least ten important URLs from the old sitemap.
 - [x] Confirm no important URL redirects to the new home page unless the old
   URL was the old home page.
+- [x] Confirm that `www.llmdb.xyz` returns one `308` redirect and preserves the
+  path and query string.
 
 ### 7.4 MCP checks
 
@@ -592,11 +601,11 @@ Do not remove the old Fly certificate or old DNS records during cutover.
 
 ### 7.5 Analytics and logs
 
-- [ ] Confirm Plausible shows a live visit for `llmcatalog.dev`.
-- [ ] Confirm Plausible records a custom filter event.
+- [x] Confirm Plausible shows a live visit for `llmcatalog.dev`.
+- [x] Confirm Plausible accepts a custom filter event.
 - [x] Confirm `/_q/s.js` loads.
-- [ ] Change the Plausible site domain. The event endpoint currently returns
-  `202` with `x-plausible-dropped: 1` for `llmcatalog.dev` events.
+- [x] Change the Plausible site domain. The event endpoint returns `202`
+  without `x-plausible-dropped` for `llmcatalog.dev` events.
 - [x] Check Fly logs for host, redirect, WebSocket, MCP, and application errors:
 
   ```sh
