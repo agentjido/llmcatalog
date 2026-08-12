@@ -16,6 +16,10 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert html =~ ~s(property="og:type" content="website")
       assert html =~ ~s(property="og:image")
       assert html =~ ~s(rel="canonical" href="#{endpoint_url}/")
+
+      assert html =~
+               ~s(<title data-suffix=" · llmcatalog.dev">LLM Catalog · llmcatalog.dev</title>)
+
       assert heading_texts(html, "h1") == ["LLM Catalog"]
       assert html =~ "LLM and AI models across"
     end
