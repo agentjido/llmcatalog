@@ -15,6 +15,7 @@ defmodule PetalBoilerplate.Catalog.Filters do
           capabilities: %{atom() => boolean()},
           modalities_in: MapSet.t(atom()),
           modalities_out: MapSet.t(atom()),
+          architecture: :all | :dense | :moe | :unknown,
           changed_within_days: integer() | nil,
           min_context: integer() | nil,
           min_output: integer() | nil,
@@ -30,6 +31,7 @@ defmodule PetalBoilerplate.Catalog.Filters do
             capabilities: %{},
             modalities_in: MapSet.new(),
             modalities_out: MapSet.new(),
+            architecture: :all,
             changed_within_days: nil,
             min_context: nil,
             min_output: nil,
@@ -176,6 +178,7 @@ defmodule PetalBoilerplate.Catalog.Filters do
       capabilities: parse_capabilities(params),
       modalities_in: parse_input_modalities(params),
       modalities_out: parse_modalities(params["modalities_out"] || params["out"]),
+      architecture: parse_architecture(params["architecture"]),
       changed_within_days: parse_changed_within(params["changed"]),
       min_context: parse_int(params["min_context"] || params["ctx"]),
       min_output: parse_int(params["min_output"]),
@@ -217,6 +220,11 @@ defmodule PetalBoilerplate.Catalog.Filters do
     params =
       if MapSet.size(f.modalities_out) > 0,
         do: Map.put(params, "out", f.modalities_out |> MapSet.to_list() |> Enum.join(",")),
+        else: params
+
+    params =
+      if f.architecture != :all,
+        do: Map.put(params, "architecture", to_string(f.architecture)),
         else: params
 
     params =
@@ -337,6 +345,13 @@ defmodule PetalBoilerplate.Catalog.Filters do
     do: %{f | changed_within_days: days}
 
   @doc """
+  Sets the model architecture filter.
+  """
+  def set_architecture(%__MODULE__{} = f, architecture)
+      when architecture in [:all, :dense, :moe, :unknown],
+      do: %{f | architecture: architecture}
+
+  @doc """
   Applies a quick filter by key, toggling it on/off.
   """
   def apply_quick_filter(%__MODULE__{} = f, key) when is_atom(key) do
@@ -397,6 +412,7 @@ defmodule PetalBoilerplate.Catalog.Filters do
     count = count + Enum.count(Map.values(f.capabilities), & &1)
     count = count + MapSet.size(f.modalities_in)
     count = count + MapSet.size(f.modalities_out)
+    count = if f.architecture != :all, do: count + 1, else: count
     count = if f.changed_within_days, do: count + 1, else: count
     count = if f.min_context, do: count + 1, else: count
     count = if f.min_output, do: count + 1, else: count
@@ -447,6 +463,7 @@ defmodule PetalBoilerplate.Catalog.Filters do
       capabilities: f.capabilities,
       modalities_in: f.modalities_in,
       modalities_out: f.modalities_out,
+      architecture: f.architecture,
       changed_within_days: f.changed_within_days,
       min_context: f.min_context,
       min_output: f.min_output,
@@ -550,6 +567,12 @@ defmodule PetalBoilerplate.Catalog.Filters do
       end
     end)
   end
+
+  defp parse_architecture(value) when value in [:dense, :moe, :unknown], do: value
+  defp parse_architecture("dense"), do: :dense
+  defp parse_architecture("moe"), do: :moe
+  defp parse_architecture("unknown"), do: :unknown
+  defp parse_architecture(_value), do: :all
 
   defp maybe_add_legacy_vision(modalities, params) do
     if legacy_vision_enabled?(params) do

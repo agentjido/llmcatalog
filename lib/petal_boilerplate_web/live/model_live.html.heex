@@ -89,6 +89,56 @@
             <option value="provider" selected={sort_control_value(@sort) == "provider"}>
               Provider A–Z
             </option>
+            <optgroup label="Model size">
+              <option
+                value="total_parameters_asc"
+                selected={sort_control_value(@sort) == "total_parameters_asc"}
+              >
+                Total params: smallest first
+              </option>
+              <option
+                value="total_parameters_desc"
+                selected={sort_control_value(@sort) == "total_parameters_desc"}
+              >
+                Total params: largest first
+              </option>
+              <option
+                value="active_parameters_asc"
+                selected={sort_control_value(@sort) == "active_parameters_asc"}
+              >
+                Active params: smallest first
+              </option>
+              <option
+                value="active_parameters_desc"
+                selected={sort_control_value(@sort) == "active_parameters_desc"}
+              >
+                Active params: largest first
+              </option>
+              <option
+                value="minimum_ram_gb_asc"
+                selected={sort_control_value(@sort) == "minimum_ram_gb_asc"}
+              >
+                Minimum RAM: lowest first
+              </option>
+              <option
+                value="minimum_ram_gb_desc"
+                selected={sort_control_value(@sort) == "minimum_ram_gb_desc"}
+              >
+                Minimum RAM: highest first
+              </option>
+              <option
+                value="minimum_vram_gb_asc"
+                selected={sort_control_value(@sort) == "minimum_vram_gb_asc"}
+              >
+                Minimum VRAM: lowest first
+              </option>
+              <option
+                value="minimum_vram_gb_desc"
+                selected={sort_control_value(@sort) == "minimum_vram_gb_desc"}
+              >
+                Minimum VRAM: highest first
+              </option>
+            </optgroup>
             <option value="custom" disabled selected={sort_control_value(@sort) == "custom"}>
               Custom table sort
             </option>

@@ -15,6 +15,12 @@ defmodule PetalBoilerplate.Catalog do
   @models_key {__MODULE__, :models}
   @model_count_key {__MODULE__, :model_count}
   @default_page_size 50
+  @size_sort_fields [
+    :total_parameters,
+    :active_parameters,
+    :minimum_ram_gb,
+    :minimum_vram_gb
+  ]
 
   @capability_definitions [
     {:chat, [:chat], "Chat", "Supports conversational chat interactions"},
@@ -286,6 +292,9 @@ defmodule PetalBoilerplate.Catalog do
     dom_id = "model-#{model.provider}-#{:erlang.phash2({model.provider, model.id})}"
     original_id = model.id
     history_summary = Map.get(history_index, history_key(model.provider, original_id), %{})
+    llmfit = model |> Map.get(:extra) |> map_value(:llmfit)
+    moe = map_value(llmfit, :moe)
+    memory = map_value(llmfit, :memory)
 
     model
     |> Map.put(:id, dom_id)
@@ -298,6 +307,11 @@ defmodule PetalBoilerplate.Catalog do
     |> Map.put(:__output, get_in(model.limits, [:output]) || 0)
     |> Map.put(:__cost_in, get_in(model.cost, [:input]))
     |> Map.put(:__cost_out, get_in(model.cost, [:output]))
+    |> Map.put(:__architecture, architecture_type(llmfit))
+    |> Map.put(:__total_parameters, numeric_metadata(llmfit, :parameters_raw))
+    |> Map.put(:__active_parameters, numeric_metadata(moe, :active_parameters))
+    |> Map.put(:__minimum_ram_gb, numeric_metadata(memory, :min_ram_gb))
+    |> Map.put(:__minimum_vram_gb, numeric_metadata(memory, :min_vram_gb))
     |> Map.put(:__last_changed_at, Map.get(history_summary, :captured_at))
     |> Map.put(:__last_changed_epoch, Map.get(history_summary, :captured_at_epoch))
     |> Map.put(:__allowed?, LLMDB.allowed?(model))
@@ -398,6 +412,30 @@ defmodule PetalBoilerplate.Catalog do
 
   defp capability_truthy?(value), do: value not in [nil, false]
 
+  defp architecture_type(llmfit) when is_map(llmfit) do
+    case llmfit |> map_value(:moe) |> map_value(:is_moe) do
+      true -> :moe
+      false -> :dense
+      _ -> if usable_architecture?(llmfit), do: :dense, else: :unknown
+    end
+  end
+
+  defp architecture_type(_llmfit), do: :unknown
+
+  defp usable_architecture?(llmfit) do
+    case map_value(llmfit, :architecture) do
+      architecture when is_binary(architecture) -> String.trim(architecture) != ""
+      _ -> false
+    end
+  end
+
+  defp numeric_metadata(metadata, key) do
+    case map_value(metadata, key) do
+      value when is_number(value) -> value
+      _ -> nil
+    end
+  end
+
   defp fallback_capability_truthy?(%{} = capability) do
     cond do
       not is_nil(map_value(capability, :enabled)) ->
@@ -424,6 +462,7 @@ defmodule PetalBoilerplate.Catalog do
         passes_allowed?(model, filters.allowed_only) and
         passes_capabilities?(model, filters.capabilities) and
         passes_modalities?(model, filters.modalities_in, filters.modalities_out) and
+        passes_architecture?(model, Map.get(filters, :architecture, :all)) and
         passes_recent_change?(model, recent_change_cutoff) and
         passes_limits?(model, filters.min_context, filters.min_output) and
         passes_cost?(model, filters.max_cost_in, filters.max_cost_out)
@@ -464,6 +503,12 @@ defmodule PetalBoilerplate.Catalog do
     in_ok and out_ok
   end
 
+  defp passes_architecture?(_model, :all), do: true
+
+  defp passes_architecture?(model, architecture) do
+    Map.get(model, :__architecture, :unknown) == architecture
+  end
+
   defp passes_recent_change?(_model, nil), do: true
 
   defp passes_recent_change?(%{__last_changed_epoch: epoch}, cutoff_epoch)
@@ -489,6 +534,19 @@ defmodule PetalBoilerplate.Catalog do
     Enum.sort(models, &compare_recently_changed(&1, &2, dir))
   end
 
+  defp sort_models(models, %{by: by, dir: dir}) when by in @size_sort_fields do
+    Enum.sort_by(models, fn model ->
+      case sort_value(model, by) do
+        value when is_number(value) ->
+          ordered_value = if dir == :asc, do: value, else: -value
+          {0, ordered_value, recent_tie_breaker(model)}
+
+        _ ->
+          {1, 0, recent_tie_breaker(model)}
+      end
+    end)
+  end
+
   defp sort_models(models, %{by: by, dir: dir}) do
     models
     |> Enum.sort_by(&sort_value(&1, by), sort_direction(dir))
@@ -502,6 +560,10 @@ defmodule PetalBoilerplate.Catalog do
   defp sort_value(model, :output), do: model.__output || 0
   defp sort_value(model, :cost_in), do: model.__cost_in || 999_999
   defp sort_value(model, :cost_out), do: model.__cost_out || 999_999
+  defp sort_value(model, :total_parameters), do: Map.get(model, :__total_parameters)
+  defp sort_value(model, :active_parameters), do: Map.get(model, :__active_parameters)
+  defp sort_value(model, :minimum_ram_gb), do: Map.get(model, :__minimum_ram_gb)
+  defp sort_value(model, :minimum_vram_gb), do: Map.get(model, :__minimum_vram_gb)
 
   defp compare_recently_changed(a, b, dir) do
     a_epoch = Map.get(a, :__last_changed_epoch)

@@ -124,8 +124,58 @@ defmodule PetalBoilerplate.CatalogTest do
     assert Enum.map(result, & &1.id) == ["multimodal-audio"]
   end
 
+  test "enriched catalog exposes architecture and model size metadata" do
+    models = Catalog.list_all_models()
+
+    assert Enum.all?(models, &(&1.__architecture in [:dense, :moe, :unknown]))
+    assert Enum.any?(models, &(&1.__architecture == :dense))
+    assert Enum.any?(models, &(&1.__architecture == :moe))
+    assert Enum.any?(models, &is_number(&1.__total_parameters))
+    assert Enum.any?(models, &is_number(&1.__active_parameters))
+    assert Enum.any?(models, &is_number(&1.__minimum_ram_gb))
+    assert Enum.any?(models, &is_number(&1.__minimum_vram_gb))
+  end
+
+  test "list_models filters by architecture" do
+    models = [
+      build_model("dense", [:text], [:text]) |> Map.put(:__architecture, :dense),
+      build_model("moe", [:text], [:text]) |> Map.put(:__architecture, :moe),
+      build_model("unknown", [:text], [:text])
+    ]
+
+    filters = %{Catalog.default_filters() | architecture: :moe}
+    assert models |> Catalog.list_models(filters, Catalog.default_sort()) |> ids() == ["moe"]
+
+    filters = %{filters | architecture: :unknown}
+    assert models |> Catalog.list_models(filters, Catalog.default_sort()) |> ids() == ["unknown"]
+  end
+
+  test "model size sorts keep missing values last in both directions" do
+    for {sort_field, metadata_field} <- [
+          total_parameters: :__total_parameters,
+          active_parameters: :__active_parameters,
+          minimum_ram_gb: :__minimum_ram_gb,
+          minimum_vram_gb: :__minimum_vram_gb
+        ] do
+      models = [
+        build_model("missing", [:text], [:text]),
+        build_model("small", [:text], [:text]) |> Map.put(metadata_field, 2),
+        build_model("large", [:text], [:text]) |> Map.put(metadata_field, 10)
+      ]
+
+      assert models
+             |> Catalog.list_models(Catalog.default_filters(), %{by: sort_field, dir: :asc})
+             |> ids() == ["small", "large", "missing"]
+
+      assert models
+             |> Catalog.list_models(Catalog.default_filters(), %{by: sort_field, dir: :desc})
+             |> ids() == ["large", "small", "missing"]
+    end
+  end
+
   defp restore_env(key, nil), do: Application.delete_env(:petal_boilerplate, key)
   defp restore_env(key, value), do: Application.put_env(:petal_boilerplate, key, value)
+  defp ids(models), do: Enum.map(models, & &1.id)
 
   defp build_model(id, input_modalities, output_modalities) do
     %{
@@ -138,10 +188,15 @@ defmodule PetalBoilerplate.CatalogTest do
       __caps: MapSet.new(),
       __in: MapSet.new(input_modalities),
       __out: MapSet.new(output_modalities),
+      __architecture: :unknown,
       __context: 0,
       __output: 0,
       __cost_in: 0.0,
-      __cost_out: 0.0
+      __cost_out: 0.0,
+      __total_parameters: nil,
+      __active_parameters: nil,
+      __minimum_ram_gb: nil,
+      __minimum_vram_gb: nil
     }
   end
 end

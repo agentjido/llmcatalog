@@ -336,7 +336,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         </div>
 
         <div class="w-full max-w-full pb-2.5 px-4">
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <.icon
               name="hero-funnel"
               class="h-4 w-4 shrink-0"
@@ -363,6 +363,17 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               <.capabilities_filter_content
                 filters={@filters}
                 form_id="capabilities-filter-form"
+              />
+            </.filter_dropdown>
+
+            <.filter_dropdown
+              id="filter-architecture"
+              label={"Architecture #{architecture_filter_label(@filters.architecture)}"}
+              active={@filters.architecture != :all}
+            >
+              <.architecture_filter_content
+                filters={@filters}
+                form_id="architecture-filter-form"
               />
             </.filter_dropdown>
 
@@ -531,6 +542,18 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               <.capabilities_filter_content
                 filters={@filters}
                 form_id="mobile-capabilities-filter-form"
+              />
+            </div>
+          </section>
+
+          <section aria-labelledby="mobile-architecture-filters-title">
+            <h3 id="mobile-architecture-filters-title" class="text-sm font-semibold">
+              Architecture
+            </h3>
+            <div class="mt-2 overflow-hidden rounded-md border">
+              <.architecture_filter_content
+                filters={@filters}
+                form_id="mobile-architecture-filter-form"
               />
             </div>
           </section>
@@ -780,6 +803,55 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     """
   end
 
+  attr :filters, :map, required: true
+  attr :form_id, :string, required: true
+
+  defp architecture_filter_content(assigns) do
+    options = [
+      {:all, "All architectures", "Include models without architecture data"},
+      {:dense, "Dense", "One dense network is active for each token"},
+      {:moe, "Mixture of Experts", "A subset of experts is active for each token"},
+      {:unknown, "Unknown", "Architecture data is not available"}
+    ]
+
+    assigns = assign(assigns, :options, options)
+
+    ~H"""
+    <div class="w-64 p-2">
+      <form id={@form_id} phx-change="filter">
+        <fieldset>
+          <legend class="sr-only">Model architecture</legend>
+          <label
+            :for={{value, label, description} <- @options}
+            class="flex cursor-pointer items-start gap-2 rounded px-2 py-2 hover:opacity-80"
+            style="background-color: transparent;"
+            onmouseover="this.style.backgroundColor='hsl(var(--accent))'"
+            onmouseout="this.style.backgroundColor='transparent'"
+          >
+            <input
+              type="radio"
+              name="architecture"
+              value={value}
+              checked={@filters.architecture == value}
+              class="mt-0.5"
+              style="border-color: hsl(var(--border));"
+            />
+            <span class="min-w-0">
+              <span class="block text-sm font-medium">{label}</span>
+              <span
+                class="block text-xs leading-snug"
+                style="color: hsl(var(--muted-foreground));"
+              >
+                {description}
+              </span>
+            </span>
+          </label>
+        </fieldset>
+      </form>
+    </div>
+    """
+  end
+
   @input_modality_options [
     {:text, "Text"},
     {:image, "Image"},
@@ -936,6 +1008,9 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     end
   end
 
+  defp architecture_filter_label(:all), do: ""
+  defp architecture_filter_label(architecture), do: "(#{architecture_label(architecture)})"
+
   defp selected_provider_badges(filters, providers) do
     Enum.filter(providers, &MapSet.member?(filters.provider_ids, to_string(&1.id)))
   end
@@ -947,6 +1022,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       filters.min_output != nil ||
       filters.max_cost_in != nil ||
       filters.max_cost_out != nil ||
+      filters.architecture != :all ||
       has_capability_filters?(filters.capabilities) ||
       MapSet.size(filters.modalities_in) > 0 ||
       MapSet.size(filters.modalities_out) > 0 ||
@@ -1021,6 +1097,20 @@ defmodule PetalBoilerplateWeb.ModelComponents do
          |> Enum.map(fn {k, _v} ->
            %{label: capability_chip_label(k), kind: "capability", value: to_string(k)}
          end))
+
+    chips =
+      if filters.architecture != :all do
+        chips ++
+          [
+            %{
+              label: "Architecture: #{architecture_label(filters.architecture)}",
+              kind: "architecture",
+              value: nil
+            }
+          ]
+      else
+        chips
+      end
 
     chips =
       chips ++
@@ -1212,13 +1302,19 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               Features
             </th>
             <.sortable_header field={:context} label="Context" sort={@sort} align="right" />
+            <.sortable_header
+              field={table_size_field(@sort)}
+              label={table_size_label(@sort)}
+              sort={@sort}
+              align="right"
+            />
             <.sortable_header field={:cost_in} label="In/Out $/M" sort={@sort} align="right" />
           </tr>
         </thead>
         <tbody :if={@total == 0} id="models-table-empty-body">
           <tr id="no-models-row">
             <td
-              colspan="7"
+              colspan="8"
               class="px-3 py-12 text-center"
               style="color: hsl(var(--muted-foreground));"
             >
@@ -1284,6 +1380,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                     {lifecycle_label(model)}
                   </span>
                 <% end %>
+                <.architecture_badge architecture={model.__architecture} compact />
               </div>
             </td>
             <td class="px-3 py-2">
@@ -1326,6 +1423,9 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             </td>
             <td class="px-3 py-2 text-right font-mono text-xs">
               {ModelLive.format_number(model_limit(model, :context))}
+            </td>
+            <td class="px-3 py-2 text-right font-mono text-xs tabular-nums">
+              {table_size_value(model, @sort)}
             </td>
             <td class="px-3 py-2 text-right font-mono text-xs">
               {ModelLive.format_cost(model_cost(model, :input))}/{ModelLive.format_cost(
@@ -1384,6 +1484,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                       {lifecycle_label(model)}
                     </span>
                   <% end %>
+                  <.architecture_badge architecture={model.__architecture} compact />
                 </div>
                 <div class="text-xs mt-0.5" style="color: hsl(var(--muted-foreground));">
                   {model.provider}
@@ -1398,14 +1499,20 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 </div>
 
                 <div
-                  class="flex items-center gap-3 mt-2 text-xs"
+                  class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
                   style="color: hsl(var(--muted-foreground));"
                 >
                   <.modality_badges model={model} />
-                  <span class="font-mono">
+                  <span class="whitespace-nowrap font-mono">
                     {ModelLive.format_number(model_limit(model, :context))}
                   </span>
-                  <span class="font-mono">
+                  <span
+                    class="whitespace-nowrap font-mono tabular-nums"
+                    title="Total parameters"
+                  >
+                    Params {format_parameter_count(model.__total_parameters)}
+                  </span>
+                  <span class="whitespace-nowrap font-mono">
                     {ModelLive.format_cost(model_cost(model, :input))}/{ModelLive.format_cost(
                       model_cost(model, :output)
                     )}
@@ -1447,6 +1554,89 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       </div>
     </div>
     """
+  end
+
+  attr :architecture, :atom, required: true
+  attr :compact, :boolean, default: false
+
+  defp architecture_badge(assigns) do
+    ~H"""
+    <span
+      data-architecture={@architecture}
+      class={[
+        "inline-flex shrink-0 items-center rounded border font-medium",
+        if(@compact, do: "px-1.5 py-0.5 text-[10px]", else: "px-2 py-0.5 text-xs")
+      ]}
+      style={architecture_badge_style(@architecture)}
+    >
+      {architecture_label(@architecture)}
+    </span>
+    """
+  end
+
+  defp architecture_badge_style(:moe) do
+    "border-color: hsl(var(--primary) / 0.35); background-color: hsl(var(--primary) / 0.12); color: hsl(var(--primary));"
+  end
+
+  defp architecture_badge_style(:dense) do
+    "border-color: hsl(var(--border)); background-color: hsl(var(--secondary)); color: hsl(var(--secondary-foreground));"
+  end
+
+  defp architecture_badge_style(_architecture) do
+    "border-color: hsl(var(--border)); background-color: hsl(var(--muted) / 0.45); color: hsl(var(--muted-foreground));"
+  end
+
+  defp architecture_label(:moe), do: "MoE"
+  defp architecture_label(:dense), do: "Dense"
+  defp architecture_label(:unknown), do: "Unknown"
+  defp architecture_label(_architecture), do: "All"
+
+  defp table_size_field(%{by: by})
+       when by in [:total_parameters, :active_parameters, :minimum_ram_gb, :minimum_vram_gb],
+       do: by
+
+  defp table_size_field(_sort), do: :total_parameters
+
+  defp table_size_label(sort) do
+    case table_size_field(sort) do
+      :total_parameters -> "Total Params"
+      :active_parameters -> "Active Params"
+      :minimum_ram_gb -> "Min RAM"
+      :minimum_vram_gb -> "Min VRAM"
+    end
+  end
+
+  defp table_size_value(model, sort) do
+    case table_size_field(sort) do
+      :total_parameters -> format_parameter_count(model.__total_parameters)
+      :active_parameters -> format_parameter_count(model.__active_parameters)
+      :minimum_ram_gb -> format_memory_gb(model.__minimum_ram_gb)
+      :minimum_vram_gb -> format_memory_gb(model.__minimum_vram_gb)
+    end
+  end
+
+  defp format_parameter_count(nil), do: "N/A"
+
+  defp format_parameter_count(value) when is_number(value) do
+    cond do
+      value >= 1_000_000_000_000 -> "#{compact_decimal(value / 1_000_000_000_000)}T"
+      value >= 1_000_000_000 -> "#{compact_decimal(value / 1_000_000_000)}B"
+      value >= 1_000_000 -> "#{compact_decimal(value / 1_000_000)}M"
+      true -> ModelLive.format_number(value)
+    end
+  end
+
+  defp format_memory_gb(nil), do: "N/A"
+  defp format_memory_gb(value) when is_number(value), do: "#{compact_decimal(value)} GB"
+
+  defp compact_decimal(value) do
+    rounded = Float.round(value * 1.0, 1)
+
+    if rounded == trunc(rounded) do
+      Integer.to_string(trunc(rounded))
+    else
+      Float.to_string(rounded)
+    end
   end
 
   attr :field, :atom, required: true
@@ -1605,6 +1795,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             >
               {@model.family}
             </span>
+            <.architecture_badge architecture={@model.__architecture} />
           </div>
 
           <h1 id="model-detail-title" class="text-2xl font-semibold mb-2">{@model.name}</h1>
@@ -2117,10 +2308,37 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                   style="border-color: hsl(var(--border));"
                 >
                   <.comparison_spec_row
+                    label="Architecture"
+                    models={@models}
+                    getter={fn m -> architecture_label(m.__architecture) end}
+                    bg
+                  />
+                  <.comparison_spec_row
+                    label="Total Parameters"
+                    models={@models}
+                    getter={fn m -> format_parameter_count(m.__total_parameters) end}
+                  />
+                  <.comparison_spec_row
+                    label="Active Parameters"
+                    models={@models}
+                    getter={fn m -> format_parameter_count(m.__active_parameters) end}
+                    bg
+                  />
+                  <.comparison_spec_row
+                    label="Minimum RAM"
+                    models={@models}
+                    getter={fn m -> format_memory_gb(m.__minimum_ram_gb) end}
+                  />
+                  <.comparison_spec_row
+                    label="Minimum VRAM"
+                    models={@models}
+                    getter={fn m -> format_memory_gb(m.__minimum_vram_gb) end}
+                    bg
+                  />
+                  <.comparison_spec_row
                     label="Context"
                     models={@models}
                     getter={fn m -> ModelLive.format_number(model_limit(m, :context)) end}
-                    bg
                   />
                   <.comparison_spec_row
                     :if={Enum.any?(@models, &(model_limit(&1, :input) != nil))}
@@ -2269,6 +2487,11 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   defp specification_rows(model) do
     rows = [
+      %{label: "Architecture", value: architecture_label(model.__architecture)},
+      %{label: "Total Parameters", value: format_parameter_count(model.__total_parameters)},
+      %{label: "Active Parameters", value: format_parameter_count(model.__active_parameters)},
+      %{label: "Minimum RAM", value: format_memory_gb(model.__minimum_ram_gb)},
+      %{label: "Minimum VRAM", value: format_memory_gb(model.__minimum_vram_gb)},
       %{label: "Context Window", value: format_token_metric(model_limit(model, :context))},
       %{label: "Max Output", value: format_token_metric(model_limit(model, :output))},
       %{label: "Input Cost", value: "#{ModelLive.format_cost(model_cost(model, :input))}/M"},

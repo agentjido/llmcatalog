@@ -61,6 +61,13 @@ defmodule PetalBoilerplate.Catalog.FiltersTest do
       assert filters.allowed_only == false
     end
 
+    test "parses supported architecture values and rejects unknown values" do
+      assert Filters.from_params(%{"architecture" => "dense"}).architecture == :dense
+      assert Filters.from_params(%{"architecture" => "moe"}).architecture == :moe
+      assert Filters.from_params(%{"architecture" => "unknown"}).architecture == :unknown
+      assert Filters.from_params(%{"architecture" => "sparse"}).architecture == :all
+    end
+
     test "parses capability params" do
       filters = Filters.from_params(%{"cap_chat" => "true", "cap_tools" => "true"})
       assert filters.capabilities.chat == true
@@ -122,6 +129,12 @@ defmodule PetalBoilerplate.Catalog.FiltersTest do
       params = Filters.to_params(filters)
 
       assert params["cost"] == 1.0
+    end
+
+    test "serializes a non-default architecture" do
+      filters = Filters.set_architecture(Filters.new(), :moe)
+
+      assert Filters.to_params(filters)["architecture"] == "moe"
     end
 
     test "serializes input and output modalities" do
@@ -191,6 +204,12 @@ defmodule PetalBoilerplate.Catalog.FiltersTest do
 
       assert MapSet.member?(filters.provider_ids, "openai")
       assert MapSet.member?(filters.provider_ids, "anthropic")
+    end
+  end
+
+  describe "set_architecture/2" do
+    test "sets a supported architecture" do
+      assert Filters.set_architecture(Filters.new(), :dense).architecture == :dense
     end
   end
 
@@ -271,6 +290,11 @@ defmodule PetalBoilerplate.Catalog.FiltersTest do
       filters = Filters.toggle_capability(filters, :chat)
       assert Filters.active_filter_count(filters) == 2
     end
+
+    test "counts architecture as one filter" do
+      filters = Filters.set_architecture(Filters.new(), :unknown)
+      assert Filters.active_filter_count(filters) == 1
+    end
   end
 
   describe "active_quick_filters/1" do
@@ -325,6 +349,7 @@ defmodule PetalBoilerplate.Catalog.FiltersTest do
         "providers" => "openai,anthropic",
         "in" => "image,pdf",
         "out" => "audio,embedding",
+        "architecture" => "moe",
         "ctx" => "100000",
         "cost" => "1.5",
         "cap_tools" => "true",
@@ -340,6 +365,7 @@ defmodule PetalBoilerplate.Catalog.FiltersTest do
       assert filters1.max_cost_in == filters2.max_cost_in
       assert filters1.modalities_in == filters2.modalities_in
       assert filters1.modalities_out == filters2.modalities_out
+      assert filters1.architecture == filters2.architecture
       assert filters1.capabilities.tools == filters2.capabilities.tools
       assert filters1.capabilities.chat == filters2.capabilities.chat
     end
