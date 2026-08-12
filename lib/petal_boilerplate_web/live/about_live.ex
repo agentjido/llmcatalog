@@ -2,6 +2,7 @@ defmodule PetalBoilerplateWeb.AboutLive do
   use PetalBoilerplateWeb, :live_view
 
   alias PetalBoilerplate.Catalog
+  alias PetalBoilerplateWeb.ModelMetadataFeedback
   alias PetalBoilerplateWeb.PublicRoutes
   alias PetalBoilerplateWeb.SEO
 
@@ -264,7 +265,13 @@ defmodule PetalBoilerplateWeb.AboutLive do
           </h2>
           <p class="mb-4" style="color: hsl(var(--muted-foreground));">
             Built by <span class="font-semibold" style="color: hsl(var(--foreground));">Mike Hostetler</span>.
-            Found a bug or have a suggestion? Please <a
+            See incorrect model data? Please <a
+              href={ModelMetadataFeedback.issue_url()}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hover:underline"
+              style="color: hsl(var(--primary));"
+            >report it to llm_db</a>. Found a website bug or have a site suggestion? Please <a
               href="https://github.com/agentjido/llmdb_xyz/issues"
               target="_blank"
               rel="noopener noreferrer"

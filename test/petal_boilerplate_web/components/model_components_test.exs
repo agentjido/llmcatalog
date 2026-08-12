@@ -11,6 +11,14 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
     refute empty_html =~ ~s(aria-label="Clear search")
   end
 
+  test "header links to the model metadata issue form" do
+    html = render_component(&ModelComponents.header/1, search_value: "")
+
+    assert html =~ ~s(aria-label="Report incorrect model data on GitHub")
+    assert html =~ "Report incorrect model data"
+    assert html =~ "template=model_metadata.yml"
+  end
+
   test "model detail modal renders proposed advanced model metadata" do
     html =
       render_component(&ModelComponents.model_detail_modal/1,
@@ -42,6 +50,10 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
     assert html =~ "70B"
     assert html =~ "Minimum RAM"
     assert html =~ "42.5 GB"
+    assert html =~ "See incorrect model data?"
+    assert html =~ "Submit Fix on GitHub"
+    assert html =~ "model-id=claude-fable-5"
+    assert html =~ "provider=Anthropic"
   end
 
   test "comparison modal renders advanced capability and input limit columns" do

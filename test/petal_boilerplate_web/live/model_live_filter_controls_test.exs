@@ -98,6 +98,12 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
              ~s(nav[aria-label="Mobile navigation"] a[href="https://github.com/agentjido/llm_db"]),
              "GitHub"
            )
+
+    assert has_element?(
+             view,
+             ~s(nav[aria-label="Mobile navigation"] a[href*="template=model_metadata.yml"]),
+             "Report incorrect model data"
+           )
   end
 
   defp first_provider_id do
