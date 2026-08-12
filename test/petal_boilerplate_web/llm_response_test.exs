@@ -44,9 +44,9 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
 
   test "explicit Markdown routes return deterministic page equivalents", %{conn: conn} do
     for {path, expected} <- [
-          {"/index.md", "# LLM Model Database"},
+          {"/index.md", "# LLM Catalog"},
           {"/llm-models.md", "# LLM Models List"},
-          {"/about.md", "# About llmdb.xyz"},
+          {"/about.md", "# About LLM Catalog"},
           {"/history.md", "# Recent LLM Model History"}
         ] do
       response_conn = get(conn, path)
@@ -90,7 +90,7 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
 
     link = get_resp_header(conn, "link") |> List.first()
 
-    assert response(conn, 200) =~ "# LLM Model Database"
+    assert response(conn, 200) =~ "# LLM Catalog"
     assert link =~ "<#{PublicRoutes.absolute("/")}>; rel=\"canonical\""
     refute link =~ "?q=gpt"
   end

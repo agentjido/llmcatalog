@@ -248,7 +248,7 @@ defmodule PetalBoilerplate.OGImage do
 
       <!-- Logo -->
       <text x="#{div(@image_width, 2)}" y="200" text-anchor="middle" fill="#60a5fa" font-size="72" font-family="system-ui, -apple-system, sans-serif" font-weight="700">
-        llmdb.xyz
+        llmcatalog.dev
       </text>
 
       <!-- Subtitle -->
@@ -279,12 +279,12 @@ defmodule PetalBoilerplate.OGImage do
 
       <!-- Header -->
       <text x="64" y="80" fill="#60a5fa" font-size="32" font-family="system-ui, -apple-system, sans-serif" font-weight="600">
-        llmdb.xyz
+        llmcatalog.dev
       </text>
 
       <!-- Title -->
       <text x="64" y="220" fill="#ffffff" font-size="72" font-family="system-ui, -apple-system, sans-serif" font-weight="700">
-        LLM Model Database
+        LLM Catalog
       </text>
 
       <!-- Subtitle -->
@@ -299,7 +299,7 @@ defmodule PetalBoilerplate.OGImage do
       <!-- Footer -->
       <line x1="64" y1="#{@image_height - 80}" x2="#{@image_width - 64}" y2="#{@image_height - 80}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
       <text x="64" y="#{@image_height - 40}" fill="#64748b" font-size="20" font-family="system-ui, -apple-system, sans-serif">
-        llmdb.xyz
+        llmcatalog.dev
       </text>
     </svg>
     """
@@ -319,12 +319,12 @@ defmodule PetalBoilerplate.OGImage do
 
       <!-- Header -->
       <text x="64" y="80" fill="#60a5fa" font-size="32" font-family="system-ui, -apple-system, sans-serif" font-weight="600">
-        llmdb.xyz
+        llmcatalog.dev
       </text>
 
       <!-- Title -->
       <text x="64" y="220" fill="#ffffff" font-size="72" font-family="system-ui, -apple-system, sans-serif" font-weight="700">
-        About llmdb.xyz
+        About LLM Catalog
       </text>
 
       <!-- Subtitle -->
@@ -338,7 +338,7 @@ defmodule PetalBoilerplate.OGImage do
       <!-- Footer -->
       <line x1="64" y1="#{@image_height - 80}" x2="#{@image_width - 64}" y2="#{@image_height - 80}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
       <text x="64" y="#{@image_height - 40}" fill="#64748b" font-size="20" font-family="system-ui, -apple-system, sans-serif">
-        llmdb.xyz/about
+        llmcatalog.dev/about
       </text>
     </svg>
     """
@@ -400,7 +400,7 @@ defmodule PetalBoilerplate.OGImage do
       <text x="#{card_x + 28}" y="#{card_y + 36}"
             fill="#60a5fa" font-size="22"
             font-family="system-ui, -apple-system, sans-serif" font-weight="700">
-        llmdb.xyz
+        llmcatalog.dev
       </text>
 
       <text x="#{card_x + 28}" y="#{card_y + 62}"
@@ -452,7 +452,7 @@ defmodule PetalBoilerplate.OGImage do
       <text x="#{card_x + 28}" y="#{@image_height - card_y - 22}"
             fill="#64748b" font-size="16"
             font-family="system-ui, -apple-system, sans-serif">
-        llmdb.xyz/models/#{provider_slug}/#{svg_escape(to_string(model_id))}
+        llmcatalog.dev/models/#{provider_slug}/#{svg_escape(to_string(model_id))}
       </text>
     </svg>
     """

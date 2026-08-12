@@ -164,7 +164,7 @@ defmodule PetalBoilerplateWeb.LandingLinks do
           [breadcrumb("/llm-models")]
       end
 
-    [%{label: "LLM Model Database", route: "/"}] ++
+    [%{label: "LLM Catalog", route: "/"}] ++
       parents ++ [%{label: current.breadcrumb_label, route: route}]
   end
 

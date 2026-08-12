@@ -28,7 +28,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       <div class="w-full max-w-full flex h-14 items-center gap-3 px-4">
         <a
           href="/"
-          aria-label="LLM Model DB home"
+          aria-label="LLM Catalog home"
           class="flex items-center gap-2 shrink-0 transition-opacity hover:opacity-80"
           title="Go to home page"
         >
@@ -37,7 +37,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             class="text-lg font-semibold tracking-tight hidden sm:inline"
             style="color: hsl(var(--foreground));"
           >
-            LLM Model DB
+            LLM Catalog
           </span>
         </a>
 
@@ -150,7 +150,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             </svg>
           </a>
           <a
-            href="https://github.com/agentjido/llm_db"
+            href="https://github.com/agentjido/llmdb"
             target="_blank"
             rel="noopener noreferrer"
             title="GitHub"
@@ -208,7 +208,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 llm_db v{llm_db_version()}
               </a>
               <a
-                href="https://github.com/agentjido/llm_db"
+                href="https://github.com/agentjido/llmdb"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="block px-4 py-2.5 text-sm hover:opacity-80"

@@ -95,7 +95,7 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
 
     assert has_element?(
              view,
-             ~s(nav[aria-label="Mobile navigation"] a[href="https://github.com/agentjido/llm_db"]),
+             ~s(nav[aria-label="Mobile navigation"] a[href="https://github.com/agentjido/llmdb"]),
              "GitHub"
            )
 

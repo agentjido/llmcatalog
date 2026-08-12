@@ -10,7 +10,7 @@ defmodule PetalBoilerplateWeb.SEO do
       SEO.OpenGraph.build(
         description:
           "Browse and compare large language models by provider, capabilities, pricing, modalities, and context windows.",
-        site_name: "llmdb.xyz",
+        site_name: "LLM Catalog",
         locale: "en_US"
       ),
     twitter: SEO.Twitter.build(card: :summary_large_image)
@@ -83,9 +83,9 @@ defmodule PetalBoilerplateWeb.SEO do
 
   def site_config(_conn) do
     SEO.Site.build(
-      default_title: "LLM Model Database",
+      default_title: "LLM Catalog",
       description: @default_description,
-      title_suffix: " · llmdb.xyz"
+      title_suffix: " · LLM Catalog"
     )
   end
 
@@ -98,15 +98,15 @@ defmodule PetalBoilerplateWeb.SEO do
       %{
         "@context" => "https://schema.org",
         "@type" => "WebSite",
-        "name" => "LLM Model Database",
-        "alternateName" => "llmdb.xyz",
+        "name" => "LLM Catalog",
+        "alternateName" => "llmcatalog.dev",
         "description" => @default_description,
         "url" => home_url
       },
       %{
         "@context" => "https://schema.org",
         "@type" => "Dataset",
-        "name" => "LLM Model Database",
+        "name" => "LLM Catalog",
         "description" =>
           "A catalog of #{model_count} large language models from #{provider_count} providers.",
         "url" => home_url,
@@ -126,7 +126,7 @@ defmodule PetalBoilerplateWeb.SEO do
         ],
         "includedInDataCatalog" => %{
           "@type" => "DataCatalog",
-          "name" => "llmdb.xyz",
+          "name" => "LLM Catalog",
           "url" => home_url
         }
       }
@@ -139,7 +139,7 @@ defmodule PetalBoilerplateWeb.SEO do
       %{
         "@context" => "https://schema.org",
         "@type" => "AboutPage",
-        "name" => "About llmdb.xyz",
+        "name" => "About LLM Catalog",
         "description" => description,
         "url" => PublicRoutes.absolute("/about")
       }
@@ -279,7 +279,7 @@ defmodule PetalBoilerplateWeb.SEO do
           %{
             "@type" => "ListItem",
             "position" => 1,
-            "name" => "LLM Model Database",
+            "name" => "LLM Catalog",
             "item" => PublicRoutes.absolute("/")
           },
           %{

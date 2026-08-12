@@ -10,13 +10,13 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       model_count = Catalog.format_number(Catalog.total_model_count())
       endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
-      assert html =~ ~s(property="og:title" content="LLM Model Database")
+      assert html =~ ~s(property="og:title" content="LLM Catalog")
       assert html =~ ~s(property="og:description" content="Browse and compare #{model_count})
       assert html =~ ~s(property="og:url" content="#{endpoint_url}/")
       assert html =~ ~s(property="og:type" content="website")
       assert html =~ ~s(property="og:image")
       assert html =~ ~s(rel="canonical" href="#{endpoint_url}/")
-      assert heading_texts(html, "h1") == ["LLM Model Database"]
+      assert heading_texts(html, "h1") == ["LLM Catalog"]
       assert html =~ "LLM and AI models across"
     end
 
@@ -26,7 +26,7 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
       assert html =~ ~s(property="og:title" content="About")
-      assert html =~ ~s(property="og:description" content="Learn about llmdb.xyz)
+      assert html =~ ~s(property="og:description" content="Learn about LLM Catalog)
       assert html =~ ~s(property="og:url" content="#{endpoint_url}/about")
     end
 

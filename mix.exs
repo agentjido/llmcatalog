@@ -41,7 +41,6 @@ defmodule PetalBoilerplate.MixProject do
       {:phoenix_live_view, "~> 1.1"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:plug_cowboy, "~> 2.5"},
-      {:plug_canonical_host, "~> 2.0"},
       {:phoenix_seo, "~> 0.3"},
 
       # UI

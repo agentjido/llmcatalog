@@ -12,7 +12,7 @@ defmodule PetalBoilerplateWeb.AboutLive do
     provider_count = length(Catalog.list_providers())
 
     description =
-      "Learn about llmdb.xyz, a database of #{model_count} LLM models across #{provider_count} providers. Powered by the open-source llm_db Elixir package."
+      "Learn about LLM Catalog, a database of #{model_count} LLM models across #{provider_count} providers. Powered by the open-source llm_db Elixir package."
 
     {:ok,
      assign(socket,
@@ -39,7 +39,7 @@ defmodule PetalBoilerplateWeb.AboutLive do
 
       <div class="flex-1 w-full max-w-4xl mx-auto py-8 sm:py-12 px-4 sm:px-6">
         <h1 class="text-3xl sm:text-4xl font-bold mb-6" style="color: hsl(var(--foreground));">
-          About llmdb.xyz
+          About LLM Catalog
         </h1>
 
         <div
@@ -50,7 +50,7 @@ defmodule PetalBoilerplateWeb.AboutLive do
             What is this?
           </h2>
           <p class="mb-4" style="color: hsl(var(--muted-foreground));">
-            llmdb.xyz is a comprehensive database of Large Language Models (LLMs) from all major providers.
+            LLM Catalog is a comprehensive database of Large Language Models (LLMs) from all major providers.
             Browse, filter, and compare models by capabilities, pricing, context windows, and more.
           </p>
           <p class="mb-4" style="color: hsl(var(--muted-foreground));">
@@ -226,7 +226,7 @@ defmodule PetalBoilerplateWeb.AboutLive do
           </p>
           <div class="flex flex-wrap gap-4">
             <a
-              href="https://github.com/agentjido/llm_db"
+              href="https://github.com/agentjido/llmdb"
               target="_blank"
               rel="noopener noreferrer"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors hover:opacity-80"
@@ -272,7 +272,7 @@ defmodule PetalBoilerplateWeb.AboutLive do
               class="hover:underline"
               style="color: hsl(var(--primary));"
             >report it to llm_db</a>. Found a website bug or have a site suggestion? Please <a
-              href="https://github.com/agentjido/llmdb_xyz/issues"
+              href="https://github.com/agentjido/llmcatalog/issues"
               target="_blank"
               rel="noopener noreferrer"
               class="hover:underline"

@@ -11,22 +11,9 @@ defmodule PetalBoilerplateWeb.Endpoint do
     same_site: "Lax"
   ]
   plug PetalBoilerplateWeb.Plug.Heartbeat
-  plug(:canonical_host)
+  plug PetalBoilerplateWeb.Plugs.CanonicalHost
   plug PetalBoilerplateWeb.Plugs.PlausibleProxy
   plug PetalBoilerplateWeb.Plugs.SearchIndexing
-
-  defp canonical_host(conn, _opts) do
-    :petal_boilerplate
-    |> Application.get_env(:canonical_host)
-    |> case do
-      host when is_binary(host) ->
-        opts = PlugCanonicalHost.init(canonical_host: host)
-        PlugCanonicalHost.call(conn, opts)
-
-      _ ->
-        conn
-    end
-  end
 
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 

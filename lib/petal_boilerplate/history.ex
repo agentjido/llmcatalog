@@ -296,7 +296,7 @@ defmodule PetalBoilerplate.History do
   defp github_request_headers do
     headers = [
       {"accept", "application/vnd.github+json"},
-      {"user-agent", "llmdb.xyz"}
+      {"user-agent", "llmcatalog.dev"}
     ]
 
     case System.get_env("GH_TOKEN") || System.get_env("GITHUB_TOKEN") do

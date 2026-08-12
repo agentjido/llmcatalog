@@ -38,7 +38,7 @@ defmodule PetalBoilerplateWeb.ModelLiveSelectionTest do
       |> elem(0)
 
     {:ok, view, _html} = live(conn, "/")
-    assert page_title(view) =~ "LLM Model Database"
+    assert page_title(view) =~ "LLM Catalog"
     html = render_click(view, "show_model", %{"id" => model.id})
     canonical_url = PublicRoutes.absolute(PublicRoutes.model_path(model))
 
@@ -52,12 +52,12 @@ defmodule PetalBoilerplateWeb.ModelLiveSelectionTest do
     assert html =~ ~s(data-indexing-enabled="true")
     assert html =~ ~s(data-canonical-url="#{canonical_url}")
     assert html =~ ~s(data-robots="noindex, follow")
-    refute page_title(view) =~ "LLM Model Database"
+    refute page_title(view) =~ "LLM Catalog"
 
     render_click(view, "close_model", %{})
 
     assert_patch(view, "/")
-    assert page_title(view) == "LLM Model Database"
+    assert page_title(view) == "LLM Catalog"
     refute has_element?(view, "#model-detail-dialog")
     assert has_element?(view, "##{model.id}")
     assert has_element?(view, "#catalog-heading")

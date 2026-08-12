@@ -10,7 +10,7 @@ defmodule PetalBoilerplateWeb.ErrorHTML do
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="noindex, nofollow" />
         <meta name="description" content="The requested page could not be found." />
-        <title>Page Not Found · llmdb.xyz</title>
+        <title>Page Not Found · LLM Catalog</title>
         <link rel="stylesheet" href="/assets/app.css" />
       </head>
       <body class="antialiased bg-white dark:bg-gray-900">

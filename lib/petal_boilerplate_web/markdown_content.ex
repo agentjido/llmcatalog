@@ -48,7 +48,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
     """
-    # LLM Model Database
+    # LLM Catalog
 
     Browse and compare #{Catalog.format_number(model_count)} large language models from #{provider_count} providers.
 
@@ -63,7 +63,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     - [Largest context window LLMs](#{endpoint_url}/models/long-context)
     - [Open-weight LLM models](#{endpoint_url}/models/open-weights)
     - [Video AI models](#{endpoint_url}/models/video)
-    - [About llmdb.xyz](#{endpoint_url}/about)
+    - [About LLM Catalog](#{endpoint_url}/about)
     - [Recent model history](#{endpoint_url}/history)
     - [XML sitemap](#{endpoint_url}/sitemap.xml)
     - [RSS history feed](#{endpoint_url}/feed)
@@ -77,9 +77,9 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     provider_count = length(Catalog.list_providers())
 
     """
-    # About llmdb.xyz
+    # About LLM Catalog
 
-    llmdb.xyz is a database of #{Catalog.format_number(model_count)} large language models from #{provider_count} providers.
+    LLM Catalog is a database of #{Catalog.format_number(model_count)} large language models from #{provider_count} providers.
 
     The catalog supports comparisons of model capabilities, pricing, context windows, output limits, modalities, aliases, and lifecycle data.
 
@@ -299,7 +299,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
 
     #{items}
 
-    See [About llmdb.xyz](#{PetalBoilerplateWeb.Endpoint.url()}/about) for more information about the data.
+    See [About LLM Catalog](#{PetalBoilerplateWeb.Endpoint.url()}/about) for more information about the data.
     """
     |> String.trim()
   end
