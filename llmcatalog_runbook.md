@@ -8,19 +8,21 @@ and links to pull requests or dashboards as work is completed.
 
 ## Migration record
 
-- Status: Cutover in progress
+- Status: Technical cutover complete; external service follow-up pending
 - Migration owner: Mike Hostetler
 - Code owner: Mike Hostetler
 - DNS owner: Mike Hostetler
-- Search owner: ____________________
-- Planned cutover time: ____________________
-- Actual cutover time: ____________________
-- Pull request: ____________________
-- Fly deployment: ____________________
+- Search owner: Mike Hostetler
+- Planned cutover time: `2026-08-12`
+- Actual cutover time: `2026-08-12 13:16 UTC`
+- Pull requests: [#91](https://github.com/agentjido/llmcatalog/pull/91),
+  [#92](https://github.com/agentjido/llmcatalog/pull/92)
+- Final code deployment:
+  [GitHub Actions run 31601028547](https://github.com/agentjido/llmcatalog/actions/runs/31601028547)
 - Cloudflare zones: `llmcatalog.dev`, `llmdb.xyz`
 - Plausible site: `llmdb.xyz` -> `llmcatalog.dev`
 - Google Search Console move: `llmdb.xyz` -> `llmcatalog.dev`
-- Rollback decision owner: ____________________
+- Rollback decision owner: Mike Hostetler
 
 ## Fixed decisions
 
@@ -31,7 +33,7 @@ and links to pull requests or dashboards as work is completed.
   domain move.
 - [x] Keep the Fly application name `llmdb-prod`.
 - [x] Keep the internal Phoenix application and module names unchanged.
-- [ ] Keep `llmdb.xyz` registered and active for at least one year. An
+- [x] Keep `llmdb.xyz` registered and active for at least one year. An
   indefinite redirect is preferred.
 - [ ] If `llmdb.dev` is kept, redirect it to `llmcatalog.dev` too.
 - [x] Keep `POST /api/mcp` operational on `llmdb.xyz`. Do not depend on a
@@ -43,19 +45,19 @@ Recommended public description:
 
 ## Success criteria
 
-- [ ] `https://llmcatalog.dev/` loads with a valid certificate.
-- [ ] LiveView navigation and WebSocket connections work through Cloudflare.
-- [ ] Every public GET and HEAD URL on `llmdb.xyz` redirects to the same path
+- [x] `https://llmcatalog.dev/` loads with a valid certificate.
+- [x] LiveView navigation and WebSocket connections work on the new domain.
+- [x] Every public GET and HEAD URL on `llmdb.xyz` redirects to the same path
   and query on `llmcatalog.dev`.
-- [ ] `POST https://llmdb.xyz/api/mcp` still returns an MCP response without a
+- [x] `POST https://llmdb.xyz/api/mcp` still returns an MCP response without a
   redirect.
-- [ ] `www.llmcatalog.dev` redirects to `llmcatalog.dev` in one hop.
-- [ ] Canonical tags, structured data, `robots.txt`, the sitemap, the RSS feed,
+- [x] `www.llmcatalog.dev` redirects to `llmcatalog.dev` in one hop.
+- [x] Canonical tags, structured data, `robots.txt`, the sitemap, the RSS feed,
   Markdown responses, and social images use the new domain.
 - [ ] Plausible receives page views and custom events for `llmcatalog.dev`.
 - [ ] Google Search Console accepts the Change of Address request.
-- [ ] The old domain has no redirect loops or broken important URLs.
-- [ ] The production health check stays green during the move.
+- [x] The old domain has no redirect loops or broken important URLs.
+- [x] The production health check stays green during the move.
 
 ## Current state recorded on 2026-08-12
 
@@ -69,6 +71,8 @@ Recommended public description:
 - Current production image at audit time:
   `llmdb-prod:deployment-01KZTVTK1KZJHF0D77JT5H7GQD`
 - Current production machine version at audit time: `98`
+- Final code release: `llmdb-prod:deployment-01KZV26891BPS6FCTTR4CJP6RK`
+- Final code release machine version: `101`
 - `PHX_HOST` and `CANONICAL_HOST` are set as Fly secrets. These secrets can
   override values in the TOML files.
 - The production GitHub workflow deploys with `build/llmdb-prod.toml`.
@@ -79,9 +83,8 @@ Recommended public description:
   - `www` CNAME: `o2depm5.llmdb-prod.fly.dev`
   - Fly ownership and ACME validation records are present.
 - `llmdb.xyz` already uses Cloudflare nameservers.
-- The migration branch changes the public brand and URL references to LLM
-  Catalog and `llmcatalog.dev`.
-- The migration branch changes source-data links to `agentjido/llmdb`.
+- The production site uses the LLM Catalog brand and `llmcatalog.dev` URLs.
+- Production source-data links use `agentjido/llmdb`.
 - `build/llmdb-stage.toml` now refers to `stage.llmcatalog.dev`, but the
   `llmdb-stage` Fly application does not exist.
 
@@ -430,8 +433,10 @@ Reference: [Plausible domain change](https://plausible.io/docs/change-domain-nam
 
 ### 5.3 Other external records
 
-- [ ] Update the website repository description and homepage URL on GitHub.
-- [ ] Update the `agentjido/llmdb` repository homepage URL and README links.
+- [x] Rename the website repository to `agentjido/llmcatalog`, and update its
+  description and homepage URL on GitHub.
+- [x] Update the `agentjido/llmdb` repository homepage URL and README links in
+  [pull request 298](https://github.com/agentjido/llmdb/pull/298).
 - [ ] Update the Hex package website link in the next normal `llm_db` release,
   if its metadata still uses the old site.
 - [ ] Update AgentJido organization pages and documentation.
@@ -446,14 +451,14 @@ Reference: [Plausible domain change](https://plausible.io/docs/change-domain-nam
 
 Complete these tasks in this order.
 
-- [ ] Confirm Cloudflare shows `llmcatalog.dev` as active.
-- [ ] Confirm Fly certificates for the apex and `www` names are valid.
-- [ ] Confirm Cloudflare SSL mode is **Full (strict)**.
-- [ ] Confirm the code pull request is merged and all CI checks pass.
+- [x] Confirm Cloudflare shows `llmcatalog.dev` as active.
+- [x] Confirm Fly certificates for the apex and `www` names are valid.
+- [x] Keep the new web records in DNS-only mode during this migration.
+- [x] Confirm the code pull requests are merged and all CI checks pass.
 - [ ] Change the Plausible domain. This starts the 72-hour transition.
-- [ ] Deploy the merged code to `llmdb-prod`.
-- [ ] Confirm that GitHub Actions used `build/llmdb-prod.toml`.
-- [ ] Set the production host secrets to the new domain:
+- [x] Deploy the merged code to `llmdb-prod`.
+- [x] Confirm that GitHub Actions used `build/llmdb-prod.toml`.
+- [x] Set the production host secrets to the new domain:
 
   ```sh
   fly secrets set \
@@ -462,15 +467,15 @@ Complete these tasks in this order.
     -a llmdb-prod
   ```
 
-- [ ] Wait for the machine restart and health check.
-- [ ] Confirm `fly status -a llmdb-prod` reports one passing health check.
-- [ ] Verify the application `www` redirect.
-- [ ] Verify the application `llmdb.xyz` redirect and MCP exception.
-- [ ] Enable the `llmdb.dev` redirect if it is in scope.
-- [ ] Record the deployed image and machine version:
-  ____________________
-- [ ] Record the exact cutover time:
-  ____________________
+- [x] Wait for the machine restart and health check.
+- [x] Confirm `fly status -a llmdb-prod` reports one passing health check.
+- [x] Verify the application `www` redirect.
+- [x] Verify the application `llmdb.xyz` redirect and MCP exception.
+- [x] Record the deployed image and machine version:
+  `llmdb-prod:deployment-01KZV26891BPS6FCTTR4CJP6RK`, version `101`.
+- [x] Record the exact cutover time: `2026-08-12 13:16 UTC`.
+
+`llmdb.dev` was not in the scope of this cutover.
 
 Do not remove the old Fly certificate or old DNS records during cutover.
 
@@ -478,7 +483,7 @@ Do not remove the old Fly certificate or old DNS records during cutover.
 
 ### 7.1 DNS and TLS
 
-- [ ] Check DNS:
+- [x] Check DNS:
 
   ```sh
   dig +short NS llmcatalog.dev
@@ -487,85 +492,85 @@ Do not remove the old Fly certificate or old DNS records during cutover.
   dig +short CNAME www.llmcatalog.dev
   ```
 
-- [ ] Check certificates:
+- [x] Check certificates:
 
   ```sh
   fly certs check llmcatalog.dev -a llmdb-prod
   fly certs check www.llmcatalog.dev -a llmdb-prod
   ```
 
-- [ ] Open the site in a new browser session and confirm there is no TLS
+- [x] Open the site in a new browser session and confirm there is no TLS
   warning.
 
 ### 7.2 New-domain checks
 
-- [ ] Home page returns `200`:
+- [x] Home page returns `200`:
 
   ```sh
   curl -fsSIL https://llmcatalog.dev/
   ```
 
-- [ ] Health endpoint returns `200`:
+- [x] Health endpoint returns `200`:
 
   ```sh
   curl -fsS https://llmcatalog.dev/status
   ```
 
-- [ ] `www` redirects in one hop and preserves the path and query:
+- [x] `www` redirects in one hop and preserves the path and query:
 
   ```sh
   curl -sSIL 'https://www.llmcatalog.dev/models/vision?source=qa'
   ```
 
-- [ ] The canonical tag uses the new domain:
+- [x] The canonical tag uses the new domain:
 
   ```sh
   curl -fsSL https://llmcatalog.dev/about | rg 'rel="canonical"'
   ```
 
-- [ ] `robots.txt` names the new sitemap:
+- [x] `robots.txt` names the new sitemap:
 
   ```sh
   curl -fsSL https://llmcatalog.dev/robots.txt
   ```
 
-- [ ] The sitemap contains no old-domain URL:
+- [x] The sitemap contains no old-domain URL:
 
   ```sh
   curl -fsSL https://llmcatalog.dev/sitemap.xml | rg 'llmcatalog\.dev'
   ! curl -fsSL https://llmcatalog.dev/sitemap.xml | rg -q 'llmdb\.xyz'
   ```
 
-- [ ] Check `/feed`, `/llms.txt`, `/about.md`, representative landing pages,
+- [x] Check `/feed`, `/llms.txt`, `/about.md`, representative landing pages,
   a model page, and an OG image.
-- [ ] Confirm the browser establishes a LiveView WebSocket connection.
-- [ ] Confirm filter changes and model modal actions work.
-- [ ] Confirm the **Submit Fix on GitHub** action opens
+- [x] Confirm the browser establishes a LiveView WebSocket connection.
+- [x] Confirm filter changes and model modal actions work.
+- [x] Confirm the **Submit Fix on GitHub** action opens
   `agentjido/llmdb` with the correct issue details.
 
 ### 7.3 Old-domain redirect checks
 
-- [ ] Home-page redirect:
+- [x] Home-page redirect:
 
   ```sh
   curl -sSIL https://llmdb.xyz/
   ```
 
-- [ ] Path and query preservation:
+- [x] Path and query preservation:
 
   ```sh
   curl -sSIL 'https://llmdb.xyz/models/vision?source=qa'
   ```
 
-- [ ] Confirm there is one redirect to:
+- [x] Confirm there is one redirect to:
   `https://llmcatalog.dev/models/vision?source=qa`.
-- [ ] Check at least ten important URLs from the old sitemap.
-- [ ] Confirm no important URL redirects to the new home page unless the old
+- [x] Check at least ten important URLs from the old sitemap.
+- [x] Confirm no important URL redirects to the new home page unless the old
   URL was the old home page.
 
 ### 7.4 MCP checks
 
-- [ ] New-domain MCP request returns `200`:
+- [x] New-domain MCP request returns `200`:
 
   ```sh
   curl -fsS https://llmcatalog.dev/api/mcp \
@@ -573,7 +578,7 @@ Do not remove the old Fly certificate or old DNS records during cutover.
     --data '{"method":"tools/list"}'
   ```
 
-- [ ] Old-domain MCP request returns `200` and does not redirect:
+- [x] Old-domain MCP request returns `200` and does not redirect:
 
   ```sh
   curl -fsS https://llmdb.xyz/api/mcp \
@@ -581,7 +586,7 @@ Do not remove the old Fly certificate or old DNS records during cutover.
     --data '{"method":"tools/list"}'
   ```
 
-- [ ] Confirm that the old-domain response has no `Location` header.
+- [x] Confirm that the old-domain response has no `Location` header.
 - [ ] Test one configured MCP client with the new endpoint.
 - [ ] Test one existing client with the old endpoint.
 
@@ -589,8 +594,10 @@ Do not remove the old Fly certificate or old DNS records during cutover.
 
 - [ ] Confirm Plausible shows a live visit for `llmcatalog.dev`.
 - [ ] Confirm Plausible records a custom filter event.
-- [ ] Confirm `/_q/s.js` loads and `/_q/e` accepts events.
-- [ ] Check Fly logs for host, redirect, WebSocket, MCP, and application errors:
+- [x] Confirm `/_q/s.js` loads.
+- [ ] Change the Plausible site domain. The event endpoint currently returns
+  `202` with `x-plausible-dropped: 1` for `llmcatalog.dev` events.
+- [x] Check Fly logs for host, redirect, WebSocket, MCP, and application errors:
 
   ```sh
   fly logs -a llmdb-prod
@@ -706,25 +713,30 @@ quickly.
 
 ## Final completion record
 
-- [ ] Code changes merged
-- [ ] Production deployment complete
-- [ ] Cloudflare zone active
-- [ ] Fly certificates valid
-- [ ] Redirects active and tested
-- [ ] MCP compatibility tested
+- [x] Code changes merged
+- [x] Production deployment complete
+- [x] Cloudflare zone active
+- [x] Fly certificates valid
+- [x] Redirects active and tested
+- [x] MCP compatibility tested
 - [ ] Plausible migrated and tested
 - [ ] Google Search Console Change of Address submitted
 - [ ] New sitemap submitted to Google
 - [ ] New sitemap submitted to Bing
-- [ ] External links updated
-- [ ] Monitoring owner assigned
+- [ ] External profiles and documentation updated
+- [x] Monitoring owner assigned: Mike Hostetler
 - [ ] Rollback window closed
 
 Final notes:
 
 ```text
-Completion date:
-Final production image:
-Known follow-up work:
-Open issues:
+Technical cutover: 2026-08-12 13:16 UTC
+Final code image: llmdb-prod:deployment-01KZV26891BPS6FCTTR4CJP6RK
+Final machine version: 101
+Known follow-up work: Change the Plausible site domain. After 24 hours of
+stable redirects, add the new Search Console property, submit the sitemap, and
+submit Change of Address. Complete Bing, DNSSEC, profile, and documentation
+updates as required.
+Open issues: Plausible drops llmcatalog.dev events until the authenticated site
+owner changes the configured domain.
 ```
