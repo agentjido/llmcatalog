@@ -746,7 +746,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
     provider_count = length(Catalog.list_providers())
 
     assign(socket,
-      page_title: "LLM Model Database",
+      page_title: "LLM Catalog",
       page_description:
         "Browse and compare #{format_number(model_count)} LLM models. Filter by provider, capabilities, pricing, modalities, and context windows.",
       canonical_url: PublicRoutes.absolute("/"),
@@ -816,9 +816,9 @@ defmodule PetalBoilerplateWeb.ModelLive do
     base = "#{model.name || model_id} by #{model.provider}"
 
     if parts == [] do
-      base <> " - View specs and compare with other LLMs on llmdb.xyz"
+      base <> " - View specs and compare with other LLMs on LLM Catalog"
     else
-      base <> " - " <> Enum.join(parts, ", ") <> ". Compare LLMs on llmdb.xyz"
+      base <> " - " <> Enum.join(parts, ", ") <> ". Compare LLMs on LLM Catalog"
     end
   end
 

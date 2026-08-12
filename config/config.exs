@@ -10,10 +10,11 @@ import Config
 config :petal_boilerplate,
   ecto_repos: [],
   history_module: PetalBoilerplate.History,
+  legacy_hosts: ["llmdb.xyz", "www.llmdb.xyz"],
   sync_history_on_start: true
 
 config :petal_boilerplate, :plausible_proxy,
-  site_domain: "llmdb.xyz",
+  site_domain: "llmcatalog.dev",
   script_path: "/_q/s.js",
   event_path: "/_q/e",
   script_url: "https://plausible.io/js/pa--janBeogK9G9oaeuCbmPP.js",

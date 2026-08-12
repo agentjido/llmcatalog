@@ -14,10 +14,10 @@ swap_size_mb = 512
   wait_timeout = '5m0s'
 
 [env]
-  CANONICAL_HOST = 'llmdb.xyz'
+  CANONICAL_HOST = 'llmcatalog.dev'
   ERL_AFLAGS = '-proto_dist inet6_tcp'
   FLY_APP_NAME = 'llmdb-prod'
-  PHX_HOST = 'llmdb.xyz'
+  PHX_HOST = 'llmcatalog.dev'
   PORT = '8080'
   PRIMARY_REGION = 'ord'
   SEO_INDEXING_ENABLED = 'true'

@@ -28,7 +28,7 @@
     %{
       id: "llm-db",
       name: "llm_db",
-      url: "https://github.com/agentjido/llm_db",
+      url: "https://github.com/agentjido/llmdb",
       kind: :primary_catalog,
       publisher: "AgentJido",
       retrieved_at: "2026-07-30",

@@ -23,8 +23,8 @@ app = "/app/bin/entrypoint"
 
 [env]
 FLY_APP_NAME = 'llmdb-prod'
-PHX_HOST = 'llmdb.xyz'
-CANONICAL_HOST = 'llmdb.xyz'
+PHX_HOST = 'llmcatalog.dev'
+CANONICAL_HOST = 'llmcatalog.dev'
 SEO_INDEXING_ENABLED = 'true'
 PORT = '8080'
 PRIMARY_REGION = "ord"

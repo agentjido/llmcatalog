@@ -270,7 +270,7 @@ defmodule PetalBoilerplateWeb.LLMModelsLive do
                 <% end %>
               </ul>
               <p>
-                See <a href="/about">About llmdb.xyz</a> for more information about the data.
+                See <a href="/about">About LLM Catalog</a> for more information about the data.
               </p>
             </div>
           </article>

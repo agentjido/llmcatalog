@@ -54,9 +54,9 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
     body = """
-    # LLM Model Database
+    # LLM Catalog
 
-    llmdb.xyz is a public catalog for browsing and comparing large language models.
+    LLM Catalog is a public catalog for browsing and comparing large language models.
 
     ## Preferred retrieval
 
@@ -113,8 +113,8 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     <?xml version="1.0" encoding="UTF-8"?>
     <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
       <channel>
-        <title>llmdb.xyz Model History</title>
-        <description>Recent model metadata changes from the LLM Model Database.</description>
+        <title>LLM Catalog Model History</title>
+        <description>Recent model metadata changes from LLM Catalog.</description>
         <link>#{xml_escape(PublicRoutes.absolute("/history"))}</link>
         <atom:link href="#{xml_escape(PublicRoutes.absolute("/feed"))}" rel="self" type="application/rss+xml" />
         <language>en-us</language>

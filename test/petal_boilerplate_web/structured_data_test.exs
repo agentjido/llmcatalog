@@ -74,7 +74,7 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     assert breadcrumb["@type"] == "BreadcrumbList"
 
     assert Enum.map(breadcrumb["itemListElement"], & &1["name"]) == [
-             "LLM Model Database",
+             "LLM Catalog",
              "LLM Models List"
            ]
   end
@@ -94,7 +94,7 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     assert breadcrumb["@type"] == "BreadcrumbList"
 
     assert Enum.map(breadcrumb["itemListElement"], & &1["name"]) == [
-             "LLM Model Database",
+             "LLM Catalog",
              "LLM Models List",
              "Vision LLM Models"
            ]

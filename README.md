@@ -1,6 +1,7 @@
-# llmdb.xyz
+# LLM Catalog
 
-LLM Model Database - A showcase for the [llm_db](https://github.com/agentjido/llm_db) Elixir package.
+Browse and compare LLM model metadata at [llmcatalog.dev](https://llmcatalog.dev).
+The catalog is powered by the [llm_db](https://github.com/agentjido/llmdb) Elixir package.
 
 Browse and compare LLM models with capability-aware filtering.
 
@@ -28,7 +29,7 @@ def deps do
 end
 ```
 
-This site consumes the published Hex release in [`mix.exs`](/Users/mhostetler/Source/ReqLLM/llmdb_xyz/mix.exs), with the committed lockfile pinning the exact `llm_db` build. On startup, the app syncs the matching published history bundle into a local cache so the history UI and API stay available.
+This site consumes the published Hex release in [`mix.exs`](mix.exs), with the committed lockfile pinning the exact `llm_db` build. On startup, the app syncs the matching published history bundle into a local cache so the history UI and API stay available.
 
 ### Example Usage
 
@@ -82,7 +83,8 @@ The application is configured for deployment to standard Phoenix hosting platfor
 ### Environment Variables
 
 - `SECRET_KEY_BASE` - Required for production
-- `HOST` - The hostname (default: llmdb.xyz)
+- `PHX_HOST` - The public hostname (production: `llmcatalog.dev`)
+- `CANONICAL_HOST` - The hostname used for permanent redirects
 - `PORT` - The port to listen on (default: 4000)
 - `ENABLE_ANALYTICS` - Set to `true`, `1`, or `yes` to enable Plausible analytics; all other values disable it
 

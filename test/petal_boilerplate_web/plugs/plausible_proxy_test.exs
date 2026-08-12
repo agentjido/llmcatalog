@@ -19,7 +19,7 @@ defmodule PetalBoilerplateWeb.Plugs.PlausibleProxyTest do
   @settings [
     enabled: true,
     client: FakeClient,
-    site_domain: "llmdb.xyz",
+    site_domain: "llmcatalog.dev",
     script_path: "/_q/s.js",
     event_path: "/_q/e",
     script_url: "https://plausible.io/js/site.js",
@@ -90,8 +90,8 @@ defmodule PetalBoilerplateWeb.Plugs.PlausibleProxyTest do
     body =
       Jason.encode!(%{
         "n" => "Model Search",
-        "d" => "llmdb.xyz",
-        "u" => "https://llmdb.xyz/?q=gpt"
+        "d" => "llmcatalog.dev",
+        "u" => "https://llmcatalog.dev/?q=gpt"
       })
 
     conn =

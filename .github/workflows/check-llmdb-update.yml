@@ -151,7 +151,7 @@ jobs:
           total_matches += count
 
           updated, count = re.subn(
-              r'\{:llm_db,\s*git:\s*"https://github\.com/agentjido/llm_db\.git",\s*tag:\s*"[^"]+"\}',
+              r'\{:llm_db,\s*git:\s*"https://github\.com/agentjido/llmdb\.git",\s*tag:\s*"[^"]+"\}',
               f'{{:llm_db, "{requirement}"}}',
               updated,
           )

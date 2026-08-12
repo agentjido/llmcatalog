@@ -5,7 +5,7 @@ defmodule PetalBoilerplateWeb.ModelMetadataFeedback do
 
   alias PetalBoilerplateWeb.PublicRoutes
 
-  @issue_url "https://github.com/agentjido/llm_db/issues/new"
+  @issue_url "https://github.com/agentjido/llmdb/issues/new"
   @template "model_metadata.yml"
 
   @form_providers %{
@@ -61,6 +61,6 @@ defmodule PetalBoilerplateWeb.ModelMetadataFeedback do
   end
 
   defp additional_notes(provider_name, model_page) do
-    "Reported from llmdb.xyz\n\nModel page: #{model_page}\nCatalog provider: #{provider_name}"
+    "Reported from llmcatalog.dev\n\nModel page: #{model_page}\nCatalog provider: #{provider_name}"
   end
 end
