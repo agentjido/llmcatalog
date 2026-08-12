@@ -41,9 +41,45 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
     assert has_element?(view, ~s(#mobile-filters-dialog[role="dialog"][aria-modal="true"]))
     assert has_element?(view, "#mobile-provider-search-form")
     assert has_element?(view, "#mobile-capabilities-filter-form")
+    assert has_element?(view, "#mobile-architecture-filter-form")
 
     render_click(view, "toggle_filters", %{})
     refute has_element?(view, "#mobile-filters-dialog")
+  end
+
+  test "architecture filter updates the URL and model rows", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/")
+
+    render_change(view, "filter", %{
+      "_target" => ["architecture"],
+      "architecture" => "moe"
+    })
+
+    assert_patch(view, "/?architecture=moe")
+    assert has_element?(view, ~s(button[aria-label="Remove Architecture: MoE filter"]))
+    assert has_element?(view, ~s(#models-table-body [data-architecture="moe"]))
+    refute has_element?(view, ~s(#models-table-body [data-architecture="dense"]))
+    refute has_element?(view, ~s(#models-table-body [data-architecture="unknown"]))
+
+    render_click(view, "remove_filter", %{"kind" => "architecture"})
+    assert_patch(view, "/")
+  end
+
+  test "model size sort presets update the URL and visible metric", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/")
+
+    render_change(view, "set_sort", %{"sort" => "minimum_ram_gb_desc"})
+
+    assert_patch(view, "/?dir=desc&sort=minimum_ram_gb")
+
+    assert has_element?(
+             view,
+             ~s(#sort-select option[value="minimum_ram_gb_desc"][selected])
+           )
+
+    assert has_element?(view, "#models-table-body")
+    assert render(view) =~ "Min RAM"
+    assert render(view) =~ "GB"
   end
 
   test "mobile navigation exposes primary and project links", %{conn: conn} do

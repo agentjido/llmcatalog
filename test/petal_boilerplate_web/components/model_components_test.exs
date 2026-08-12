@@ -36,6 +36,12 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
     assert html =~ "$5.00 / 1M tokens"
     assert html =~ "api: batch"
     assert html =~ "provider_docs"
+    assert html =~ "Architecture"
+    assert html =~ "Dense"
+    assert html =~ "Total Parameters"
+    assert html =~ "70B"
+    assert html =~ "Minimum RAM"
+    assert html =~ "42.5 GB"
   end
 
   test "comparison modal renders advanced capability and input limit columns" do
@@ -53,6 +59,9 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
     assert html =~ "Cite"
     assert html =~ "Code"
     assert html =~ "Ctx"
+    assert html =~ "Architecture"
+    assert html =~ "Total Parameters"
+    assert html =~ "Minimum VRAM"
   end
 
   defp advanced_model do
@@ -62,6 +71,11 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
       provider: :anthropic,
       name: "Claude Fable 5",
       family: "claude",
+      __architecture: :dense,
+      __total_parameters: 70_000_000_000,
+      __active_parameters: nil,
+      __minimum_ram_gb: 42.5,
+      __minimum_vram_gb: 38.0,
       deprecated: false,
       lifecycle: %{"status" => "active"},
       modalities: %{"input" => [:text], "output" => [:text]},

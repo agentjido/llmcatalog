@@ -61,7 +61,24 @@ defmodule PetalBoilerplateWeb.ModelLive do
     "output" => :output,
     "cost_in" => :cost_in,
     "cost_out" => :cost_out,
+    "total_parameters" => :total_parameters,
+    "active_parameters" => :active_parameters,
+    "minimum_ram_gb" => :minimum_ram_gb,
+    "minimum_vram_gb" => :minimum_vram_gb,
     "recently_changed" => :recently_changed
+  }
+
+  @sort_presets %{
+    "default" => %{by: :recently_changed, dir: :desc},
+    "provider" => %{by: :provider, dir: :asc},
+    "total_parameters_asc" => %{by: :total_parameters, dir: :asc},
+    "total_parameters_desc" => %{by: :total_parameters, dir: :desc},
+    "active_parameters_asc" => %{by: :active_parameters, dir: :asc},
+    "active_parameters_desc" => %{by: :active_parameters, dir: :desc},
+    "minimum_ram_gb_asc" => %{by: :minimum_ram_gb, dir: :asc},
+    "minimum_ram_gb_desc" => %{by: :minimum_ram_gb, dir: :desc},
+    "minimum_vram_gb_asc" => %{by: :minimum_vram_gb, dir: :asc},
+    "minimum_vram_gb_desc" => %{by: :minimum_vram_gb, dir: :desc}
   }
 
   @analytics_search_max_length 100
@@ -77,6 +94,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
     {"caps", "capabilities"},
     {"in", "input_modalities"},
     {"out", "output_modalities"},
+    {"architecture", "architecture"},
     {"changed", "changed_within"},
     {"ctx", "min_context"},
     {"min_output", "min_output"},
@@ -309,6 +327,9 @@ defmodule PetalBoilerplateWeb.ModelLive do
           mod = String.to_existing_atom(params["filter_value"])
           Filters.toggle_modality_out(filters, mod)
 
+        "architecture" ->
+          Filters.set_architecture(filters, :all)
+
         "changed_within" ->
           Filters.set_changed_within(filters, nil)
 
@@ -365,12 +386,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   @impl true
   def handle_event("set_sort", %{"sort" => sort_key}, socket) do
-    sort =
-      case sort_key do
-        "default" -> Catalog.default_sort()
-        "provider" -> %{by: :provider, dir: :asc}
-        _ -> socket.assigns.sort
-      end
+    sort = Map.get(@sort_presets, sort_key, socket.assigns.sort)
 
     {:noreply, apply_filters(socket, socket.assigns.filters, sort: sort, push_url: true)}
   end
@@ -464,6 +480,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
       capabilities: analytics_capabilities_value(filters.capabilities),
       input_modalities: analytics_list_value(filters.modalities_in),
       output_modalities: analytics_list_value(filters.modalities_out),
+      architecture: Atom.to_string(filters.architecture),
       changed_within_days: analytics_scalar_value(filters.changed_within_days),
       min_context: analytics_scalar_value(filters.min_context),
       min_output: analytics_scalar_value(filters.min_output),
@@ -628,9 +645,17 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   defp sort_control_value(sort) do
     cond do
-      sort == Catalog.default_sort() -> "default"
-      sort == %{by: :provider, dir: :asc} -> "provider"
-      true -> "custom"
+      sort == Catalog.default_sort() ->
+        "default"
+
+      sort == %{by: :provider, dir: :asc} ->
+        "provider"
+
+      sort.by in [:total_parameters, :active_parameters, :minimum_ram_gb, :minimum_vram_gb] ->
+        "#{sort.by}_#{sort.dir}"
+
+      true ->
+        "custom"
     end
   end
 
