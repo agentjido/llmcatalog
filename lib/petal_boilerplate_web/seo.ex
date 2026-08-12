@@ -85,7 +85,7 @@ defmodule PetalBoilerplateWeb.SEO do
     SEO.Site.build(
       default_title: "LLM Catalog",
       description: @default_description,
-      title_suffix: " · LLM Catalog"
+      title_suffix: " · llmcatalog.dev"
     )
   end
 
