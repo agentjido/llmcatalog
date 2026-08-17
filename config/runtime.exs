@@ -32,11 +32,27 @@ if config_env() != :test do
     |> String.downcase()
     |> then(&(&1 in ["true", "1", "yes"]))
 
+  trending_ranks_enabled =
+    System.get_env("TRENDING_RANKS_ENABLED", "true")
+    |> String.trim()
+    |> String.downcase()
+    |> then(&(&1 in ["true", "1", "yes"]))
+
+  trending_refresh_hours =
+    case Integer.parse(System.get_env("TRENDING_REFRESH_HOURS", "6")) do
+      {hours, ""} when hours > 0 -> hours
+      _ -> 6
+    end
+
   config :petal_boilerplate,
     canonical_host: System.get_env("CANONICAL_HOST"),
     seo_indexing_enabled: seo_indexing_enabled,
     # Keep this false or unset in local and staging environments.
     enable_analytics: analytics_enabled
+
+  config :petal_boilerplate, PetalBoilerplate.Catalog.Trending,
+    enabled: trending_ranks_enabled,
+    refresh_interval_ms: :timer.hours(trending_refresh_hours)
 end
 
 if config_env() == :prod do

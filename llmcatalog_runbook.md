@@ -749,3 +749,22 @@ updates as required.
 Open issues: Plausible drops llmcatalog.dev events until the authenticated site
 owner changes the configured domain.
 ```
+## Trending model ranks
+
+The landing page refreshes its OpenRouter popularity and intelligence ranks in
+the background every six hours. The last good rank set stays active if a refresh
+fails. A failed refresh retries after 15 minutes. Page requests do not wait for
+OpenRouter.
+
+Use these optional environment variables:
+
+- `TRENDING_RANKS_ENABLED=false` stops external rank refreshes.
+- `TRENDING_REFRESH_HOURS=3` changes the normal refresh interval.
+
+Use these commands in a remote IEx session when you must check or refresh the
+rank set:
+
+```elixir
+PetalBoilerplate.Catalog.Trending.snapshot()
+PetalBoilerplate.Catalog.Trending.refresh_now()
+```

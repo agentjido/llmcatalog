@@ -36,7 +36,7 @@ defmodule PetalBoilerplateWeb.ModelLiveAnalyticsTest do
         max_output_cost: "none",
         show_deprecated: false,
         allowed_only: true,
-        sort_by: "recently_changed",
+        sort_by: "trending",
         sort_direction: "desc",
         result_count: result_count,
         active_filter_count: 1
@@ -65,6 +65,25 @@ defmodule PetalBoilerplateWeb.ModelLiveAnalyticsTest do
     }
 
     assert is_integer(result_count)
+  end
+
+  test "tracks a model view for future local popularity ranks", %{conn: conn} do
+    model =
+      Catalog.query_models(Catalog.default_filters(), Catalog.default_sort(), 1)
+      |> elem(0)
+      |> hd()
+
+    {:ok, view, _html} = live(conn, "/")
+
+    render_click(view, "show_model", %{"id" => model.id})
+
+    assert_push_event view, "plausible-event", %{
+      name: "Model View",
+      props: %{provider: provider, model_id: model_id}
+    }
+
+    assert provider == to_string(model.provider)
+    assert model_id == model.model_id
   end
 
   test "redacts a search value that can contain private data", %{conn: conn} do

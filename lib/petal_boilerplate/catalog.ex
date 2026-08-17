@@ -10,6 +10,7 @@ defmodule PetalBoilerplate.Catalog do
   """
 
   alias PetalBoilerplate.Catalog.Filters
+  alias PetalBoilerplate.Catalog.Trending
 
   @ets_table :catalog_models
   @models_key {__MODULE__, :models}
@@ -21,6 +22,14 @@ defmodule PetalBoilerplate.Catalog do
     :minimum_ram_gb,
     :minimum_vram_gb
   ]
+  @trending_diversity_size 24
+  @trending_models_per_author 2
+  @external_rank_window 100
+  @author_aliases %{
+    "moonshot" => "moonshotai",
+    "xai" => "x-ai",
+    "zai" => "z-ai"
+  }
 
   @capability_definitions [
     {:chat, [:chat], "Chat", "Supports conversational chat interactions"},
@@ -190,7 +199,7 @@ defmodule PetalBoilerplate.Catalog do
   Returns the default sort configuration.
   """
   def default_sort do
-    %{by: :recently_changed, dir: :desc}
+    %{by: :trending, dir: :desc}
   end
 
   @doc """
@@ -534,6 +543,38 @@ defmodule PetalBoilerplate.Catalog do
     Enum.sort(models, &compare_recently_changed(&1, &2, dir))
   end
 
+  defp sort_models(models, %{by: :trending, dir: dir}) do
+    snapshot = Trending.snapshot()
+
+    {primary, duplicates} =
+      models
+      |> Enum.map(&trending_entry(&1, snapshot))
+      |> Enum.group_by(& &1.canonical_id)
+      |> Enum.map(fn {_canonical_id, entries} -> split_primary_route(entries) end)
+      |> Enum.unzip()
+
+    primary =
+      primary
+      |> Enum.sort_by(&trending_sort_key/1)
+      |> diversify_trending_results()
+
+    duplicates = duplicates |> List.flatten() |> Enum.sort_by(&trending_sort_key/1)
+    sorted = Enum.map(primary ++ duplicates, & &1.model)
+    if dir == :asc, do: Enum.reverse(sorted), else: sorted
+  end
+
+  defp sort_models(models, %{by: :popular, dir: dir}) do
+    sort_external_rank(models, Trending.snapshot().popular, dir)
+  end
+
+  defp sort_models(models, %{by: :intelligence, dir: dir}) do
+    sort_external_rank(models, Trending.snapshot().intelligence, dir)
+  end
+
+  defp sort_models(models, %{by: :newest, dir: dir}) do
+    Enum.sort_by(models, &date_sort_key(&1, :release_date, dir))
+  end
+
   defp sort_models(models, %{by: by, dir: dir}) when by in @size_sort_fields do
     Enum.sort_by(models, fn model ->
       case sort_value(model, by) do
@@ -564,6 +605,171 @@ defmodule PetalBoilerplate.Catalog do
   defp sort_value(model, :active_parameters), do: Map.get(model, :__active_parameters)
   defp sort_value(model, :minimum_ram_gb), do: Map.get(model, :__minimum_ram_gb)
   defp sort_value(model, :minimum_vram_gb), do: Map.get(model, :__minimum_vram_gb)
+
+  defp trending_entry(model, snapshot) do
+    {canonical_id, popular_rank, intelligence_rank} = external_identity(model, snapshot)
+
+    %{
+      model: model,
+      canonical_id: canonical_id,
+      author: canonical_author(canonical_id),
+      score:
+        rank_score(popular_rank, 55.0) +
+          release_score(model) +
+          rank_score(intelligence_rank, 15.0),
+      route_quality: route_quality(model, canonical_id)
+    }
+  end
+
+  defp split_primary_route(entries) do
+    [primary | duplicates] =
+      Enum.sort_by(entries, fn entry ->
+        {-entry.route_quality, recent_tie_breaker(entry.model)}
+      end)
+
+    {primary, duplicates}
+  end
+
+  defp trending_sort_key(entry) do
+    {-entry.score, recent_tie_breaker(entry.model)}
+  end
+
+  defp diversify_trending_results(entries) do
+    {head, tail} = take_diverse(entries, @trending_diversity_size, %{}, [])
+    head ++ tail
+  end
+
+  defp take_diverse(entries, 0, _counts, selected), do: {Enum.reverse(selected), entries}
+  defp take_diverse([], _remaining, _counts, selected), do: {Enum.reverse(selected), []}
+
+  defp take_diverse(entries, remaining, counts, selected) do
+    case Enum.split_while(entries, fn entry ->
+           Map.get(counts, entry.author, 0) >= @trending_models_per_author
+         end) do
+      {_skipped, []} ->
+        {Enum.reverse(selected), entries}
+
+      {skipped, [entry | rest]} ->
+        next_entries = skipped ++ rest
+        next_counts = Map.update(counts, entry.author, 1, &(&1 + 1))
+        take_diverse(next_entries, remaining - 1, next_counts, [entry | selected])
+    end
+  end
+
+  defp sort_external_rank(models, ranks, dir) do
+    Enum.sort_by(models, fn model ->
+      {_canonical_id, rank} = match_external_rank(model, ranks)
+
+      case rank do
+        rank when is_integer(rank) ->
+          ordered_rank = if dir == :asc, do: -rank, else: rank
+          {0, ordered_rank, -release_epoch(model), recent_tie_breaker(model)}
+
+        _ ->
+          {1, 0, -release_epoch(model), recent_tie_breaker(model)}
+      end
+    end)
+  end
+
+  defp external_identity(model, snapshot) do
+    {popular_id, popular_rank} = match_external_rank(model, snapshot.popular)
+    {intelligence_id, intelligence_rank} = match_external_rank(model, snapshot.intelligence)
+    canonical_id = popular_id || intelligence_id || fallback_canonical_id(model)
+    {canonical_id, popular_rank, intelligence_rank}
+  end
+
+  defp match_external_rank(model, ranks) do
+    model
+    |> external_id_candidates()
+    |> Enum.find_value({nil, nil}, fn candidate ->
+      case Map.get(ranks, candidate) do
+        rank when is_integer(rank) -> {candidate, rank}
+        _ -> nil
+      end
+    end)
+  end
+
+  defp external_id_candidates(model) do
+    model_id = Map.get(model, :model_id, model.id)
+    model_name = Map.get(model, :model)
+    provider = normalized_author(Map.get(model, :__provider_str, to_string(model.provider)))
+    bare_id = model_id |> String.split("/") |> List.last()
+
+    [model_id, model_name, "#{provider}/#{bare_id}"]
+    |> Enum.filter(&is_binary/1)
+    |> Enum.uniq()
+  end
+
+  defp fallback_canonical_id(model) do
+    model_id = Map.get(model, :model_id, model.id)
+
+    if String.contains?(model_id, "/") do
+      model_id
+    else
+      provider = normalized_author(Map.get(model, :__provider_str, to_string(model.provider)))
+      "#{provider}/#{model_id}"
+    end
+  end
+
+  defp canonical_author(canonical_id) do
+    canonical_id |> String.split("/", parts: 2) |> List.first()
+  end
+
+  defp normalized_author(author) do
+    author = author |> to_string() |> String.replace("_", "-")
+    Map.get(@author_aliases, author, author)
+  end
+
+  defp route_quality(model, canonical_id) do
+    provider = normalized_author(Map.get(model, :__provider_str, to_string(model.provider)))
+    first_party = if provider == canonical_author(canonical_id), do: 100, else: 0
+    executable = if Map.get(model, :catalog_only, false), do: 0, else: 10
+    named = if is_binary(Map.get(model, :name)), do: 1, else: 0
+    first_party + executable + named
+  end
+
+  defp rank_score(rank, weight) when is_integer(rank) and rank <= @external_rank_window do
+    weight * (1.0 - (rank - 1) / @external_rank_window)
+  end
+
+  defp rank_score(_rank, _weight), do: 0.0
+
+  defp release_score(model) do
+    case date_to_epoch(Map.get(model, :release_date)) do
+      epoch when is_integer(epoch) ->
+        age_days =
+          max(0.0, (DateTime.utc_now() |> DateTime.to_unix() |> Kernel.-(epoch)) / 86_400)
+
+        30.0 * :math.exp(-age_days / 30.0)
+
+      _ ->
+        0.0
+    end
+  end
+
+  defp date_sort_key(model, field, dir) do
+    case date_to_epoch(Map.get(model, field)) do
+      epoch when is_integer(epoch) ->
+        ordered_epoch = if dir == :asc, do: epoch, else: -epoch
+        {0, ordered_epoch, recent_tie_breaker(model)}
+
+      _ ->
+        {1, 0, recent_tie_breaker(model)}
+    end
+  end
+
+  defp release_epoch(model), do: date_to_epoch(Map.get(model, :release_date)) || 0
+
+  defp date_to_epoch(value) when is_binary(value) do
+    with {:ok, date} <- Date.from_iso8601(String.slice(value, 0, 10)),
+         {:ok, datetime} <- DateTime.new(date, ~T[00:00:00], "Etc/UTC") do
+      DateTime.to_unix(datetime)
+    else
+      _ -> nil
+    end
+  end
+
+  defp date_to_epoch(_value), do: nil
 
   defp compare_recently_changed(a, b, dir) do
     a_epoch = Map.get(a, :__last_changed_epoch)

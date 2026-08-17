@@ -1,5 +1,7 @@
 import Config
 
+config :petal_boilerplate, PetalBoilerplate.Catalog.Trending, enabled: false
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used

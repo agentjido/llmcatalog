@@ -28,6 +28,8 @@ defmodule PetalBoilerplate.Application do
         {Phoenix.PubSub, name: PetalBoilerplate.PubSub},
         # Start Finch
         {Finch, name: PetalBoilerplate.Finch},
+        # Refresh external model ranks without blocking page requests
+        PetalBoilerplate.Catalog.Trending,
         # Start OG image cache (uses Image/libvips for SVG->PNG)
         PetalBoilerplate.OGImage,
         # Start the Endpoint (http/https)

@@ -84,7 +84,22 @@
             style="border-color: hsl(var(--border)); background-color: hsl(var(--background)); color: hsl(var(--foreground));"
           >
             <option value="default" selected={sort_control_value(@sort) == "default"}>
-              Recommended
+              Trending
+            </option>
+            <option value="popular" selected={sort_control_value(@sort) == "popular"}>
+              Most popular this week
+            </option>
+            <option value="newest" selected={sort_control_value(@sort) == "newest"}>
+              Newest releases
+            </option>
+            <option value="intelligence" selected={sort_control_value(@sort) == "intelligence"}>
+              Intelligence
+            </option>
+            <option
+              value="recently_changed"
+              selected={sort_control_value(@sort) == "recently_changed"}
+            >
+              Recently changed
             </option>
             <option value="provider" selected={sort_control_value(@sort) == "provider"}>
               Provider A–Z

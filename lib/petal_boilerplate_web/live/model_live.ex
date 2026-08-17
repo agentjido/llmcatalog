@@ -65,11 +65,19 @@ defmodule PetalBoilerplateWeb.ModelLive do
     "active_parameters" => :active_parameters,
     "minimum_ram_gb" => :minimum_ram_gb,
     "minimum_vram_gb" => :minimum_vram_gb,
+    "trending" => :trending,
+    "popular" => :popular,
+    "newest" => :newest,
+    "intelligence" => :intelligence,
     "recently_changed" => :recently_changed
   }
 
   @sort_presets %{
-    "default" => %{by: :recently_changed, dir: :desc},
+    "default" => %{by: :trending, dir: :desc},
+    "popular" => %{by: :popular, dir: :desc},
+    "newest" => %{by: :newest, dir: :desc},
+    "intelligence" => %{by: :intelligence, dir: :desc},
+    "recently_changed" => %{by: :recently_changed, dir: :desc},
     "provider" => %{by: :provider, dir: :asc},
     "total_parameters_asc" => %{by: :total_parameters, dir: :asc},
     "total_parameters_desc" => %{by: :total_parameters, dir: :desc},
@@ -185,7 +193,13 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
     if model do
       path = model_show_path(model)
-      {:noreply, push_patch(socket, to: path)}
+
+      socket =
+        socket
+        |> maybe_track_model_view(model)
+        |> push_patch(to: path)
+
+      {:noreply, socket}
     else
       {:noreply, socket}
     end
@@ -445,6 +459,20 @@ defmodule PetalBoilerplateWeb.ModelLive do
     end
   end
 
+  defp maybe_track_model_view(socket, model) do
+    if Application.get_env(:petal_boilerplate, :enable_analytics, false) do
+      push_event(socket, "plausible-event", %{
+        name: "Model View",
+        props: %{
+          provider: to_string(model.provider),
+          model_id: model.model_id
+        }
+      })
+    else
+      socket
+    end
+  end
+
   defp analytics_changes(previous_filters, previous_sort, filters, sort) do
     previous_params = Filters.to_params(previous_filters)
     current_params = Filters.to_params(filters)
@@ -634,7 +662,11 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   defp parse_sort_direction("desc", _field), do: :desc
   defp parse_sort_direction("asc", _field), do: :asc
-  defp parse_sort_direction(_value, :recently_changed), do: :desc
+
+  defp parse_sort_direction(_value, field)
+       when field in [:trending, :popular, :newest, :intelligence, :recently_changed],
+       do: :desc
+
   defp parse_sort_direction(_value, _field), do: :asc
 
   defp sort_param(field) do
@@ -650,6 +682,18 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
       sort == %{by: :provider, dir: :asc} ->
         "provider"
+
+      sort == %{by: :popular, dir: :desc} ->
+        "popular"
+
+      sort == %{by: :newest, dir: :desc} ->
+        "newest"
+
+      sort == %{by: :intelligence, dir: :desc} ->
+        "intelligence"
+
+      sort == %{by: :recently_changed, dir: :desc} ->
+        "recently_changed"
 
       sort.by in [:total_parameters, :active_parameters, :minimum_ram_gb, :minimum_vram_gb] ->
         "#{sort.by}_#{sort.dir}"

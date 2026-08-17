@@ -13,6 +13,10 @@ config :petal_boilerplate,
   legacy_hosts: ["llmdb.xyz", "www.llmdb.xyz"],
   sync_history_on_start: true
 
+config :petal_boilerplate, PetalBoilerplate.Catalog.Trending,
+  enabled: true,
+  refresh_interval_ms: :timer.hours(6)
+
 config :petal_boilerplate, :plausible_proxy,
   site_domain: "llmcatalog.dev",
   script_path: "/_q/s.js",

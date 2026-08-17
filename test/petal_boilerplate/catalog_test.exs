@@ -2,6 +2,7 @@ defmodule PetalBoilerplate.CatalogTest do
   use ExUnit.Case, async: false
 
   alias PetalBoilerplate.Catalog
+  alias PetalBoilerplate.Catalog.Trending
 
   defmodule HistoryStub do
     def available?, do: true
@@ -17,11 +18,13 @@ defmodule PetalBoilerplate.CatalogTest do
     original_history_module = Application.get_env(:petal_boilerplate, :history_module)
     original_recent_events = Application.get_env(:petal_boilerplate, :catalog_test_recent_events)
 
+    Trending.reset()
     Catalog.refresh_cache()
 
     on_exit(fn ->
       restore_env(:history_module, original_history_module)
       restore_env(:catalog_test_recent_events, original_recent_events)
+      Trending.reset()
       Catalog.refresh_cache()
     end)
 
@@ -91,7 +94,7 @@ defmodule PetalBoilerplate.CatalogTest do
     assert Catalog.query_models(filters, sort, 2) == expected
   end
 
-  test "default sort prioritizes recently changed models" do
+  test "recently changed sort prioritizes recently changed models" do
     older = build_model("older", [:text], [:text]) |> Map.put(:__last_changed_epoch, 100)
     newer = build_model("newer", [:text], [:text]) |> Map.put(:__last_changed_epoch, 200)
     unchanged = build_model("unchanged", [:text], [:text]) |> Map.put(:__last_changed_epoch, nil)
@@ -100,10 +103,75 @@ defmodule PetalBoilerplate.CatalogTest do
       Catalog.list_models(
         [older, unchanged, newer],
         Catalog.default_filters(),
-        Catalog.default_sort()
+        %{by: :recently_changed, dir: :desc}
       )
 
     assert Enum.map(result, & &1.id) == ["newer", "older", "unchanged"]
+  end
+
+  test "trending sort combines usage, intelligence, and a release boost" do
+    Trending.put_snapshot(%{
+      popular: ["openai/gpt-established", "x-ai/grok-new"],
+      intelligence: ["x-ai/grok-new", "openai/gpt-established"]
+    })
+
+    established = build_model("gpt-established", [:text], [:text])
+
+    new_model =
+      build_model("grok-new", [:text], [:text])
+      |> Map.merge(%{
+        provider: :xai,
+        __provider_str: "xai",
+        release_date: Date.utc_today() |> Date.to_iso8601()
+      })
+
+    result =
+      Catalog.list_models(
+        [established, new_model],
+        Catalog.default_filters(),
+        Catalog.default_sort()
+      )
+
+    assert Enum.map(result, & &1.model_id) == ["grok-new", "gpt-established"]
+  end
+
+  test "trending sort keeps the first-party route before a duplicate broker route" do
+    Trending.put_snapshot(%{popular: ["x-ai/grok-4.6"]})
+
+    official =
+      build_model("grok-4.6", [:text], [:text])
+      |> Map.merge(%{provider: :xai, __provider_str: "xai"})
+
+    broker =
+      build_model("x-ai/grok-4.6", [:text], [:text])
+      |> Map.merge(%{provider: :broker, __provider_str: "broker"})
+
+    result =
+      Catalog.list_models([broker, official], Catalog.default_filters(), Catalog.default_sort())
+
+    assert Enum.map(result, & &1.provider) == [:xai, :broker]
+  end
+
+  test "popular and newest sorts use their named data sources" do
+    Trending.put_snapshot(%{popular: ["test-provider/older", "test-provider/newer"]})
+
+    older =
+      build_model("older", [:text], [:text])
+      |> Map.put(:release_date, "2026-01-01")
+
+    newer =
+      build_model("newer", [:text], [:text])
+      |> Map.put(:release_date, "2026-08-01")
+
+    assert ["older", "newer"] ==
+             [newer, older]
+             |> Catalog.list_models(Catalog.default_filters(), %{by: :popular, dir: :desc})
+             |> ids()
+
+    assert ["newer", "older"] ==
+             [older, newer]
+             |> Catalog.list_models(Catalog.default_filters(), %{by: :newest, dir: :desc})
+             |> ids()
   end
 
   test "list_models filters by required input and output modalities" do
@@ -180,8 +248,13 @@ defmodule PetalBoilerplate.CatalogTest do
   defp build_model(id, input_modalities, output_modalities) do
     %{
       id: id,
+      model_id: id,
+      model: id,
+      name: id,
       provider: :test_provider,
       deprecated: false,
+      catalog_only: false,
+      release_date: nil,
       __provider_str: "test_provider",
       __search: id,
       __allowed?: true,
