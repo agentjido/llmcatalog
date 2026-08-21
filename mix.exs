@@ -39,7 +39,7 @@ defmodule PetalBoilerplate.MixProject do
       {:phoenix, "~> 1.8.3"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_view, "~> 1.1"},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
+      {:phoenix_live_dashboard, "~> 0.9.0"},
       {:plug_cowboy, "~> 2.5"},
       {:phoenix_seo, "~> 0.3"},
 
