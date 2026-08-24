@@ -5,7 +5,7 @@ defmodule PetalBoilerplate.MixProject do
     [
       app: :petal_boilerplate,
       version: "0.1.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -39,7 +39,7 @@ defmodule PetalBoilerplate.MixProject do
       {:phoenix, "~> 1.8.3"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_view, "~> 1.1"},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
+      {:phoenix_live_dashboard, "~> 0.9.0"},
       {:plug_cowboy, "~> 2.5"},
       {:phoenix_seo, "~> 0.3"},
 
