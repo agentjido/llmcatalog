@@ -14,9 +14,25 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
   test "header links to the model metadata issue form" do
     html = render_component(&ModelComponents.header/1, search_value: "")
 
-    assert html =~ ~s(aria-label="Report incorrect model data on GitHub")
+    assert html =~ ~s(nav aria-label="Site navigation")
+    assert html =~ ~s(href="https://jidokahq.com/")
+    assert html =~ ~s(href="https://hex.pm/packages/llm_db")
+
+    assert html
+           |> Floki.parse_fragment!()
+           |> Floki.find(~s(a[href="https://hex.pm/packages/llm_db"]))
+           |> Floki.text()
+           |> String.trim() == "v#{Application.spec(:llm_db, :vsn)}"
+
+    assert html =~ ~s(aria-label="View llmdb on GitHub")
+    assert html =~ ~s(href="https://jido.run/discord")
+    assert html =~ ~s(aria-label="Join Discord")
+    assert html =~ ~s(aria-label="Change color theme")
     assert html =~ "Report incorrect model data"
     assert html =~ "template=model_metadata.yml"
+    refute html =~ ~s(href="/developers")
+    refute html =~ ~s(href="/openapi.json")
+    refute html =~ "www.npmjs.com/package/@agentjido/llmdb"
   end
 
   test "model detail modal renders proposed advanced model metadata" do
@@ -76,6 +92,25 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
     assert html =~ "Minimum VRAM"
   end
 
+  test "model table uses clear text summaries for dense model data" do
+    html =
+      render_component(&ModelComponents.model_table/1,
+        models: [advanced_model()],
+        sort: %{by: :name, dir: :asc},
+        total: 1,
+        selected_ids: MapSet.new(),
+        can_add_more: true
+      )
+
+    assert html =~ "Modalities"
+    assert html =~ "Capabilities"
+    assert html =~ ~s(aria-label="Input: Text; output: Text")
+    assert html =~ "Reasoning, Tools, Batch, Code, JSON"
+    assert html =~ "Input / output price"
+    assert html =~ "$10.00 / $50.00"
+    assert html =~ "1M"
+  end
+
   defp advanced_model do
     %{
       id: "model-test",
@@ -88,6 +123,7 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
       __active_parameters: nil,
       __minimum_ram_gb: 42.5,
       __minimum_vram_gb: 38.0,
+      __last_changed_at: "2026-08-17T00:00:00Z",
       deprecated: false,
       lifecycle: %{"status" => "active"},
       modalities: %{"input" => [:text], "output" => [:text]},

@@ -15,15 +15,17 @@ defmodule PetalBoilerplateWeb.ModelLiveAnalyticsTest do
   end
 
   test "tracks a model search with the result and filter state", %{conn: conn} do
+    model = Catalog.list_all_models() |> List.first()
+    expected_query = "model:#{model.name}"
     {:ok, view, _html} = live(conn, "/")
 
-    render_change(view, "filter", %{"_target" => ["search"], "search" => "claude"})
+    render_change(view, "filter", %{"_target" => ["search"], "search" => model.name})
 
     assert_push_event view, "plausible-event", %{
       name: "Model Search",
       props: %{
         action: "search",
-        query: "claude",
+        query: ^expected_query,
         providers: "none",
         provider_count: 0,
         capabilities: "none",
@@ -57,7 +59,7 @@ defmodule PetalBoilerplateWeb.ModelLiveAnalyticsTest do
       name: "Model Filter",
       props: %{
         action: "providers",
-        query: "gpt",
+        query: "other",
         providers: ^provider_id,
         result_count: result_count,
         active_filter_count: 2
@@ -86,7 +88,7 @@ defmodule PetalBoilerplateWeb.ModelLiveAnalyticsTest do
     assert model_id == model.model_id
   end
 
-  test "redacts a search value that can contain private data", %{conn: conn} do
+  test "does not send search text to analytics", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/")
 
     render_change(view, "filter", %{
@@ -96,7 +98,23 @@ defmodule PetalBoilerplateWeb.ModelLiveAnalyticsTest do
 
     assert_push_event view, "plausible-event", %{
       name: "Model Search",
-      props: %{query: "redacted"}
+      props: %{query: "other"}
+    }
+  end
+
+  test "sends a canonical provider for an exact allowlisted search", %{conn: conn} do
+    provider = Catalog.list_providers() |> List.first()
+    expected_query = "provider:#{provider.name}"
+    {:ok, view, _html} = live(conn, "/")
+
+    render_change(view, "filter", %{
+      "_target" => ["search"],
+      "search" => String.upcase(provider.name)
+    })
+
+    assert_push_event view, "plausible-event", %{
+      name: "Model Search",
+      props: %{query: ^expected_query}
     }
   end
 

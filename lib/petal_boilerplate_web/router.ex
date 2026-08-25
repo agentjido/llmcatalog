@@ -28,6 +28,7 @@ defmodule PetalBoilerplateWeb.Router do
     live "/", ModelLive, :index
     live "/llm-models", LLMModelsLive, :index
     live "/rankings/cheapest-llm-api", CatalogLandingLive, :cheapest
+    live "/rankings/free-llm-api", CatalogLandingLive, :free
     live "/rankings/ai-models", CatalogLandingLive, :ai_models
     live "/models/vision", CatalogLandingLive, :vision
     live "/models/tool-calling", CatalogLandingLive, :tool_calling
@@ -36,6 +37,8 @@ defmodule PetalBoilerplateWeb.Router do
     live "/models/video", CatalogLandingLive, :video
     live "/history", HistoryLive, :index
     live "/about", AboutLive, :index
+    live "/developers", DevelopersLive, :index
+    live "/privacy", PrivacyLive, :index
 
     get "/robots.txt", DiscoveryController, :robots
     get "/sitemap.xml", DiscoveryController, :sitemap
@@ -56,12 +59,20 @@ defmodule PetalBoilerplateWeb.Router do
   end
 
   # Other scopes may use custom stacks.
+  scope "/", PetalBoilerplateWeb do
+    pipe_through :api
+
+    get "/openapi.json", OpenAPIController, :show
+  end
+
   scope "/api", PetalBoilerplateWeb do
     pipe_through :api
 
     get "/history/recent", HistoryController, :recent
     get "/history/:provider/*id", HistoryController, :model
     post "/mcp", MCPController, :handle
+    match :*, "/mcp", APIErrorController, :method_not_allowed
+    match :*, "/*path", APIErrorController, :not_found
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

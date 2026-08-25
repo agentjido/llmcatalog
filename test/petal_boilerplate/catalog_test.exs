@@ -82,6 +82,19 @@ defmodule PetalBoilerplate.CatalogTest do
     assert %{model_id: ^model_id} = Catalog.get_model_by_dom_id(model_dom_id)
   end
 
+  test "analytics search values use an exact catalog allowlist" do
+    provider = Catalog.list_providers() |> List.first()
+    model = Catalog.list_all_models() |> List.first()
+
+    assert Catalog.analytics_search_value("  #{String.upcase(provider.name)}  ") ==
+             "provider:#{provider.name}"
+
+    assert Catalog.analytics_search_value(String.upcase(model.name)) == "model:#{model.name}"
+    assert Catalog.analytics_search_value(model.model_id) == "model:#{model.name}"
+    assert Catalog.analytics_search_value("private project launch") == "other"
+    assert Catalog.analytics_search_value("  ") == "none"
+  end
+
   test "query_models matches list_models plus paginate" do
     filters = Catalog.default_filters()
     sort = %{by: :recently_changed, dir: :desc}

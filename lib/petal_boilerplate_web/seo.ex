@@ -10,7 +10,7 @@ defmodule PetalBoilerplateWeb.SEO do
       SEO.OpenGraph.build(
         description:
           "Browse and compare large language models by provider, capabilities, pricing, modalities, and context windows.",
-        site_name: "LLM Catalog",
+        site_name: "LLM Catalog by Jidoka Labs",
         locale: "en_US"
       ),
     twitter: SEO.Twitter.build(card: :summary_large_image)
@@ -24,9 +24,12 @@ defmodule PetalBoilerplateWeb.SEO do
   @search_indexable_paths [
     "/",
     "/about",
+    "/developers",
     "/llm-models",
+    "/privacy",
     "/rankings/ai-models",
     "/rankings/cheapest-llm-api",
+    "/rankings/free-llm-api",
     "/models/vision",
     "/models/tool-calling",
     "/models/long-context",
@@ -83,7 +86,7 @@ defmodule PetalBoilerplateWeb.SEO do
 
   def site_config(_conn) do
     SEO.Site.build(
-      default_title: "LLM Catalog",
+      default_title: "LLM Catalog by Jidoka Labs",
       description: @default_description,
       title_suffix: " · llmcatalog.dev"
     )
@@ -93,28 +96,39 @@ defmodule PetalBoilerplateWeb.SEO do
   def home_structured_data(model_count, provider_count) do
     home_url = PublicRoutes.absolute("/")
     dataset_version = Application.spec(:llm_db, :vsn) |> to_string()
+    organization_id = home_url <> "#organization"
+    website_id = home_url <> "#website"
 
     [
       %{
         "@context" => "https://schema.org",
+        "@type" => "Organization",
+        "@id" => organization_id,
+        "name" => "Jidoka Labs",
+        "url" => "https://jidokahq.com",
+        "sameAs" => [
+          "https://github.com/agentjido",
+          "https://www.npmjs.com/package/@agentjido/llmdb"
+        ]
+      },
+      %{
+        "@context" => "https://schema.org",
         "@type" => "WebSite",
-        "name" => "LLM Catalog",
-        "alternateName" => "llmcatalog.dev",
+        "@id" => website_id,
+        "name" => "LLM Catalog by Jidoka Labs",
+        "alternateName" => ["LLM Catalog", "llmcatalog.dev"],
         "description" => @default_description,
-        "url" => home_url
+        "url" => home_url,
+        "publisher" => %{"@id" => organization_id}
       },
       %{
         "@context" => "https://schema.org",
         "@type" => "Dataset",
-        "name" => "LLM Catalog",
+        "name" => "LLM Catalog by Jidoka Labs",
         "description" =>
           "A catalog of #{model_count} large language models from #{provider_count} providers.",
         "url" => home_url,
-        "creator" => %{
-          "@type" => "Organization",
-          "name" => "Jidoka Labs",
-          "url" => "https://jidokahq.com"
-        },
+        "creator" => %{"@id" => organization_id},
         "license" => "https://www.apache.org/licenses/LICENSE-2.0",
         "isAccessibleForFree" => true,
         "version" => dataset_version,
@@ -126,7 +140,7 @@ defmodule PetalBoilerplateWeb.SEO do
         ],
         "includedInDataCatalog" => %{
           "@type" => "DataCatalog",
-          "name" => "LLM Catalog",
+          "name" => "LLM Catalog by Jidoka Labs",
           "url" => home_url
         }
       }
@@ -142,6 +156,33 @@ defmodule PetalBoilerplateWeb.SEO do
         "name" => "About LLM Catalog",
         "description" => description,
         "url" => PublicRoutes.absolute("/about")
+      }
+    ]
+  end
+
+  @spec developers_structured_data(String.t()) :: [map()]
+  def developers_structured_data(description) do
+    [
+      %{
+        "@context" => "https://schema.org",
+        "@type" => "TechArticle",
+        "name" => "LLM Catalog developer guide",
+        "description" => description,
+        "url" => PublicRoutes.absolute("/developers"),
+        "publisher" => %{"@id" => PublicRoutes.absolute("/") <> "#organization"}
+      }
+    ]
+  end
+
+  @spec privacy_structured_data(String.t()) :: [map()]
+  def privacy_structured_data(description) do
+    [
+      %{
+        "@context" => "https://schema.org",
+        "@type" => "WebPage",
+        "name" => "LLM Catalog privacy policy",
+        "description" => description,
+        "url" => PublicRoutes.absolute("/privacy")
       }
     ]
   end

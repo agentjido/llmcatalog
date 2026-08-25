@@ -1,6 +1,6 @@
 defmodule PetalBoilerplateWeb.ModelMetadataFeedback do
   @moduledoc """
-  Builds links to the llm_db model metadata issue form.
+  Builds links to the llmdb model metadata issue form.
   """
 
   alias PetalBoilerplateWeb.PublicRoutes

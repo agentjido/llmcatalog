@@ -17,7 +17,7 @@ defmodule PetalBoilerplate.SEOContentTest do
 
   test "loads published Markdown content with typed editorial metadata" do
     pages = SEOContent.all_pages()
-    assert length(pages) == 8
+    assert length(pages) == 9
     assert Enum.all?(pages, &match?(%Page{}, &1))
 
     page = SEOContent.get_page!("/llm-models")
@@ -69,7 +69,8 @@ defmodule PetalBoilerplate.SEOContentTest do
              "/models/video",
              "/models/vision",
              "/rankings/ai-models",
-             "/rankings/cheapest-llm-api"
+             "/rankings/cheapest-llm-api",
+             "/rankings/free-llm-api"
            ]
 
     assert pages
@@ -79,11 +80,16 @@ defmodule PetalBoilerplate.SEOContentTest do
            |> length() == length(pages)
 
     assert Enum.all?(pages, fn page ->
+             reviewed_at =
+               if page.route == "/rankings/free-llm-api",
+                 do: ~D[2026-08-25],
+                 else: ~D[2026-07-30]
+
              match?(
                %Review{
                  status: :approved,
                  reviewed_by: "Mike Hostetler",
-                 reviewed_at: ~D[2026-07-30]
+                 reviewed_at: ^reviewed_at
                },
                page.review
              )

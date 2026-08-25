@@ -23,7 +23,7 @@ defmodule PetalBoilerplateWeb.LandingLinks do
       category: "Ranking hub",
       label: "Compare objective AI model rankings",
       description:
-        "Review separate rankings for paid token price, context size, and catalog freshness."
+        "Review separate lists for zero and paid token prices, context size, and catalog freshness."
     },
     "/rankings/cheapest-llm-api" => %{
       breadcrumb_label: "Cheapest LLM APIs",
@@ -31,6 +31,13 @@ defmodule PetalBoilerplateWeb.LandingLinks do
       label: "Compare the cheapest LLM APIs",
       description:
         "Order paid text-generation offers by known input-token price and check output cost."
+    },
+    "/rankings/free-llm-api" => %{
+      breadcrumb_label: "Zero-Price LLM APIs",
+      category: "Price availability",
+      label: "Check zero-price LLM API offers",
+      description:
+        "Find active text offers with $0 catalog input and output token prices, with clear limits on what zero price means."
     },
     "/models/vision" => %{
       breadcrumb_label: "Vision LLM Models",
@@ -70,6 +77,7 @@ defmodule PetalBoilerplateWeb.LandingLinks do
     "/llm-models" => [
       "/rankings/ai-models",
       "/rankings/cheapest-llm-api",
+      "/rankings/free-llm-api",
       "/models/vision",
       "/models/tool-calling",
       "/models/long-context",
@@ -79,6 +87,7 @@ defmodule PetalBoilerplateWeb.LandingLinks do
     "/rankings/ai-models" => [
       "/llm-models",
       "/rankings/cheapest-llm-api",
+      "/rankings/free-llm-api",
       "/models/long-context",
       "/models/tool-calling",
       "/models/vision",
@@ -88,9 +97,15 @@ defmodule PetalBoilerplateWeb.LandingLinks do
     "/rankings/cheapest-llm-api" => [
       "/llm-models",
       "/rankings/ai-models",
+      "/rankings/free-llm-api",
       "/models/long-context",
       "/models/tool-calling",
       "/models/open-weights"
+    ],
+    "/rankings/free-llm-api" => [
+      "/llm-models",
+      "/rankings/ai-models",
+      "/rankings/cheapest-llm-api"
     ],
     "/models/vision" => [
       "/llm-models",

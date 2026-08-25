@@ -13,8 +13,9 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
   @history_limit 50
 
   @spec eligible_public_path?(String.t()) :: boolean()
-  def eligible_public_path?(path) when path in ["/", "/about", "/history", "/llm-models"],
-    do: true
+  def eligible_public_path?(path)
+      when path in ["/", "/about", "/developers", "/history", "/llm-models", "/privacy"],
+      do: true
 
   def eligible_public_path?(path) when is_binary(path) do
     not is_nil(SEOContent.get_page(path)) or
@@ -24,8 +25,10 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
   @spec resolve(String.t(), String.t()) :: {:ok, String.t()} | :no_match
   def resolve("/", canonical_url), do: {:ok, home_markdown(canonical_url)}
   def resolve("/about", canonical_url), do: {:ok, about_markdown(canonical_url)}
+  def resolve("/developers", canonical_url), do: {:ok, developers_markdown(canonical_url)}
   def resolve("/history", canonical_url), do: {:ok, history_markdown(canonical_url)}
   def resolve("/llm-models", canonical_url), do: {:ok, llm_models_markdown(canonical_url)}
+  def resolve("/privacy", canonical_url), do: {:ok, privacy_markdown(canonical_url)}
 
   def resolve(path, canonical_url) do
     with nil <- SEOContent.get_page(path) do
@@ -48,7 +51,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
     """
-    # LLM Catalog
+    # LLM Catalog by Jidoka Labs
 
     Browse and compare #{Catalog.format_number(model_count)} large language models from #{provider_count} providers.
 
@@ -58,17 +61,21 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     - [Deduplicated LLM models list](#{endpoint_url}/llm-models)
     - [AI model rankings](#{endpoint_url}/rankings/ai-models)
     - [Cheapest LLM APIs](#{endpoint_url}/rankings/cheapest-llm-api)
+    - [Zero-price LLM API offers](#{endpoint_url}/rankings/free-llm-api)
     - [Vision LLM models](#{endpoint_url}/models/vision)
     - [Tool-calling LLM models](#{endpoint_url}/models/tool-calling)
     - [Largest context window LLMs](#{endpoint_url}/models/long-context)
     - [Open-weight LLM models](#{endpoint_url}/models/open-weights)
     - [Video AI models](#{endpoint_url}/models/video)
     - [About LLM Catalog](#{endpoint_url}/about)
+    - [Developer guide](#{endpoint_url}/developers)
+    - [Privacy policy](#{endpoint_url}/privacy)
     - [Recent model history](#{endpoint_url}/history)
     - [XML sitemap](#{endpoint_url}/sitemap.xml)
     - [RSS history feed](#{endpoint_url}/feed)
     - [LLM retrieval guidance](#{endpoint_url}/llms.txt)
-    - MCP endpoint: `#{endpoint_url}/api/mcp`
+    - [OpenAPI document](#{endpoint_url}/openapi.json)
+    - Tool endpoint: `POST #{endpoint_url}/api/mcp`
     """
   end
 
@@ -83,7 +90,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
 
     The catalog supports comparisons of model capabilities, pricing, context windows, output limits, modalities, aliases, and lifecycle data.
 
-    The site uses the open-source `llm_db` Elixir package as its catalog source.
+    The site uses the open-source `llmdb` project as its catalog source.
 
     Canonical URL: #{canonical_url}
     """
@@ -110,13 +117,71 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     """
     # Recent LLM Model History
 
-    Reverse-chronological model metadata changes from the bundled `llm_db` history.
+    Reverse-chronological model metadata changes from the bundled `llmdb` history.
 
     Canonical URL: #{canonical_url}
 
     ## Latest events
 
     #{event_markdown}
+    """
+  end
+
+  defp developers_markdown(canonical_url) do
+    endpoint_url = PetalBoilerplateWeb.Endpoint.url()
+
+    """
+    # LLM Catalog by Jidoka Labs developer guide
+
+    Use public catalog pages, Markdown copies, history APIs, and lookup tools without an API key.
+
+    ## Choose the right interface
+
+    - Use HTML for interactive browsing and comparison.
+    - Use Markdown for compact page content with stable headings and links.
+    - Use the history API for metadata changes as JSON.
+    - Use the npm package when a Node.js application needs catalog data locally.
+    - Verify important prices, limits, and availability with the model provider.
+
+    ## Markdown
+
+    Send `Accept: text/markdown` to a supported public page or add `.md` to its path.
+
+    ## JSON APIs
+
+    - `GET #{endpoint_url}/api/history/recent?limit=25`
+    - `GET #{endpoint_url}/api/history/:provider/:model_id?limit=100`
+    - [OpenAPI 3.1 document](#{endpoint_url}/openapi.json)
+
+    API errors use `application/problem+json` and include `code`, `status`, `detail`, `instance`, and `resolution` fields.
+
+    ## Catalog lookup tools
+
+    `POST #{endpoint_url}/api/mcp` accepts `tools/list` and `tools/call`. Tools are `query_models`, `get_model`, and `list_providers`. This is a small tool interface, not a complete MCP protocol server.
+
+    ## JavaScript package
+
+    Install [`@agentjido/llmdb`](https://www.npmjs.com/package/@agentjido/llmdb) with `npm install @agentjido/llmdb`. The package does not currently install a command-line executable.
+
+    Canonical URL: #{canonical_url}
+    """
+  end
+
+  defp privacy_markdown(canonical_url) do
+    """
+    # LLM Catalog by Jidoka Labs privacy policy
+
+    Effective August 25, 2026.
+
+    LLM Catalog is a public website without user accounts. Standard server request data can be processed for security, fault diagnosis, and service operation.
+
+    When analytics are enabled, the site uses cookieless Plausible Analytics through first-party proxy paths. Exact searches for catalog provider names or IDs, model names, or model IDs are sent as canonical catalog labels. Every other search is recorded only as `other`; unmatched text is not sent. Analytics are disabled in local development by default.
+
+    The site can use a signed session cookie and stores the selected color theme in browser local storage. It does not use advertising cookies.
+
+    The site does not sell personal data or use it for advertising. For questions, use the [LLM Catalog GitHub issue tracker](https://github.com/agentjido/llmcatalog/issues) and do not include sensitive data in a public issue.
+
+    Canonical URL: #{canonical_url}
     """
   end
 

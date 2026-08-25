@@ -17,6 +17,9 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
     assert link =~
              "<#{PublicRoutes.absolute("/index.md")}>; rel=\"alternate\"; type=\"text/markdown\""
 
+    assert link =~ ~s(</openapi.json>; rel="service-desc"; type="application/json")
+    assert link =~ ~s(</developers>; rel="help"; type="text/html")
+
     assert vary =~ "Accept"
   end
 
@@ -44,9 +47,11 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
 
   test "explicit Markdown routes return deterministic page equivalents", %{conn: conn} do
     for {path, expected} <- [
-          {"/index.md", "# LLM Catalog"},
+          {"/index.md", "# LLM Catalog by Jidoka Labs"},
           {"/llm-models.md", "# LLM Models List"},
           {"/about.md", "# About LLM Catalog"},
+          {"/developers.md", "# LLM Catalog by Jidoka Labs developer guide"},
+          {"/privacy.md", "# LLM Catalog by Jidoka Labs privacy policy"},
           {"/history.md", "# Recent LLM Model History"}
         ] do
       response_conn = get(conn, path)
@@ -97,10 +102,19 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
 
   test "invalid explicit model Markdown returns 404", %{conn: conn} do
     conn = get(conn, "/models/not-real/not-real.md")
-    body = html_response(conn, 404)
+    body = response(conn, 404)
 
     assert body =~ "Page not found"
+    assert get_resp_header(conn, "content-type") |> hd() =~ "text/markdown"
     assert get_resp_header(conn, "x-robots-tag") == ["noindex, nofollow"]
+  end
+
+  test "unknown pages negotiate a recovery-focused Markdown 404", %{conn: conn} do
+    conn = conn |> put_req_header("accept", "text/markdown") |> get("/not-a-page")
+
+    assert response(conn, 404) =~ "[Developer guide](/developers)"
+    assert get_resp_header(conn, "content-type") |> hd() =~ "text/markdown"
+    assert get_resp_header(conn, "vary") == ["Accept"]
   end
 
   test "machine routes do not negotiate Markdown", %{conn: conn} do

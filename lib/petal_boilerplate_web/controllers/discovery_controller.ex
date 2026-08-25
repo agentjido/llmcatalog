@@ -54,9 +54,22 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
     body = """
-    # LLM Catalog
+    # LLM Catalog by Jidoka Labs
 
-    LLM Catalog is a public catalog for browsing and comparing large language models.
+    LLM Catalog by Jidoka Labs is a public catalog for browsing and comparing large language models.
+
+    ## When to use this site
+
+    - Use it to find model identifiers, providers, capabilities, context limits, and recorded prices.
+    - Use Markdown pages when an agent needs compact catalog content.
+    - Use the JSON history API when software needs model metadata changes.
+    - Verify important prices, limits, and availability with the model provider before a production decision.
+
+    ## When not to use this site
+
+    - Do not treat a zero recorded price as a permanent or unconditional free offer.
+    - Do not use catalog metadata as a service-level guarantee.
+    - Do not send secrets or personal data to the public API routes.
 
     ## Preferred retrieval
 
@@ -66,28 +79,41 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
 
     ## Public content
 
-    - Catalog: #{endpoint_url}/
-    - Deduplicated LLM models list: #{endpoint_url}/llm-models
-    - AI model rankings: #{endpoint_url}/rankings/ai-models
-    - Cheapest LLM APIs: #{endpoint_url}/rankings/cheapest-llm-api
-    - Vision LLM models: #{endpoint_url}/models/vision
-    - Tool-calling LLM models: #{endpoint_url}/models/tool-calling
-    - Largest context window LLMs: #{endpoint_url}/models/long-context
-    - Open-weight LLM models: #{endpoint_url}/models/open-weights
-    - Video AI models: #{endpoint_url}/models/video
-    - About: #{endpoint_url}/about
-    - Recent history: #{endpoint_url}/history
-    - Model pages: #{endpoint_url}/models/:provider/:model_id
+    - [Catalog](#{endpoint_url}/)
+    - [Deduplicated LLM models list](#{endpoint_url}/llm-models)
+    - [AI model rankings](#{endpoint_url}/rankings/ai-models)
+    - [Cheapest LLM APIs](#{endpoint_url}/rankings/cheapest-llm-api)
+    - [Zero-price LLM API offers](#{endpoint_url}/rankings/free-llm-api)
+    - [Vision LLM models](#{endpoint_url}/models/vision)
+    - [Tool-calling LLM models](#{endpoint_url}/models/tool-calling)
+    - [Largest context window LLMs](#{endpoint_url}/models/long-context)
+    - [Open-weight LLM models](#{endpoint_url}/models/open-weights)
+    - [Video AI models](#{endpoint_url}/models/video)
+    - [About](#{endpoint_url}/about)
+    - [Privacy policy](#{endpoint_url}/privacy)
+    - [Recent history](#{endpoint_url}/history)
+    - Model pages use `#{endpoint_url}/models/:provider/:model_id`.
+
+    ## Developer interfaces
+
+    - [Developer guide](#{endpoint_url}/developers)
+    - [OpenAPI 3.1 document](#{endpoint_url}/openapi.json)
+    - [JavaScript and TypeScript package](https://www.npmjs.com/package/@agentjido/llmdb)
+    - [Recent history JSON](#{endpoint_url}/api/history/recent)
+    - Model history JSON uses `#{endpoint_url}/api/history/:provider/:model_id`.
+    - The tool endpoint is `POST #{endpoint_url}/api/mcp`.
+    - No API key is required for these public, read-only interfaces.
 
     ## Discovery
 
-    - Sitemap: #{endpoint_url}/sitemap.xml
-    - RSS history feed: #{endpoint_url}/feed
+    - [Sitemap](#{endpoint_url}/sitemap.xml)
+    - [RSS history feed](#{endpoint_url}/feed)
 
-    ## MCP
+    ## Tool interface
 
-    - HTTP endpoint: #{endpoint_url}/api/mcp
     - Tools: `query_models`, `get_model`, `list_providers`
+    - Request shapes: `tools/list` and `tools/call`
+    - This is a small tool interface, not a complete MCP protocol server.
 
     Markdown copies are retrieval alternatives. Their response headers identify the canonical HTML page and prevent duplicate indexing.
     """

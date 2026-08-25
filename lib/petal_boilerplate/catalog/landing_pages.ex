@@ -14,6 +14,7 @@ defmodule PetalBoilerplate.Catalog.LandingPages do
 
   @pages %{
     cheapest: "/rankings/cheapest-llm-api",
+    free: "/rankings/free-llm-api",
     vision: "/models/vision",
     tool_calling: "/models/tool-calling",
     long_context: "/models/long-context",
@@ -24,6 +25,7 @@ defmodule PetalBoilerplate.Catalog.LandingPages do
 
   @type action ::
           :cheapest
+          | :free
           | :vision
           | :tool_calling
           | :long_context
@@ -47,6 +49,7 @@ defmodule PetalBoilerplate.Catalog.LandingPages do
 
   @spec snapshot(action(), pos_integer()) :: map()
   def snapshot(:cheapest, page), do: cheapest_snapshot(page)
+  def snapshot(:free, page), do: free_snapshot(page)
   def snapshot(:vision, page), do: grouped_snapshot(:vision, page)
   def snapshot(:tool_calling, page), do: grouped_snapshot(:tool_calling, page)
   def snapshot(:long_context, page), do: grouped_snapshot(:long_context, page)
@@ -86,6 +89,28 @@ defmodule PetalBoilerplate.Catalog.LandingPages do
       "Lowest input-token prices",
       "Paid text-generation offers with known input and output token prices, ordered by input price.",
       "Paid text API offers"
+    )
+  end
+
+  defp free_snapshot(page) do
+    entries =
+      LLMModelsList.eligible_offers()
+      |> Enum.filter(&zero_token_price_offer?/1)
+      |> Enum.sort_by(fn model ->
+        {
+          to_string(model.provider),
+          String.downcase(model.name || model.model_id),
+          model.model_id
+        }
+      end)
+      |> Enum.map(&offer_entry(&1, "Catalog input and output prices are $0"))
+
+    paged_snapshot(
+      entries,
+      page,
+      "API offers with zero token prices",
+      "Active text-generation provider offers whose catalog input and output token prices are both $0. Provider limits and current terms can change.",
+      "Zero-price text API offers"
     )
   end
 
@@ -237,7 +262,7 @@ defmodule PetalBoilerplate.Catalog.LandingPages do
     }
   end
 
-  defp offer_entry(model) do
+  defp offer_entry(model, reason \\ "Known paid token prices") do
     %{
       model_id: model.model_id,
       name: model.name || model.model_id,
@@ -252,13 +277,18 @@ defmodule PetalBoilerplate.Catalog.LandingPages do
       input_modalities: model.__in,
       output_modalities: model.__out,
       last_updated: model.last_updated,
-      reason: "Known paid token prices"
+      reason: reason
     }
   end
 
   defp paid_token_offer?(model) do
     is_number(model.__cost_in) and model.__cost_in > 0 and
       is_number(model.__cost_out) and model.__cost_out > 0
+  end
+
+  defp zero_token_price_offer?(model) do
+    is_number(model.__cost_in) and model.__cost_in == 0 and
+      is_number(model.__cost_out) and model.__cost_out == 0
   end
 
   defp group_filter(model, :vision), do: modality?(model.__in, :image)

@@ -40,7 +40,16 @@ defmodule PetalBoilerplateWeb.CatalogLandingLiveTest do
 
   test "includes all approved landing pages in the curated sitemap source" do
     assert Enum.all?(LandingPages.routes(), &(&1 in SEO.search_indexable_paths()))
-    assert length(SEO.search_indexable_paths()) == 10
+    assert length(SEO.search_indexable_paths()) == 13
+  end
+
+  test "zero-price page uses conservative free-offer language", %{conn: conn} do
+    html = conn |> get("/rankings/free-llm-api") |> html_response(200)
+
+    assert html =~ "LLM API Offers With Zero Token Prices"
+    assert html =~ "does not guarantee permanent free access"
+    assert html =~ "Confirm the offer before use"
+    assert html =~ "Catalog input and output prices are $0"
   end
 
   test "pagination keeps the base canonical and noindex directive", %{conn: conn} do

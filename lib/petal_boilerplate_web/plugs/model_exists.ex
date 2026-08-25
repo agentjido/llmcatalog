@@ -6,7 +6,7 @@ defmodule PetalBoilerplateWeb.Plugs.ModelExists do
   import Plug.Conn
 
   alias PetalBoilerplate.Catalog
-  alias PetalBoilerplateWeb.ErrorHTML
+  alias PetalBoilerplateWeb.ErrorController
 
   @behaviour Plug
 
@@ -22,10 +22,7 @@ defmodule PetalBoilerplateWeb.Plugs.ModelExists do
       conn
     else
       conn
-      |> put_status(:not_found)
-      |> put_resp_content_type("text/html", "utf-8")
-      |> put_resp_header("x-robots-tag", "noindex, nofollow")
-      |> send_resp(404, ErrorHTML.not_found_html())
+      |> ErrorController.not_found(%{})
       |> halt()
     end
   end

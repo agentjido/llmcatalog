@@ -17,16 +17,27 @@
 
   <section
     :if={@live_action == :index}
-    class="border-b px-4 py-4 sm:px-6"
-    style="border-color: hsl(var(--border));"
+    class="px-4 py-5 sm:px-6 sm:py-7"
     aria-labelledby="catalog-heading"
   >
-    <h1 id="catalog-heading" class="text-xl font-semibold sm:text-2xl">
-      LLM Catalog
-    </h1>
-    <p class="mt-1 max-w-4xl text-sm" style="color: hsl(var(--muted-foreground));">
-      Compare {format_number(@catalog_total)} LLM and AI models across {length(@providers)} providers.
-      Explore pricing, context windows, input and output modalities, and model capabilities.
+    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+      <h1 id="catalog-heading" class="text-2xl font-semibold tracking-tight sm:text-3xl">
+        LLM Catalog
+      </h1>
+      <span class="text-sm" style="color: hsl(var(--muted-foreground));">
+        by
+        <a
+          href="https://jidokahq.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+          style="text-underline-offset: 3px;"
+        >Jidoka Labs</a>
+      </span>
+    </div>
+    <p class="mt-2 max-w-3xl text-sm leading-6" style="color: hsl(var(--muted-foreground));">
+      Compare {format_number(@catalog_total)} models across {length(@providers)} providers by price,
+      capabilities, context window, and modality.
     </p>
   </section>
 
@@ -49,32 +60,20 @@
     models={selected_models(assigns)}
   />
 
-  <div class="flex-1 w-full max-w-full py-3 px-3 sm:px-4 md:py-4">
+  <section
+    class="flex-1 w-full max-w-full py-3 px-3 sm:px-4 md:py-4"
+    aria-labelledby="model-results-heading"
+  >
     <div class="mb-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-      <div class="text-xs sm:text-sm" style="color: hsl(var(--muted-foreground));">
-        <span class="font-medium" style="color: hsl(var(--foreground));">{@total}</span>
-        of {@catalog_total} models
+      <div>
+        <h2 id="model-results-heading" class="text-base font-semibold">Models</h2>
+        <p class="mt-0.5 text-xs sm:text-sm" style="color: hsl(var(--muted-foreground));">
+          <span class="font-medium" style="color: hsl(var(--foreground));">{@total}</span>
+          of {@catalog_total}
+        </p>
       </div>
 
       <div class="flex flex-wrap items-center gap-2 xl:justify-end">
-        <form id="catalog-recency-form" phx-change="set_changed_within">
-          <label class="sr-only" for="changed-within-select">Changed within</label>
-          <select
-            id="changed-within-select"
-            name="changed_within"
-            class="h-9 rounded-md border px-3 text-sm"
-            style="border-color: hsl(var(--border)); background-color: hsl(var(--background)); color: hsl(var(--foreground));"
-          >
-            <option value="" selected={is_nil(@filters.changed_within_days)}>All models</option>
-            <option value="7" selected={@filters.changed_within_days == 7}>
-              Changed in last 7d
-            </option>
-            <option value="30" selected={@filters.changed_within_days == 30}>
-              Changed in last 30d
-            </option>
-          </select>
-        </form>
-
         <form id="catalog-sort-form" phx-change="set_sort">
           <label class="sr-only" for="sort-select">Sort models</label>
           <select
@@ -230,7 +229,7 @@
         </button>
       </div>
     <% end %>
-  </div>
+  </section>
 
   <%= if MapSet.size(@selected_ids) > 0 do %>
     <div

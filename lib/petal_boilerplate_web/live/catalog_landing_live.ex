@@ -361,6 +361,7 @@ defmodule PetalBoilerplateWeb.CatalogLandingLive do
   end
 
   defp price_note(:cheapest, _section), do: "per 1M tokens"
+  defp price_note(:free, _section), do: "catalog rate per 1M tokens"
   defp price_note(:video, _section), do: "media units vary"
   defp price_note(:ai_models, "Lowest paid input-token prices"), do: "per 1M tokens"
   defp price_note(_action, _section), do: "per 1M tokens, when known"

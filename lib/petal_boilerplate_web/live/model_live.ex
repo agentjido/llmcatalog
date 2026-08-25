@@ -89,13 +89,6 @@ defmodule PetalBoilerplateWeb.ModelLive do
     "minimum_vram_gb_desc" => %{by: :minimum_vram_gb, dir: :desc}
   }
 
-  @analytics_search_max_length 100
-  @analytics_private_search_patterns [
-    ~r/@/u,
-    ~r/\b(?:https?:\/\/|www\.)/iu,
-    ~r/\b(?:\+?\d[\d\s().-]{7,}\d)\b/u,
-    ~r/\b(?:\d{1,3}\.){3}\d{1,3}\b/u
-  ]
   @analytics_filter_changes [
     {"q", "search"},
     {"providers", "providers"},
@@ -524,21 +517,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
   end
 
   defp analytics_search_value(search) do
-    normalized_search =
-      search
-      |> String.trim()
-      |> String.replace(~r/\s+/u, " ")
-
-    cond do
-      normalized_search == "" ->
-        "none"
-
-      Enum.any?(@analytics_private_search_patterns, &Regex.match?(&1, normalized_search)) ->
-        "redacted"
-
-      true ->
-        String.slice(normalized_search, 0, @analytics_search_max_length)
-    end
+    Catalog.analytics_search_value(search)
   end
 
   defp analytics_capabilities_value(capabilities) do
@@ -790,7 +769,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
     provider_count = length(Catalog.list_providers())
 
     assign(socket,
-      page_title: "LLM Catalog",
+      page_title: "LLM Catalog by Jidoka Labs",
       page_description:
         "Browse and compare #{format_number(model_count)} LLM models. Filter by provider, capabilities, pricing, modalities, and context windows.",
       canonical_url: PublicRoutes.absolute("/"),

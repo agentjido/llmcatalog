@@ -98,9 +98,12 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert SEO.search_indexable_paths() == [
              "/",
              "/about",
+             "/developers",
              "/llm-models",
+             "/privacy",
              "/rankings/ai-models",
              "/rankings/cheapest-llm-api",
+             "/rankings/free-llm-api",
              "/models/vision",
              "/models/tool-calling",
              "/models/long-context",
@@ -119,7 +122,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     end
   end
 
-  test "llms.txt documents Markdown, discovery, and MCP interfaces", %{conn: conn} do
+  test "llms.txt documents use guidance and developer interfaces", %{conn: conn} do
     conn = get(conn, "/llms.txt")
     body = response(conn, 200)
 
@@ -129,12 +132,20 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert body =~ PublicRoutes.absolute("/llm-models")
     assert body =~ PublicRoutes.absolute("/rankings/ai-models")
     assert body =~ PublicRoutes.absolute("/rankings/cheapest-llm-api")
+    assert body =~ PublicRoutes.absolute("/rankings/free-llm-api")
     assert body =~ PublicRoutes.absolute("/models/vision")
     assert body =~ PublicRoutes.absolute("/models/tool-calling")
     assert body =~ PublicRoutes.absolute("/models/long-context")
     assert body =~ PublicRoutes.absolute("/models/open-weights")
     assert body =~ PublicRoutes.absolute("/models/video")
     assert body =~ PublicRoutes.absolute("/api/mcp")
+    assert body =~ PublicRoutes.absolute("/developers")
+    assert body =~ PublicRoutes.absolute("/openapi.json")
+    assert body =~ PublicRoutes.absolute("/privacy")
+    assert body =~ "https://www.npmjs.com/package/@agentjido/llmdb"
+    assert body =~ "## When to use this site"
+    assert body =~ "## When not to use this site"
+    assert body =~ "not a complete MCP protocol server"
     assert body =~ "query_models"
     assert get_resp_header(conn, "x-robots-tag") == ["noindex"]
   end

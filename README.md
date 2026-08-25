@@ -90,10 +90,10 @@ The application is configured for deployment to standard Phoenix hosting platfor
 
 When analytics are enabled, the model catalog sends these custom events through the first-party Plausible proxy:
 
-- `Model Search` - Search term, active filter state, and result count
+- `Model Search` - Allowlisted catalog value, active filter state, and result count
 - `Model Filter` - Changed control, active filter state, sort state, and result count
 
-Search values are limited to 100 characters. Values that look like an email address, URL, phone number, or IP address are sent as `redacted`. Configure the event goals and custom properties in the Plausible site settings after the first events arrive.
+Search analytics use an exact allowlist generated from the current catalog. Exact provider names or IDs are sent as canonical `provider:<name>` values. Exact model names or IDs are sent as canonical `model:<name>` values. Blank searches are sent as `none`. All partial, unknown, or arbitrary text is sent only as `other`; unmatched raw text is never sent. Configure the event goals and custom properties in the Plausible site settings after the first events arrive.
 
 ## License
 

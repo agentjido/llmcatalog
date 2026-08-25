@@ -10,7 +10,7 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       model_count = Catalog.format_number(Catalog.total_model_count())
       endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
-      assert html =~ ~s(property="og:title" content="LLM Catalog")
+      assert html =~ ~s(property="og:title" content="LLM Catalog by Jidoka Labs")
       assert html =~ ~s(property="og:description" content="Browse and compare #{model_count})
       assert html =~ ~s(property="og:url" content="#{endpoint_url}/")
       assert html =~ ~s(property="og:type" content="website")
@@ -18,10 +18,14 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert html =~ ~s(rel="canonical" href="#{endpoint_url}/")
 
       assert html =~
-               ~s(<title data-suffix=" · llmcatalog.dev">LLM Catalog · llmcatalog.dev</title>)
+               ~s(<title data-suffix=" · llmcatalog.dev">LLM Catalog by Jidoka Labs · llmcatalog.dev</title>)
 
       assert heading_texts(html, "h1") == ["LLM Catalog"]
-      assert html =~ "LLM and AI models across"
+      assert heading_texts(html, "h2") |> Enum.take(1) == ["Models"]
+
+      assert html =~ "models across"
+      refute html =~ ~s(href="/developers")
+      assert html =~ ~s(href="/privacy")
     end
 
     test "about page has correct OG tags", %{conn: conn} do
@@ -40,7 +44,7 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
       assert html =~ ~s(property="og:title" content="Recent History")
-      assert html =~ ~s(property="og:description" content="Track recent llm_db)
+      assert html =~ ~s(property="og:description" content="Track recent llmdb)
       assert html =~ ~s(property="og:url" content="#{endpoint_url}/history")
       assert html =~ ~s(name="robots" content="noindex, follow")
     end

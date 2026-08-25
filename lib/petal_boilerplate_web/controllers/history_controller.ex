@@ -2,6 +2,7 @@ defmodule PetalBoilerplateWeb.HistoryController do
   use PetalBoilerplateWeb, :controller
 
   alias PetalBoilerplate.Catalog
+  alias PetalBoilerplateWeb.APIProblem
 
   @default_model_limit 200
   @default_recent_limit 50
@@ -17,9 +18,14 @@ defmodule PetalBoilerplateWeb.HistoryController do
     with {:ok, events} <- history.timeline(provider, model_id, limit),
          {:ok, meta} <- history.meta() do
       if events == [] and is_nil(Catalog.find_model(provider, model_id)) do
-        conn
-        |> put_status(:not_found)
-        |> json(%{error: "model_not_found", model_key: model_key})
+        APIProblem.respond(
+          conn,
+          :not_found,
+          "model_not_found",
+          "The requested provider model is not in the current catalog.",
+          resolution: "Check the provider and model ID on the catalog home page.",
+          extras: %{model_key: model_key}
+        )
       else
         json(conn, %{
           schema_version: schema_version(events),
@@ -30,19 +36,13 @@ defmodule PetalBoilerplateWeb.HistoryController do
       end
     else
       {:error, :invalid_limit} ->
-        conn
-        |> put_status(:bad_request)
-        |> json(%{error: "invalid_limit"})
+        invalid_limit(conn)
 
       {:error, :history_unavailable} ->
-        conn
-        |> put_status(:service_unavailable)
-        |> json(%{error: "history_unavailable"})
+        history_unavailable(conn)
 
       {:error, _reason} ->
-        conn
-        |> put_status(:service_unavailable)
-        |> json(%{error: "history_unavailable"})
+        history_unavailable(conn)
     end
   end
 
@@ -60,19 +60,13 @@ defmodule PetalBoilerplateWeb.HistoryController do
       })
     else
       {:error, :invalid_limit} ->
-        conn
-        |> put_status(:bad_request)
-        |> json(%{error: "invalid_limit"})
+        invalid_limit(conn)
 
       {:error, :history_unavailable} ->
-        conn
-        |> put_status(:service_unavailable)
-        |> json(%{error: "history_unavailable"})
+        history_unavailable(conn)
 
       {:error, _reason} ->
-        conn
-        |> put_status(:service_unavailable)
-        |> json(%{error: "history_unavailable"})
+        history_unavailable(conn)
     end
   end
 
@@ -87,6 +81,26 @@ defmodule PetalBoilerplateWeb.HistoryController do
 
   defp map_get(map, string_key, atom_key) do
     Map.get(map, string_key) || Map.get(map, atom_key)
+  end
+
+  defp invalid_limit(conn) do
+    APIProblem.respond(
+      conn,
+      :bad_request,
+      "invalid_limit",
+      "The limit must be an integer from 1 through 1000.",
+      resolution: "Use a limit query value from 1 through 1000."
+    )
+  end
+
+  defp history_unavailable(conn) do
+    APIProblem.respond(
+      conn,
+      :service_unavailable,
+      "history_unavailable",
+      "Model history data is temporarily unavailable.",
+      resolution: "Try the request again later or use the current catalog data."
+    )
   end
 
   defp history_module do

@@ -1,6 +1,8 @@
 defmodule PetalBoilerplateWeb.MCPController do
   use PetalBoilerplateWeb, :controller
 
+  alias PetalBoilerplateWeb.APIProblem
+
   def handle(conn, %{"method" => "tools/list"}) do
     tools = [
       %{
@@ -137,9 +139,13 @@ defmodule PetalBoilerplateWeb.MCPController do
   end
 
   def handle(conn, _params) do
-    conn
-    |> put_status(400)
-    |> json(%{error: "Unknown method or invalid request"})
+    APIProblem.respond(
+      conn,
+      :bad_request,
+      "invalid_tool_request",
+      "The request does not match a supported tool operation.",
+      resolution: "Use tools/list or tools/call as documented on /developers."
+    )
   end
 
   defp filter_by_provider(models, nil), do: models

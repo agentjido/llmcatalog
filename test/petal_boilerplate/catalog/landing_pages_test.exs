@@ -11,7 +11,8 @@ defmodule PetalBoilerplate.Catalog.LandingPagesTest do
              "/models/video",
              "/models/vision",
              "/rankings/ai-models",
-             "/rankings/cheapest-llm-api"
+             "/rankings/cheapest-llm-api",
+             "/rankings/free-llm-api"
            ]
   end
 
@@ -24,6 +25,23 @@ defmodule PetalBoilerplate.Catalog.LandingPagesTest do
 
     prices = Enum.map(entries, &{&1.cost_in, &1.cost_out})
     assert prices == Enum.sort(prices)
+  end
+
+  test "zero-price API rows require numeric zero input and output prices" do
+    snapshot = LandingPages.snapshot(:free, 1)
+    entries = hd(snapshot.sections).entries
+
+    assert snapshot.total_count > 0
+    assert snapshot.provider_count > 0
+
+    assert Enum.all?(entries, fn entry ->
+             is_number(entry.cost_in) and entry.cost_in == 0 and
+               is_number(entry.cost_out) and entry.cost_out == 0
+           end)
+
+    assert Enum.all?(entries, fn entry ->
+             entry.reason == "Catalog input and output prices are $0"
+           end)
   end
 
   test "capability pages expose the stated catalog evidence" do

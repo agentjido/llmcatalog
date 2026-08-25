@@ -14,7 +14,7 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
 
     assert_patch(view, "/?providers=#{provider_id}")
     refute has_element?(view, ~s(button[aria-label="Clear search"]))
-    assert has_element?(view, "button", "Clear filters")
+    assert has_element?(view, ~s(button[aria-label="Clear filters"]))
   end
 
   test "clear filters preserves search", %{conn: conn} do
@@ -22,29 +22,40 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
 
     {:ok, view, _html} = live(conn, "/?q=gpt&providers=#{provider_id}&caps=tools")
 
-    assert has_element?(view, "button", "Clear filters")
+    assert has_element?(view, ~s(button[aria-label="Clear filters"]))
 
     render_click(view, "clear_filters", %{})
 
     assert_patch(view, "/?q=gpt")
     assert has_element?(view, ~s(button[aria-label="Clear search"]))
-    refute has_element?(view, "button", "Clear filters")
+    refute has_element?(view, ~s(button[aria-label="Clear filters"]))
   end
 
-  test "mobile filter control opens a labelled filter dialog", %{conn: conn} do
+  test "filter control opens a labelled filter dialog", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/")
 
-    refute has_element?(view, "#mobile-filters-dialog")
+    assert has_element?(view, ~s(#quick-filters[aria-label="Quick filters"]))
+    assert has_element?(view, ~s(#quick-filters button[phx-click="quick_filter"]))
+    refute has_element?(view, "#filters-dialog")
 
     render_click(view, "toggle_filters", %{})
 
-    assert has_element?(view, ~s(#mobile-filters-dialog[role="dialog"][aria-modal="true"]))
-    assert has_element?(view, "#mobile-provider-search-form")
-    assert has_element?(view, "#mobile-capabilities-filter-form")
-    assert has_element?(view, "#mobile-architecture-filter-form")
+    assert has_element?(view, ~s(#filters-dialog[role="dialog"][aria-modal="true"]))
+    refute has_element?(view, "#filters-dialog summary", "Quick filters")
+    assert has_element?(view, "#provider-search-form")
+    assert has_element?(view, "#capabilities-filter-form")
+    assert has_element?(view, "#architecture-filter-form")
+    assert has_element?(view, "#catalog-recency-form")
 
     render_click(view, "toggle_filters", %{})
-    refute has_element?(view, "#mobile-filters-dialog")
+    refute has_element?(view, "#filters-dialog")
+  end
+
+  test "model rows hide unknown architecture badges", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/?architecture=unknown")
+
+    assert has_element?(view, "#models-table-body tr")
+    refute has_element?(view, ~s(span[data-architecture="unknown"]))
   end
 
   test "architecture filter updates the URL and model rows", %{conn: conn} do
@@ -82,26 +93,34 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
     assert render(view) =~ "GB"
   end
 
-  test "mobile navigation exposes primary and project links", %{conn: conn} do
+  test "site header exposes social and theme actions without developer menu links", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/")
 
     assert has_element?(
              view,
-             ~s(nav[aria-label="Mobile navigation"] a[href="/history"]),
-             "History"
+             ~s(nav[aria-label="Site navigation"] a[href="/history"]),
+             "Model history"
            )
 
-    assert has_element?(view, ~s(nav[aria-label="Mobile navigation"] a[href="/about"]), "About")
+    assert has_element?(view, ~s(nav[aria-label="Site navigation"] a[href="/about"]), "About")
 
     assert has_element?(
              view,
-             ~s(nav[aria-label="Mobile navigation"] a[href="https://github.com/agentjido/llmdb"]),
-             "GitHub"
+             ~s(header a[aria-label="View llmdb on GitHub"])
            )
 
     assert has_element?(
              view,
-             ~s(nav[aria-label="Mobile navigation"] a[href*="template=model_metadata.yml"]),
+             ~s(header a[aria-label="Join Discord"][href="https://jido.run/discord"])
+           )
+
+    assert has_element?(view, ~s(header button[aria-label="Change color theme"]))
+    refute has_element?(view, ~s(nav[aria-label="Site navigation"] a[href="/developers"]))
+    refute has_element?(view, ~s(nav[aria-label="Site navigation"] a[href="/openapi.json"]))
+
+    assert has_element?(
+             view,
+             ~s(nav[aria-label="Site navigation"] a[href*="template=model_metadata.yml"]),
              "Report incorrect model data"
            )
   end

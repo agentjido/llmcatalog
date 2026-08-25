@@ -22,32 +22,30 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
     ~H"""
     <header
-      class="sticky top-0 z-50 border-b backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background)/0.6)]"
-      style="border-color: hsl(var(--border)); background-color: hsl(var(--background) / 0.95);"
+      class="sticky top-0 z-50 border-b"
+      style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
     >
-      <div class="w-full max-w-full flex h-14 items-center gap-3 px-4">
+      <div class="flex h-14 w-full items-center gap-2 px-3 sm:gap-3 sm:px-4">
         <a
           href="/"
           aria-label="LLM Catalog home"
-          class="flex items-center gap-2 shrink-0 transition-opacity hover:opacity-80"
+          class="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-4"
           title="Go to home page"
         >
-          <.icon name="hero-circle-stack" class="h-6 w-6" style="color: hsl(var(--primary));" />
+          <.icon name="hero-circle-stack" class="h-5 w-5" style="color: hsl(var(--primary));" />
           <span
-            class="text-lg font-semibold tracking-tight hidden sm:inline"
+            class="hidden text-base font-semibold tracking-tight sm:inline"
             style="color: hsl(var(--foreground));"
           >
             LLM Catalog
           </span>
         </a>
 
-        <div class="flex-1" />
-
         <form
           id="model-search-form"
           phx-change="filter"
           phx-debounce="300"
-          class="w-full max-w-[200px] sm:max-w-xs md:max-w-sm"
+          class="mx-auto min-w-0 w-full max-w-xl"
         >
           <div class="relative">
             <.icon
@@ -60,10 +58,9 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               name="search"
               id="search-input"
               value={@search_value}
-              placeholder="Search..."
-              autofocus
-              class="w-full pl-9 pr-9 h-9 rounded-md border-0 text-sm"
-              style="background-color: hsl(var(--secondary)); color: hsl(var(--foreground));"
+              placeholder="Search models"
+              class="h-9 w-full rounded-md border py-0 pl-9 pr-9 text-sm focus:ring-2"
+              style="border-color: hsl(var(--border)); background-color: hsl(var(--background)); color: hsl(var(--foreground));"
             />
             <button
               :if={@search_value != ""}
@@ -80,161 +77,138 @@ defmodule PetalBoilerplateWeb.ModelComponents do
           </div>
         </form>
 
-        <a
-          href="https://hex.pm/packages/llm_db"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-xs hidden sm:flex items-center gap-1 px-2 py-1 rounded border transition-colors hover:opacity-80"
-          style="color: hsl(var(--muted-foreground)); border-color: hsl(var(--border));"
-          title="View llm_db package on Hex"
-        >
-          <.icon name="hero-cube" class="h-3 w-3" /> llm_db v{llm_db_version()}
-        </a>
-
-        <a
-          href="/llm-models"
-          class="text-sm hidden sm:block transition-colors hover:opacity-80"
-          style="color: hsl(var(--muted-foreground));"
-        >
-          LLM list
-        </a>
-
-        <a
-          href="/rankings/ai-models"
-          class="text-sm hidden lg:block transition-colors hover:opacity-80"
-          style="color: hsl(var(--muted-foreground));"
-        >
-          Rankings
-        </a>
-
-        <a
-          href="/history"
-          class="text-sm hidden sm:block transition-colors hover:opacity-80"
-          style="color: hsl(var(--muted-foreground));"
-        >
-          History
-        </a>
-
-        <a
-          href="/about"
-          class="text-sm hidden sm:block transition-colors hover:opacity-80"
-          style="color: hsl(var(--muted-foreground));"
-        >
-          About
-        </a>
-
-        <div class="flex items-center gap-0.5 shrink-0">
+        <div class="flex shrink-0 items-center gap-0.5">
           <a
-            href={@metadata_issue_url}
+            href="https://hex.pm/packages/llm_db"
             target="_blank"
             rel="noopener noreferrer"
-            title="See incorrect model data? Report it on GitHub"
-            aria-label="Report incorrect model data on GitHub"
-            class="hidden sm:inline-flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
-            style="border-color: hsl(var(--border)); color: hsl(var(--muted-foreground));"
+            title="View llmdb on Hex"
+            class="hidden h-9 items-center px-1.5 text-xs transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 md:inline-flex"
+            style="color: hsl(var(--muted-foreground)); text-underline-offset: 3px;"
           >
-            <.icon name="hero-flag" class="h-3.5 w-3.5" />
-            <span class="hidden xl:inline">Data issue?</span>
-          </a>
-          <a
-            href="https://agentjido.xyz/discord"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Join Discord"
-            aria-label="Join Discord"
-            class="hidden sm:block p-2 rounded-md transition-colors hover:opacity-80"
-            style="color: hsl(var(--foreground));"
-          >
-            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
-            </svg>
+            v{llm_db_version()}
           </a>
           <a
             href="https://github.com/agentjido/llmdb"
             target="_blank"
             rel="noopener noreferrer"
             title="GitHub"
-            aria-label="View llm_db on GitHub"
-            class="hidden sm:block p-2 rounded-md transition-colors hover:opacity-80"
+            aria-label="View llmdb on GitHub"
+            class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-[hsl(var(--muted))] focus-visible:outline-2 focus-visible:outline-offset-2"
             style="color: hsl(var(--foreground));"
           >
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.52 11.52 0 0 1 12 6.65c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.8 24 17.302 24 12c0-6.627-5.373-12-12-12Z" />
+            </svg>
+          </a>
+          <a
+            href="https://jido.run/discord"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Discord"
+            aria-label="Join Discord"
+            class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-[hsl(var(--muted))] focus-visible:outline-2 focus-visible:outline-offset-2"
+            style="color: hsl(var(--foreground));"
+          >
+            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.125-.094.25-.192.372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03ZM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z" />
             </svg>
           </a>
           <button
             type="button"
             onclick="toggleScheme()"
-            title="Toggle theme"
-            aria-label="Toggle theme"
-            class="p-2 rounded-md transition-colors hover:opacity-80"
+            title="Change color theme"
+            aria-label="Change color theme"
+            class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-[hsl(var(--muted))] focus-visible:outline-2 focus-visible:outline-offset-2"
             style="color: hsl(var(--foreground));"
           >
             <.icon name="hero-moon" class="h-4 w-4 color-scheme-dark-icon" />
             <.icon name="hero-sun" class="h-4 w-4 color-scheme-light-icon hidden" />
           </button>
+        </div>
 
-          <details class="relative sm:hidden">
-            <summary
-              aria-label="Open navigation"
-              class="flex list-none items-center justify-center p-2 rounded-md transition-colors hover:opacity-80 [&::-webkit-details-marker]:hidden"
-              style="color: hsl(var(--foreground));"
-            >
-              <.icon name="hero-bars-3" class="h-4 w-4" />
-            </summary>
-            <nav
-              aria-label="Mobile navigation"
-              class="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-md border shadow-lg"
-              style="border-color: hsl(var(--border)); background-color: hsl(var(--popover)); color: hsl(var(--popover-foreground));"
-            >
-              <a href="/" class="block px-4 py-2.5 text-sm hover:opacity-80">Catalog</a>
-              <a href="/llm-models" class="block px-4 py-2.5 text-sm hover:opacity-80">
+        <details id="site-navigation-menu" class="group relative shrink-0">
+          <summary
+            aria-label="Open site menu"
+            class="flex h-9 list-none items-center gap-2 rounded-md border px-2.5 text-sm font-medium transition-colors hover:bg-[hsl(var(--muted))] focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden"
+            style="border-color: hsl(var(--border)); color: hsl(var(--foreground));"
+          >
+            <.icon name="hero-bars-3" class="h-4 w-4" />
+            <span class="hidden sm:inline">Menu</span>
+          </summary>
+
+          <nav
+            aria-label="Site navigation"
+            class="absolute right-0 top-full mt-2 w-[min(19rem,calc(100vw-1.5rem))] overflow-hidden rounded-lg border"
+            style="border-color: hsl(var(--border)); background-color: hsl(var(--popover)); color: hsl(var(--popover-foreground));"
+          >
+            <div class="px-3 py-3">
+              <p class="px-2 pb-1 text-xs font-medium" style="color: hsl(var(--muted-foreground));">
+                Browse
+              </p>
+              <a href="/" class="block rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]">
+                Model catalog
+              </a>
+              <a
+                href="/llm-models"
+                class="block rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
+              >
                 LLM models list
               </a>
               <a
                 href="/rankings/ai-models"
-                class="block px-4 py-2.5 text-sm hover:opacity-80"
+                class="block rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
               >
-                AI model rankings
-              </a>
-              <a href="/history" class="block px-4 py-2.5 text-sm hover:opacity-80">History</a>
-              <a href="/about" class="block px-4 py-2.5 text-sm hover:opacity-80">About</a>
-              <a
-                href="https://hex.pm/packages/llm_db"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="block px-4 py-2.5 text-sm hover:opacity-80"
-              >
-                llm_db v{llm_db_version()}
+                Rankings
               </a>
               <a
-                href="https://github.com/agentjido/llmdb"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="block px-4 py-2.5 text-sm hover:opacity-80"
+                href="/history"
+                class="block rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
               >
-                GitHub
+                Model history
               </a>
-              <a
-                href="https://agentjido.xyz/discord"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="block px-4 py-2.5 text-sm hover:opacity-80"
-              >
-                Discord
-              </a>
+            </div>
+
+            <div class="border-t px-3 py-3" style="border-color: hsl(var(--border));">
+              <p class="px-2 pb-1 text-xs font-medium" style="color: hsl(var(--muted-foreground));">
+                Project
+              </p>
+              <div class="grid grid-cols-2">
+                <a href="/about" class="rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]">
+                  About
+                </a>
+                <a href="/privacy" class="rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]">
+                  Privacy
+                </a>
+              </div>
               <a
                 href={@metadata_issue_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="block border-t px-4 py-2.5 text-sm font-medium hover:opacity-80"
-                style="border-color: hsl(var(--border)); color: hsl(var(--primary));"
+                class="mt-1 block rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
               >
                 Report incorrect model data
               </a>
-            </nav>
-          </details>
-        </div>
+            </div>
+
+            <div
+              class="border-t px-5 py-3"
+              style="border-color: hsl(var(--border)); color: hsl(var(--muted-foreground));"
+            >
+              <p class="text-xs font-medium">
+                By
+                <a
+                  href="https://jidokahq.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  style="text-underline-offset: 3px;"
+                >Jidoka Labs</a>
+              </p>
+              <p class="mt-0.5 text-[11px]">llmdb v{llm_db_version()}</p>
+            </div>
+          </nav>
+        </details>
       </div>
     </header>
     """
@@ -337,188 +311,95 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
     ~H"""
     <div
-      class="sticky top-14 z-40 border-b backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background)/0.8)]"
-      style="border-color: hsl(var(--border)); background-color: hsl(var(--background) / 0.95);"
+      class="sticky top-14 z-40 border-b"
+      style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
     >
-      <div class="hidden md:block">
-        <div class="w-full max-w-full py-2.5 px-4">
-          <div class="flex items-center gap-3">
-            <span class="text-sm shrink-0 font-medium" style="color: hsl(var(--muted-foreground));">
-              Quick:
-            </span>
-            <div class="flex items-center gap-2 flex-wrap">
-              <%= for qf <- @quick_filters do %>
-                <.quick_filter_pill
-                  label={qf.label}
-                  icon={qf.icon}
-                  kind={to_string(qf.key)}
-                  active={qf.key in @active_quick_filters}
-                />
-              <% end %>
-            </div>
-          </div>
-        </div>
-
-        <div class="w-full max-w-full pb-2.5 px-4">
-          <div class="flex flex-wrap items-center gap-2">
-            <.icon
-              name="hero-funnel"
-              class="h-4 w-4 shrink-0"
-              style="color: hsl(var(--muted-foreground));"
+      <div class="flex min-h-14 w-full items-center gap-2 px-3 py-2 sm:px-4">
+        <div
+          id="quick-filters"
+          aria-label="Quick filters"
+          class="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto scrollbar-none"
+        >
+          <%= for qf <- @quick_filters do %>
+            <.quick_filter_pill
+              label={qf.label}
+              kind={to_string(qf.key)}
+              active={qf.key in @active_quick_filters}
             />
-
-            <.filter_dropdown
-              id="filter-provider"
-              label={"Provider #{provider_count_label(@filters)}"}
-              active={MapSet.size(@filters.provider_ids) > 0}
-            >
-              <.provider_filter_content
-                providers={@providers}
-                filters={@filters}
-                form_id="provider-search-form"
-              />
-            </.filter_dropdown>
-
-            <.filter_dropdown
-              id="filter-capabilities"
-              label="Capabilities"
-              active={has_capability_filters?(@filters.capabilities)}
-            >
-              <.capabilities_filter_content
-                filters={@filters}
-                form_id="capabilities-filter-form"
-              />
-            </.filter_dropdown>
-
-            <.filter_dropdown
-              id="filter-architecture"
-              label={"Architecture #{architecture_filter_label(@filters.architecture)}"}
-              active={@filters.architecture != :all}
-            >
-              <.architecture_filter_content
-                filters={@filters}
-                form_id="architecture-filter-form"
-              />
-            </.filter_dropdown>
-
-            <.filter_dropdown
-              id="filter-modalities-in"
-              label={"Input #{modality_count_label(@filters.modalities_in)}"}
-              active={MapSet.size(@filters.modalities_in) > 0}
-            >
-              <.modalities_filter_content
-                filters={@filters}
-                direction={:input}
-                form_id="input-modalities-filter-form"
-              />
-            </.filter_dropdown>
-
-            <.filter_dropdown
-              id="filter-modalities-out"
-              label={"Output #{modality_count_label(@filters.modalities_out)}"}
-              active={MapSet.size(@filters.modalities_out) > 0}
-            >
-              <.modalities_filter_content
-                filters={@filters}
-                direction={:output}
-                form_id="output-modalities-filter-form"
-              />
-            </.filter_dropdown>
-
-            <.filter_dropdown
-              id="filter-context"
-              label={"Context #{context_label(@filters)}"}
-              active={@filters.min_context != nil}
-            >
-              <.context_filter_content filters={@filters} />
-            </.filter_dropdown>
-
-            <.filter_dropdown
-              id="filter-cost"
-              label={"Cost #{cost_label(@filters)}"}
-              active={@filters.max_cost_in != nil or @filters.max_cost_out != nil}
-            >
-              <.cost_filter_content filters={@filters} />
-            </.filter_dropdown>
-
-            <div class="flex flex-wrap gap-1 ml-2 overflow-x-auto scrollbar-none">
-              <%= for chip <- active_filter_chips(@filters, @providers) do %>
-                <.filter_chip label={chip.label} kind={chip.kind} filter_value={chip.value} />
-              <% end %>
-            </div>
-
-            <button
-              :if={has_active_filters?(@filters)}
-              type="button"
-              phx-click="clear_filters"
-              class="ml-auto h-8 px-3 text-sm transition-colors hover:opacity-80"
-              style="color: hsl(var(--muted-foreground));"
-            >
-              Clear filters
-            </button>
-          </div>
+          <% end %>
         </div>
+
+        <button
+          id="filters-trigger"
+          type="button"
+          phx-click={JS.push_focus() |> JS.push("toggle_filters")}
+          aria-expanded={to_string(@filters_open)}
+          aria-controls="filters-dialog"
+          class="flex h-9 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-[hsl(var(--muted))] focus-visible:outline-2"
+          style="border-color: hsl(var(--border));"
+        >
+          <.icon name="hero-adjustments-horizontal" class="h-4 w-4" /> Filters
+          <span
+            :if={filter_count(@filters) > 0}
+            class="flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs"
+            style="background-color: hsl(var(--foreground)); color: hsl(var(--background));"
+          >
+            {filter_count(@filters)}
+          </span>
+        </button>
       </div>
 
-      <div class="md:hidden">
-        <div class="w-full max-w-full py-2.5 px-4">
-          <div class="flex items-center gap-2">
-            <button
-              id="mobile-filters-trigger"
-              type="button"
-              phx-click={JS.push_focus() |> JS.push("toggle_filters")}
-              aria-expanded={to_string(@filters_open)}
-              aria-controls="mobile-filters-dialog"
-              class="h-9 px-3 flex items-center gap-2 rounded-md border text-sm"
-              style="border-color: hsl(var(--border));"
-            >
-              <.icon name="hero-adjustments-horizontal" class="h-4 w-4" /> Filters
-              <span
-                :if={filter_count(@filters) > 0}
-                class="h-5 min-w-5 px-1.5 text-xs rounded-full flex items-center justify-center"
-                style="background-color: hsl(var(--secondary)); color: hsl(var(--secondary-foreground));"
-              >
-                {filter_count(@filters)}
-              </span>
-            </button>
-
-            <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-1">
-              <%= for chip <- active_filter_chips(@filters, @providers) do %>
-                <.filter_chip label={chip.label} kind={chip.kind} filter_value={chip.value} />
-              <% end %>
-            </div>
-          </div>
+      <div
+        :if={has_active_filters?(@filters)}
+        class="flex min-h-10 items-center gap-2 border-t px-3 py-1.5 sm:px-4"
+        style="border-color: hsl(var(--border));"
+      >
+        <div class="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto scrollbar-none">
+          <%= for chip <- active_filter_chips(@filters, @providers) do %>
+            <.filter_chip label={chip.label} kind={chip.kind} filter_value={chip.value} />
+          <% end %>
         </div>
+
+        <button
+          :if={has_active_filters?(@filters)}
+          type="button"
+          phx-click="clear_filters"
+          aria-label="Clear filters"
+          class="h-9 shrink-0 px-2 text-sm hover:underline focus-visible:outline-2"
+          style="color: hsl(var(--muted-foreground)); text-underline-offset: 3px;"
+        >
+          Clear
+        </button>
       </div>
     </div>
 
     <div
       :if={@filters_open}
-      class="fixed inset-0 top-14 z-[60] md:hidden"
+      class="fixed inset-0 top-14 z-[60]"
       phx-remove={JS.pop_focus()}
     >
       <button
         type="button"
         phx-click="toggle_filters"
-        class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        class="absolute inset-0 bg-black/50"
         aria-label="Close filters"
       ></button>
       <.focus_wrap
-        id="mobile-filters-dialog"
+        id="filters-dialog"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="mobile-filters-title"
-        phx-mounted={JS.focus_first(to: "#mobile-filters-dialog")}
+        aria-labelledby="filters-title"
+        phx-mounted={JS.focus_first(to: "#filters-dialog")}
         phx-window-keydown="toggle_filters"
         phx-key="escape"
-        class="absolute inset-y-0 left-0 w-[min(90vw,24rem)] overflow-y-auto border-r shadow-xl"
+        class="absolute inset-y-0 left-0 w-[min(92vw,28rem)] overflow-y-auto border-r"
         style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
       >
         <div
           class="sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3"
           style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
         >
-          <h2 id="mobile-filters-title" class="text-lg font-semibold">Filters</h2>
+          <h2 id="filters-title" class="text-lg font-semibold">Filters</h2>
           <button
             type="button"
             phx-click="toggle_filters"
@@ -529,106 +410,99 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             <.icon name="hero-x-mark" class="h-5 w-5" />
           </button>
         </div>
+        <div class="px-4 pb-10">
+          <.filter_section
+            title={"Providers #{provider_count_label(@filters)}"}
+            open={MapSet.size(@filters.provider_ids) > 0}
+          >
+            <.provider_filter_content
+              providers={@providers}
+              filters={@filters}
+              form_id="provider-search-form"
+            />
+          </.filter_section>
 
-        <div class="space-y-5 p-4 pb-10">
-          <section aria-labelledby="mobile-quick-filters-title">
-            <h3 id="mobile-quick-filters-title" class="mb-2 text-sm font-semibold">
-              Quick filters
-            </h3>
-            <div class="flex flex-wrap gap-2">
-              <%= for qf <- @quick_filters do %>
-                <.quick_filter_pill
-                  label={qf.label}
-                  icon={qf.icon}
-                  kind={to_string(qf.key)}
-                  active={qf.key in @active_quick_filters}
-                />
-              <% end %>
-            </div>
-          </section>
+          <.filter_section
+            title="Capabilities"
+            open={has_capability_filters?(@filters.capabilities)}
+          >
+            <.capabilities_filter_content
+              filters={@filters}
+              form_id="capabilities-filter-form"
+            />
+          </.filter_section>
 
-          <section aria-labelledby="mobile-provider-filters-title">
-            <h3 id="mobile-provider-filters-title" class="text-sm font-semibold">Providers</h3>
-            <div class="mt-2 overflow-hidden rounded-md border">
-              <.provider_filter_content
-                providers={@providers}
-                filters={@filters}
-                form_id="mobile-provider-search-form"
-              />
-            </div>
-          </section>
+          <.filter_section
+            title={"Architecture #{architecture_filter_label(@filters.architecture)}"}
+            open={@filters.architecture != :all}
+          >
+            <.architecture_filter_content
+              filters={@filters}
+              form_id="architecture-filter-form"
+            />
+          </.filter_section>
 
-          <section aria-labelledby="mobile-capability-filters-title">
-            <h3 id="mobile-capability-filters-title" class="text-sm font-semibold">
-              Capabilities
-            </h3>
-            <div class="mt-2 overflow-hidden rounded-md border">
-              <.capabilities_filter_content
-                filters={@filters}
-                form_id="mobile-capabilities-filter-form"
-              />
-            </div>
-          </section>
+          <.filter_section
+            title={"Input modalities #{modality_count_label(@filters.modalities_in)}"}
+            open={MapSet.size(@filters.modalities_in) > 0}
+          >
+            <.modalities_filter_content
+              filters={@filters}
+              direction={:input}
+              form_id="input-modalities-filter-form"
+            />
+          </.filter_section>
 
-          <section aria-labelledby="mobile-architecture-filters-title">
-            <h3 id="mobile-architecture-filters-title" class="text-sm font-semibold">
-              Architecture
-            </h3>
-            <div class="mt-2 overflow-hidden rounded-md border">
-              <.architecture_filter_content
-                filters={@filters}
-                form_id="mobile-architecture-filter-form"
-              />
-            </div>
-          </section>
+          <.filter_section
+            title={"Output modalities #{modality_count_label(@filters.modalities_out)}"}
+            open={MapSet.size(@filters.modalities_out) > 0}
+          >
+            <.modalities_filter_content
+              filters={@filters}
+              direction={:output}
+              form_id="output-modalities-filter-form"
+            />
+          </.filter_section>
 
-          <section aria-labelledby="mobile-input-filters-title">
-            <h3 id="mobile-input-filters-title" class="text-sm font-semibold">
-              Input modalities
-            </h3>
-            <div class="mt-2 overflow-hidden rounded-md border">
-              <.modalities_filter_content
-                filters={@filters}
-                direction={:input}
-                form_id="mobile-input-modalities-filter-form"
-              />
-            </div>
-          </section>
+          <.filter_section
+            title={"Context window #{context_label(@filters)}"}
+            open={@filters.min_context != nil}
+          >
+            <.context_filter_content filters={@filters} />
+          </.filter_section>
 
-          <section aria-labelledby="mobile-output-filters-title">
-            <h3 id="mobile-output-filters-title" class="text-sm font-semibold">
-              Output modalities
-            </h3>
-            <div class="mt-2 overflow-hidden rounded-md border">
-              <.modalities_filter_content
-                filters={@filters}
-                direction={:output}
-                form_id="mobile-output-modalities-filter-form"
-              />
-            </div>
-          </section>
+          <.filter_section
+            title={"Cost #{cost_label(@filters)}"}
+            open={@filters.max_cost_in != nil or @filters.max_cost_out != nil}
+          >
+            <.cost_filter_content filters={@filters} />
+          </.filter_section>
 
-          <section aria-labelledby="mobile-context-filters-title">
-            <h3 id="mobile-context-filters-title" class="text-sm font-semibold">
-              Context window
-            </h3>
-            <div class="mt-2 overflow-hidden rounded-md border">
-              <.context_filter_content filters={@filters} />
-            </div>
-          </section>
-
-          <section aria-labelledby="mobile-cost-filters-title">
-            <h3 id="mobile-cost-filters-title" class="text-sm font-semibold">Input cost</h3>
-            <div class="mt-2 overflow-hidden rounded-md border">
-              <.cost_filter_content filters={@filters} />
-            </div>
-          </section>
+          <.filter_section title="Updated" open={is_integer(@filters.changed_within_days)}>
+            <form id="catalog-recency-form" phx-change="set_changed_within" class="pb-4">
+              <label class="sr-only" for="changed-within-select">Changed within</label>
+              <select
+                id="changed-within-select"
+                name="changed_within"
+                class="h-10 w-full rounded-md border px-3 text-sm"
+                style="border-color: hsl(var(--border)); background-color: hsl(var(--background)); color: hsl(var(--foreground));"
+              >
+                <option value="" selected={is_nil(@filters.changed_within_days)}>Any time</option>
+                <option value="7" selected={@filters.changed_within_days == 7}>
+                  Changed in last 7 days
+                </option>
+                <option value="30" selected={@filters.changed_within_days == 30}>
+                  Changed in last 30 days
+                </option>
+              </select>
+            </form>
+          </.filter_section>
 
           <button
             :if={has_active_filters?(@filters)}
             type="button"
             phx-click="clear_filters"
-            class="w-full rounded-md border px-4 py-2 text-sm font-medium"
+            class="mt-4 w-full rounded-md border px-4 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]"
           >
             Clear all filters
           </button>
@@ -638,8 +512,27 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     """
   end
 
+  attr :title, :string, required: true
+  attr :open, :boolean, default: false
+  slot :inner_block, required: true
+
+  defp filter_section(assigns) do
+    ~H"""
+    <details class="group border-b" style="border-color: hsl(var(--border));" open={@open}>
+      <summary class="flex min-h-12 list-none items-center justify-between py-3 text-sm font-medium hover:opacity-75 [&::-webkit-details-marker]:hidden">
+        {@title}
+        <.icon
+          name="hero-chevron-down"
+          class="h-4 w-4 transition-transform group-open:rotate-180"
+          style="color: hsl(var(--muted-foreground));"
+        />
+      </summary>
+      {render_slot(@inner_block)}
+    </details>
+    """
+  end
+
   attr :label, :string, required: true
-  attr :icon, :string, required: true
   attr :kind, :string, required: true
   attr :active, :boolean, default: false
 
@@ -649,58 +542,18 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       type="button"
       phx-click="quick_filter"
       phx-value-kind={@kind}
-      class={"inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors #{if @active, do: "", else: "hover:opacity-80"}"}
+      aria-pressed={to_string(@active)}
+      class={"inline-flex min-h-9 items-center justify-center rounded-md border px-2.5 py-1.5 text-sm font-medium transition-colors #{if @active, do: "", else: "hover:bg-[hsl(var(--muted))]"}"}
       style={
         if @active,
-          do: "background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground));",
-          else: "background-color: hsl(var(--muted)); color: hsl(var(--muted-foreground));"
+          do:
+            "border-color: hsl(var(--foreground)); background-color: hsl(var(--foreground)); color: hsl(var(--background));",
+          else:
+            "border-color: hsl(var(--border)); background-color: hsl(var(--background)); color: hsl(var(--foreground));"
       }
     >
-      <.icon name={@icon} class="h-4 w-4" />
       <span>{@label}</span>
     </button>
-    """
-  end
-
-  attr :id, :string, required: true
-  attr :label, :string, required: true
-  attr :active, :boolean, default: false
-  slot :inner_block, required: true
-
-  defp filter_dropdown(assigns) do
-    ~H"""
-    <div class="relative">
-      <button
-        type="button"
-        phx-click={JS.toggle(to: "##{@id}-panel")}
-        class="h-8 px-3 text-sm rounded-md border flex items-center gap-1 transition-colors hover:opacity-80"
-        style={
-          if @active,
-            do:
-              "border-color: hsl(var(--primary)); background-color: hsl(var(--primary) / 0.1); color: hsl(var(--primary));",
-            else: "border-color: hsl(var(--border)); background-color: hsl(var(--background));"
-        }
-      >
-        {@label}
-        <.icon
-          name="hero-chevron-down"
-          class="h-3 w-3"
-          style={
-            if @active,
-              do: "color: hsl(var(--primary));",
-              else: "color: hsl(var(--muted-foreground));"
-          }
-        />
-      </button>
-      <div
-        id={"#{@id}-panel"}
-        phx-click-away={JS.hide(to: "##{@id}-panel")}
-        class="absolute left-0 top-full mt-1 hidden rounded-md border shadow-lg z-50"
-        style="border-color: hsl(var(--border)); background-color: hsl(var(--popover)); color: hsl(var(--popover-foreground));"
-      >
-        {render_slot(@inner_block)}
-      </div>
-    </div>
     """
   end
 
@@ -710,7 +563,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   defp provider_filter_content(assigns) do
     ~H"""
-    <div class="w-64">
+    <div class="w-full pb-4">
       <div class="p-2 border-b" style="border-color: hsl(var(--border));">
         <div class="relative">
           <.icon
@@ -756,10 +609,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             type="button"
             role="checkbox"
             aria-checked={to_string(MapSet.member?(@filters.provider_ids, to_string(provider.id)))}
-            class="flex w-full items-center gap-2 cursor-pointer rounded px-2 py-1.5 text-left hover:opacity-80"
-            style="background-color: transparent;"
-            onmouseover="this.style.backgroundColor='hsl(var(--accent))'"
-            onmouseout="this.style.backgroundColor='transparent'"
+            class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-[hsl(var(--muted))]"
             phx-click="toggle_provider"
             phx-value-id={provider.id}
           >
@@ -802,15 +652,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     assigns = assign(assigns, :capabilities, capabilities)
 
     ~H"""
-    <div class="w-56 p-2">
+    <div class="w-full p-2 pb-4">
       <form id={@form_id} phx-change="filter">
         <%= for {cap_key, cap_label} <- @capabilities do %>
-          <label
-            class="flex items-center gap-2 cursor-pointer rounded px-2 py-1 hover:opacity-80"
-            style="background-color: transparent;"
-            onmouseover="this.style.backgroundColor='hsl(var(--accent))'"
-            onmouseout="this.style.backgroundColor='transparent'"
-          >
+          <label class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-[hsl(var(--muted))]">
             <input
               type="checkbox"
               name={"cap_#{cap_key}"}
@@ -841,16 +686,13 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     assigns = assign(assigns, :options, options)
 
     ~H"""
-    <div class="w-64 p-2">
+    <div class="w-full p-2 pb-4">
       <form id={@form_id} phx-change="filter">
         <fieldset>
           <legend class="sr-only">Model architecture</legend>
           <label
             :for={{value, label, description} <- @options}
-            class="flex cursor-pointer items-start gap-2 rounded px-2 py-2 hover:opacity-80"
-            style="background-color: transparent;"
-            onmouseover="this.style.backgroundColor='hsl(var(--accent))'"
-            onmouseout="this.style.backgroundColor='transparent'"
+            class="flex cursor-pointer items-start gap-2 rounded-md px-2 py-2 hover:bg-[hsl(var(--muted))]"
           >
             <input
               type="radio"
@@ -905,15 +747,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       |> assign(:modality_options, modality_options(assigns.direction))
 
     ~H"""
-    <div class="w-48 p-2">
+    <div class="w-full p-2 pb-4">
       <form id={@form_id} phx-change="filter">
         <%= for {modality_key, label} <- @modality_options do %>
-          <label
-            class="flex items-center gap-2 cursor-pointer rounded px-2 py-1 hover:opacity-80"
-            style="background-color: transparent;"
-            onmouseover="this.style.backgroundColor='hsl(var(--accent))'"
-            onmouseout="this.style.backgroundColor='transparent'"
-          >
+          <label class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-[hsl(var(--muted))]">
             <input
               type="checkbox"
               name={"#{@param_key}[#{modality_key}]"}
@@ -945,7 +782,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     assigns = assign(assigns, :context_options, context_options)
 
     ~H"""
-    <div class="w-48 p-3">
+    <div class="w-full px-2 pb-4">
       <div class="text-xs font-medium mb-2">Minimum context window</div>
       <div class="grid grid-cols-3 gap-1">
         <%= for {val, label} <- @context_options do %>
@@ -983,7 +820,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     assigns = assign(assigns, :cost_options, cost_options)
 
     ~H"""
-    <div class="w-48 p-3">
+    <div class="w-full px-2 pb-4">
       <div class="text-xs font-medium mb-2">Max input cost (per 1M tokens)</div>
       <div class="grid grid-cols-2 gap-1">
         <%= for {val, label} <- @cost_options do %>
@@ -1314,16 +1151,29 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     ~H"""
     <div class="overflow-x-auto scrollbar-thin">
       <table class="w-full text-sm hidden md:table">
+        <caption class="sr-only">
+          Compare models by provider, modalities, capabilities, context window, size, and price.
+        </caption>
         <thead style="background-color: hsl(var(--table-header));">
           <tr class="border-b" style="border-color: hsl(var(--table-border));">
-            <th class="w-10 px-3 py-3 text-left"></th>
+            <th scope="col" class="w-10 px-3 py-3 text-left">
+              <span class="sr-only">Compare</span>
+            </th>
             <.sortable_header field={:provider} label="Provider" sort={@sort} />
             <.sortable_header field={:name} label="Model" sort={@sort} />
-            <th class="px-3 py-3 text-left font-medium" style="color: hsl(var(--muted-foreground));">
-              I/O
+            <th
+              scope="col"
+              class="px-3 py-3 text-left font-medium"
+              style="color: hsl(var(--muted-foreground));"
+            >
+              Modalities
             </th>
-            <th class="px-3 py-3 text-left font-medium" style="color: hsl(var(--muted-foreground));">
-              Features
+            <th
+              scope="col"
+              class="px-3 py-3 text-left font-medium"
+              style="color: hsl(var(--muted-foreground));"
+            >
+              Capabilities
             </th>
             <.sortable_header field={:context} label="Context" sort={@sort} align="right" />
             <.sortable_header
@@ -1332,7 +1182,12 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               sort={@sort}
               align="right"
             />
-            <.sortable_header field={:cost_in} label="In/Out $/M" sort={@sort} align="right" />
+            <.sortable_header
+              field={:cost_in}
+              label="Input / output price"
+              sort={@sort}
+              align="right"
+            />
           </tr>
         </thead>
         <tbody :if={@total == 0} id="models-table-empty-body">
@@ -1363,7 +1218,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 do: "this.style.backgroundColor='transparent'"
             }
           >
-            <td class="px-3 py-2">
+            <td class="px-3 py-2.5">
               <input
                 id={"compare-desktop-#{model.id}"}
                 type="checkbox"
@@ -1376,85 +1231,69 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 aria-label={"Select #{model.name} for comparison"}
               />
             </td>
-            <td class="px-3 py-2" style="color: hsl(var(--muted-foreground));">
+            <td class="px-3 py-2.5 text-xs" style="color: hsl(var(--muted-foreground));">
               {model.provider}
             </td>
-            <td class="px-3 py-2">
-              <div class="flex items-center gap-2">
-                <div>
+            <td class="min-w-64 px-3 py-2.5">
+              <div class="min-w-0">
+                <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                   <.link
                     patch={model_detail_path(model)}
-                    class="font-medium hover:underline"
+                    class="min-w-0 truncate font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
                   >
                     {model.name}
                   </.link>
-                  <div class="text-xs font-mono" style="color: hsl(var(--muted-foreground));">
-                    {model.model_id}
-                    <span :if={model.__last_changed_at}>
-                      {" • Updated "}
-                      {String.slice(model.__last_changed_at, 0, 10)}
+                  <%= if model.deprecated || lifecycle_status(model) != "active" do %>
+                    <span
+                      class="rounded px-1 py-0 text-[10px]"
+                      style="background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive));"
+                    >
+                      {lifecycle_label(model)}
                     </span>
-                  </div>
+                  <% end %>
+                  <.architecture_badge architecture={model.__architecture} compact />
                 </div>
-                <%= if model.deprecated || lifecycle_status(model) != "active" do %>
-                  <span
-                    class="text-[10px] px-1 py-0 rounded"
-                    style="background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive));"
-                  >
-                    {lifecycle_label(model)}
+                <div
+                  class="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs"
+                  style="color: hsl(var(--muted-foreground));"
+                >
+                  <span class="min-w-0 truncate font-mono" title={model.model_id}>
+                    {model.model_id}
                   </span>
-                <% end %>
-                <.architecture_badge architecture={model.__architecture} compact />
+                  <time
+                    :if={model.__last_changed_at}
+                    datetime={String.slice(model.__last_changed_at, 0, 10)}
+                    class="shrink-0 whitespace-nowrap"
+                  >
+                    Updated {String.slice(model.__last_changed_at, 0, 10)}
+                  </time>
+                </div>
               </div>
             </td>
-            <td class="px-3 py-2">
-              <.modality_badges model={model} />
+            <td class="min-w-36 px-3 py-2.5">
+              <.modality_summary model={model} />
             </td>
-            <td class="px-3 py-2">
-              <div class="flex flex-wrap gap-1">
-                <.capability_badge
-                  :if={model_has_capability?(model, :reasoning)}
-                  capability={:reasoning}
-                  compact
-                />
-                <.capability_badge
-                  :if={model_has_capability?(model, :tools)}
-                  capability={:tools}
-                  compact
-                />
-                <.capability_badge
-                  :if={model_has_capability?(model, :batch)}
-                  capability={:batch}
-                  compact
-                />
-                <.capability_badge
-                  :if={model_has_capability?(model, :code_execution)}
-                  capability={:code_execution}
-                  compact
-                />
-                <.capability_badge :if={has_vision?(model)} capability={:vision} compact />
-                <.capability_badge
-                  :if={embeddings_enabled?(model.capabilities)}
-                  capability={:embeddings}
-                  compact
-                />
-                <.capability_badge
-                  :if={model_has_capability?(model, :json_output)}
-                  capability={:json_output}
-                  compact
-                />
-              </div>
+            <td
+              class="min-w-40 px-3 py-2.5 text-xs leading-5"
+              style="color: hsl(var(--muted-foreground));"
+              aria-label={model_capability_aria_label(model)}
+            >
+              {model_capability_summary(model)}
             </td>
-            <td class="px-3 py-2 text-right font-mono text-xs">
-              {ModelLive.format_number(model_limit(model, :context))}
+            <td
+              class="px-3 py-2.5 text-right font-mono text-xs tabular-nums"
+              title={context_window_title(model)}
+            >
+              {format_token_count(model_limit(model, :context))}
             </td>
-            <td class="px-3 py-2 text-right font-mono text-xs tabular-nums">
+            <td class="px-3 py-2.5 text-right font-mono text-xs tabular-nums">
               {table_size_value(model, @sort)}
             </td>
-            <td class="px-3 py-2 text-right font-mono text-xs">
-              {ModelLive.format_cost(model_cost(model, :input))}/{ModelLive.format_cost(
-                model_cost(model, :output)
-              )}
+            <td
+              class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-xs tabular-nums"
+              title="Input / output price per 1M tokens"
+            >
+              {format_table_cost_pair(model)}
             </td>
           </tr>
         </tbody>
@@ -1469,7 +1308,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
           <div
             :for={model <- @models}
             id={"mobile-#{model.id}"}
-            class="p-3 transition-colors cursor-pointer"
+            class="cursor-pointer p-3 transition-colors"
             style={
               if MapSet.member?(@selected_ids, model.id),
                 do: "background-color: hsl(var(--table-row-selected));",
@@ -1492,17 +1331,17 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                   aria-label={"Select #{model.name} for comparison"}
                 />
               </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
+              <div class="min-w-0 flex-1">
+                <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                   <.link
                     patch={model_detail_path(model)}
-                    class="font-medium truncate hover:underline"
+                    class="min-w-0 truncate font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
                   >
                     {model.name}
                   </.link>
                   <%= if model.deprecated || lifecycle_status(model) != "active" do %>
                     <span
-                      class="text-[10px] px-1 py-0 rounded"
+                      class="rounded px-1 py-0 text-[10px]"
                       style="background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive));"
                     >
                       {lifecycle_label(model)}
@@ -1510,67 +1349,64 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                   <% end %>
                   <.architecture_badge architecture={model.__architecture} compact />
                 </div>
-                <div class="text-xs mt-0.5" style="color: hsl(var(--muted-foreground));">
-                  {model.provider}
-                </div>
-
                 <div
-                  :if={model.__last_changed_at}
-                  class="text-xs mt-1"
+                  class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs"
                   style="color: hsl(var(--muted-foreground));"
                 >
-                  Updated {String.slice(model.__last_changed_at, 0, 10)}
-                </div>
-
-                <div
-                  class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
-                  style="color: hsl(var(--muted-foreground));"
-                >
-                  <.modality_badges model={model} />
-                  <span class="whitespace-nowrap font-mono">
-                    {ModelLive.format_number(model_limit(model, :context))}
-                  </span>
-                  <span
-                    class="whitespace-nowrap font-mono tabular-nums"
-                    title="Total parameters"
+                  <span>{model.provider}</span>
+                  <time
+                    :if={model.__last_changed_at}
+                    datetime={String.slice(model.__last_changed_at, 0, 10)}
                   >
-                    Params {format_parameter_count(model.__total_parameters)}
-                  </span>
-                  <span class="whitespace-nowrap font-mono">
-                    {ModelLive.format_cost(model_cost(model, :input))}/{ModelLive.format_cost(
-                      model_cost(model, :output)
-                    )}
-                  </span>
+                    Updated {String.slice(model.__last_changed_at, 0, 10)}
+                  </time>
                 </div>
 
-                <div class="flex flex-wrap gap-1 mt-2">
-                  <.capability_badge
-                    :if={model_has_capability?(model, :reasoning)}
-                    capability={:reasoning}
-                    compact
-                  />
-                  <.capability_badge
-                    :if={model_has_capability?(model, :tools)}
-                    capability={:tools}
-                    compact
-                  />
-                  <.capability_badge
-                    :if={model_has_capability?(model, :batch)}
-                    capability={:batch}
-                    compact
-                  />
-                  <.capability_badge
-                    :if={model_has_capability?(model, :code_execution)}
-                    capability={:code_execution}
-                    compact
-                  />
-                  <.capability_badge :if={has_vision?(model)} capability={:vision} compact />
-                  <.capability_badge
-                    :if={embeddings_enabled?(model.capabilities)}
-                    capability={:embeddings}
-                    compact
-                  />
+                <div
+                  class="mt-2 space-y-1 text-xs leading-5"
+                  style="color: hsl(var(--muted-foreground));"
+                >
+                  <.modality_summary model={model} />
+                  <p
+                    :if={model_capability_summary(model) != "—"}
+                    aria-label={model_capability_aria_label(model)}
+                  >
+                    {model_capability_summary(model)}
+                  </p>
                 </div>
+
+                <dl class="mt-3 grid grid-cols-3 gap-x-3">
+                  <div>
+                    <dt class="text-[11px]" style="color: hsl(var(--muted-foreground));">
+                      Context
+                    </dt>
+                    <dd
+                      class="mt-0.5 font-mono text-xs tabular-nums"
+                      title={context_window_title(model)}
+                    >
+                      {format_token_count(model_limit(model, :context))}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px]" style="color: hsl(var(--muted-foreground));">
+                      Parameters
+                    </dt>
+                    <dd class="mt-0.5 font-mono text-xs tabular-nums">
+                      {table_parameter_count(model.__total_parameters)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px]" style="color: hsl(var(--muted-foreground));">
+                      Input / output
+                    </dt>
+                    <dd
+                      class="mt-0.5 whitespace-nowrap font-mono text-xs tabular-nums"
+                      title="Price per 1M tokens"
+                    >
+                      {format_table_cost_pair(model)}
+                    </dd>
+                  </div>
+                </dl>
               </div>
             </div>
           </div>
@@ -1586,6 +1422,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   defp architecture_badge(assigns) do
     ~H"""
     <span
+      :if={@architecture != :unknown}
       data-architecture={@architecture}
       class={[
         "inline-flex shrink-0 items-center rounded border font-medium",
@@ -1631,13 +1468,48 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   end
 
   defp table_size_value(model, sort) do
-    case table_size_field(sort) do
-      :total_parameters -> format_parameter_count(model.__total_parameters)
-      :active_parameters -> format_parameter_count(model.__active_parameters)
-      :minimum_ram_gb -> format_memory_gb(model.__minimum_ram_gb)
-      :minimum_vram_gb -> format_memory_gb(model.__minimum_vram_gb)
+    value =
+      case table_size_field(sort) do
+        :total_parameters -> format_parameter_count(model.__total_parameters)
+        :active_parameters -> format_parameter_count(model.__active_parameters)
+        :minimum_ram_gb -> format_memory_gb(model.__minimum_ram_gb)
+        :minimum_vram_gb -> format_memory_gb(model.__minimum_vram_gb)
+      end
+
+    table_value_or_dash(value)
+  end
+
+  defp table_parameter_count(value),
+    do: value |> format_parameter_count() |> table_value_or_dash()
+
+  defp table_value_or_dash("N/A"), do: "—"
+  defp table_value_or_dash(value), do: value
+
+  defp format_token_count(nil), do: "—"
+
+  defp format_token_count(value) when is_number(value) do
+    cond do
+      value >= 1_000_000 -> "#{compact_decimal(value / 1_000_000)}M"
+      value >= 1_000 -> "#{compact_decimal(value / 1_000)}K"
+      true -> ModelLive.format_number(value)
     end
   end
+
+  defp context_window_title(model) do
+    case model_limit(model, :context) do
+      nil -> "Context window not listed"
+      value -> "#{ModelLive.format_number(value)} token context window"
+    end
+  end
+
+  defp format_table_cost_pair(model) do
+    input = format_table_cost(model_cost(model, :input))
+    output = format_table_cost(model_cost(model, :output))
+    "#{input} / #{output}"
+  end
+
+  defp format_table_cost(nil), do: "—"
+  defp format_table_cost(value), do: ModelLive.format_cost(value)
 
   defp format_parameter_count(nil), do: "N/A"
 
@@ -1677,6 +1549,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
     ~H"""
     <th
+      scope="col"
       aria-sort={sortable_header_aria_sort(@is_active, @sort.dir)}
       class={"px-3 py-3 font-medium #{if @align == "right", do: "text-right", else: "text-left"}"}
       style="color: hsl(var(--muted-foreground));"
@@ -1685,7 +1558,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         type="button"
         phx-click="sort"
         phx-value-by={@field}
-        class={"flex w-full items-center gap-1 transition-colors select-none hover:opacity-80 #{if @align == "right", do: "justify-end", else: ""}"}
+        class={"group flex w-full select-none items-center gap-1 transition-colors hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 #{if @align == "right", do: "justify-end", else: ""}"}
       >
         <span>{@label}</span>
         <%= if @is_active do %>
@@ -1695,7 +1568,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             <.icon name="hero-arrow-down" class="h-3.5 w-3.5" />
           <% end %>
         <% else %>
-          <.icon name="hero-arrows-up-down" class="h-3.5 w-3.5 opacity-30" />
+          <.icon
+            name="hero-arrows-up-down"
+            class="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-40 group-focus-visible:opacity-60"
+          />
         <% end %>
       </button>
     </th>
@@ -1708,26 +1584,35 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   attr :model, :map, required: true
 
-  defp modality_badges(assigns) do
+  defp modality_summary(assigns) do
     modalities = assigns.model.modalities || %{}
     input_list = map_value(modalities, :input) || []
     output_list = map_value(modalities, :output) || []
-    all_modalities = (input_list ++ output_list) |> Enum.uniq()
 
-    assigns = assign(assigns, :modalities, all_modalities)
+    assigns =
+      assigns
+      |> assign(:input_label, modality_list_label(input_list))
+      |> assign(:output_label, modality_list_label(output_list))
 
     ~H"""
-    <div class="flex gap-0.5">
-      <span
-        :for={mod <- @modalities}
-        title={mod_label(mod)}
-        style="color: hsl(var(--muted-foreground));"
-      >
-        <.modality_icon modality={mod} />
-        <span class="sr-only">{mod_label(mod)}</span>
-      </span>
-    </div>
+    <span
+      class="inline-flex flex-wrap items-center gap-x-1 text-xs leading-5"
+      style="color: hsl(var(--muted-foreground));"
+      aria-label={"Input: #{@input_label}; output: #{@output_label}"}
+    >
+      <span>{@input_label}</span>
+      <span aria-hidden="true">→</span>
+      <span>{@output_label}</span>
+    </span>
     """
+  end
+
+  defp modality_list_label([]), do: "—"
+
+  defp modality_list_label(modalities) do
+    modalities
+    |> Enum.map(&mod_label/1)
+    |> Enum.join(", ")
   end
 
   attr :modality, :atom, required: true
@@ -1747,6 +1632,34 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         <.icon name="hero-question-mark-circle" class="h-3 w-3" />
     <% end %>
     """
+  end
+
+  defp model_capability_summary(model) do
+    case model_capability_labels(model) do
+      [] -> "—"
+      labels -> Enum.join(labels, ", ")
+    end
+  end
+
+  defp model_capability_aria_label(model) do
+    case model_capability_labels(model) do
+      [] -> "No capabilities listed"
+      labels -> "Capabilities: #{Enum.join(labels, ", ")}"
+    end
+  end
+
+  defp model_capability_labels(model) do
+    [
+      {:reasoning, model_has_capability?(model, :reasoning)},
+      {:tools, model_has_capability?(model, :tools)},
+      {:batch, model_has_capability?(model, :batch)},
+      {:code_execution, model_has_capability?(model, :code_execution)},
+      {:vision, has_vision?(model)},
+      {:embeddings, embeddings_enabled?(model.capabilities)},
+      {:json_output, model_has_capability?(model, :json_output)}
+    ]
+    |> Enum.filter(fn {_capability, enabled?} -> enabled? end)
+    |> Enum.map(fn {capability, _enabled?} -> Map.fetch!(@capability_labels, capability) end)
   end
 
   defp has_vision?(model) do
@@ -2043,7 +1956,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               </a>
             </div>
             <p class="mb-3 text-xs" style="color: hsl(var(--muted-foreground));">
-              Timeline is based on collected llm_db history snapshots and may be incomplete.
+              Timeline is based on collected llmdb history snapshots and may be incomplete.
             </p>
 
             <%= if @history_available do %>

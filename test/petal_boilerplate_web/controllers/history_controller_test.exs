@@ -111,7 +111,15 @@ defmodule PetalBoilerplateWeb.HistoryControllerTest do
 
     conn = get(conn, "/api/history/recent?limit=bad")
 
-    assert %{"error" => "invalid_limit"} = json_response(conn, 400)
+    assert %{
+             "error" => "invalid_limit",
+             "code" => "invalid_limit",
+             "status" => 400,
+             "resolution" => resolution
+           } = json_response(conn, 400)
+
+    assert resolution =~ "1 through 1000"
+    assert get_resp_header(conn, "content-type") |> hd() =~ "application/problem+json"
   end
 
   test "GET /api/history/recent returns 503 when history unavailable", %{conn: conn} do
@@ -119,7 +127,10 @@ defmodule PetalBoilerplateWeb.HistoryControllerTest do
 
     conn = get(conn, "/api/history/recent")
 
-    assert %{"error" => "history_unavailable"} = json_response(conn, 503)
+    assert %{"error" => "history_unavailable", "status" => 503, "detail" => detail} =
+             json_response(conn, 503)
+
+    assert detail =~ "temporarily unavailable"
   end
 
   test "GET /api/history/:provider/*id returns model history contract", %{conn: conn} do
@@ -148,7 +159,11 @@ defmodule PetalBoilerplateWeb.HistoryControllerTest do
 
     conn = get(conn, "/api/history/unknown_provider/missing-model")
 
-    assert %{"error" => "model_not_found", "model_key" => "unknown_provider:missing-model"} =
+    assert %{
+             "error" => "model_not_found",
+             "status" => 404,
+             "model_key" => "unknown_provider:missing-model"
+           } =
              json_response(conn, 404)
   end
 

@@ -11,7 +11,7 @@ defmodule PetalBoilerplateWeb.HistoryLive do
   @impl true
   def mount(_params, _session, socket) do
     description =
-      "Track recent llm_db model metadata changes across providers, including introductions, updates, and lineage-aware history."
+      "Track recent llmdb model metadata changes across providers, including introductions, updates, and lineage-aware history."
 
     {:ok,
      assign(socket,
@@ -95,7 +95,7 @@ defmodule PetalBoilerplateWeb.HistoryLive do
               class="mt-2 max-w-2xl text-sm sm:text-base"
               style="color: hsl(var(--muted-foreground));"
             >
-              Reverse-chronological model metadata changes captured from bundled llm_db history snapshots.
+              Reverse-chronological model metadata changes captured from bundled llmdb history snapshots.
             </p>
           </div>
 

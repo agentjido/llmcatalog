@@ -633,7 +633,7 @@ defmodule PetalBoilerplateWeb.CoreComponents do
   def color_scheme_switch_js(assigns) do
     ~H"""
     <script>
-      window.applyScheme = function(scheme) {
+      window.applyScheme = function(scheme, persist = true) {
         if (scheme === "light") {
           document.documentElement.classList.remove('dark')
           document
@@ -642,7 +642,7 @@ defmodule PetalBoilerplateWeb.CoreComponents do
           document
             .querySelectorAll(".color-scheme-light-icon")
             .forEach((el) => el.classList.add("hidden"));
-          localStorage.scheme = 'light'
+          if (persist) localStorage.scheme = 'light'
         } else {
           document.documentElement.classList.add('dark')
           document
@@ -651,7 +651,7 @@ defmodule PetalBoilerplateWeb.CoreComponents do
           document
             .querySelectorAll(".color-scheme-light-icon")
             .forEach((el) => el.classList.remove("hidden"));
-          localStorage.scheme = 'dark'
+          if (persist) localStorage.scheme = 'dark'
         }
       };
 
@@ -665,9 +665,9 @@ defmodule PetalBoilerplateWeb.CoreComponents do
 
       window.initScheme = function() {
         if (localStorage.scheme === 'dark' || (!('scheme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          applyScheme("dark")
+          applyScheme("dark", false)
         } else {
-          applyScheme("light")
+          applyScheme("light", false)
         }
       }
 

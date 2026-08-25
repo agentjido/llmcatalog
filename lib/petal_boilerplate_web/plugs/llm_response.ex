@@ -81,7 +81,9 @@ defmodule PetalBoilerplateWeb.Plugs.LLMResponse do
     |> put_vary_accept()
     |> add_link_entries([
       "</llms.txt>; rel=\"alternate\"; type=\"text/plain\"",
-      "<#{markdown_url}>; rel=\"alternate\"; type=\"text/markdown\""
+      "<#{markdown_url}>; rel=\"alternate\"; type=\"text/markdown\"",
+      "</openapi.json>; rel=\"service-desc\"; type=\"application/json\"",
+      "</developers>; rel=\"help\"; type=\"text/html\""
     ])
   end
 

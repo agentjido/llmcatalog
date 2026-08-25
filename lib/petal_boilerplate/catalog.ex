@@ -15,6 +15,7 @@ defmodule PetalBoilerplate.Catalog do
   @ets_table :catalog_models
   @models_key {__MODULE__, :models}
   @model_count_key {__MODULE__, :model_count}
+  @analytics_search_allowlist_key {__MODULE__, :analytics_search_allowlist}
   @default_page_size 50
   @size_sort_fields [
     :total_parameters,
@@ -85,6 +86,7 @@ defmodule PetalBoilerplate.Catalog do
     history_index = build_history_index()
     models = raw_models |> Enum.map(&enrich_model(&1, history_index))
     store_models(models)
+    store_analytics_search_allowlist(models)
     :ok
   end
 
@@ -140,6 +142,19 @@ defmodule PetalBoilerplate.Catalog do
 
       count ->
         count
+    end
+  end
+
+  @doc """
+  Returns a canonical analytics value only when a search exactly matches a
+  catalog provider name or ID, model name, or model ID.
+
+  Unrecognized search text is never returned.
+  """
+  def analytics_search_value(search) when is_binary(search) do
+    case normalize_analytics_search(search) do
+      "" -> "none"
+      normalized -> Map.get(analytics_search_allowlist(), normalized, "other")
     end
   end
 
@@ -841,6 +856,50 @@ defmodule PetalBoilerplate.Catalog do
     :persistent_term.put(@model_count_key, length(models))
     rebuild_lookup_indexes(models)
     :ok
+  end
+
+  defp analytics_search_allowlist do
+    case :persistent_term.get(@analytics_search_allowlist_key, :undefined) do
+      :undefined ->
+        models = list_all_models()
+        store_analytics_search_allowlist(models)
+        :persistent_term.get(@analytics_search_allowlist_key)
+
+      allowlist ->
+        allowlist
+    end
+  end
+
+  defp store_analytics_search_allowlist(models) do
+    model_entries =
+      Enum.reduce(models, %{}, fn model, entries ->
+        entries
+        |> put_analytics_search_entry(model.name, "model:#{model.name}")
+        |> put_analytics_search_entry(model.model_id, "model:#{model.name}")
+      end)
+
+    allowlist =
+      Enum.reduce(list_providers(), model_entries, fn provider, entries ->
+        entries
+        |> put_analytics_search_entry(provider.name, "provider:#{provider.name}")
+        |> put_analytics_search_entry(to_string(provider.id), "provider:#{provider.name}")
+      end)
+
+    :persistent_term.put(@analytics_search_allowlist_key, allowlist)
+  end
+
+  defp put_analytics_search_entry(entries, value, canonical)
+       when is_binary(value) and value != "" do
+    Map.put(entries, normalize_analytics_search(value), canonical)
+  end
+
+  defp put_analytics_search_entry(entries, _value, _canonical), do: entries
+
+  defp normalize_analytics_search(search) do
+    search
+    |> String.trim()
+    |> String.replace(~r/\s+/u, " ")
+    |> String.downcase()
   end
 
   defp rebuild_lookup_indexes(models) do

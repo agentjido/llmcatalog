@@ -27,10 +27,28 @@ defmodule PetalBoilerplateWeb.ErrorHTML do
             >
               Browse the model catalog
             </a>
+            <nav aria-label="Recovery links" class="mt-5 flex flex-wrap justify-center gap-4 text-sm">
+              <a href="/developers" class="text-blue-600 hover:underline">Developer guide</a>
+              <a href="/llms.txt" class="text-blue-600 hover:underline">Agent guidance</a>
+              <a href="/sitemap.xml" class="text-blue-600 hover:underline">Sitemap</a>
+            </nav>
           </div>
         </main>
       </body>
     </html>
+    """
+  end
+
+  def not_found_markdown(path) do
+    """
+    # Page not found
+
+    The requested path `#{path}` does not exist in the current LLM Catalog.
+
+    - [Browse the model catalog](/)
+    - [Developer guide](/developers)
+    - [Agent retrieval guidance](/llms.txt)
+    - [XML sitemap](/sitemap.xml)
     """
   end
 

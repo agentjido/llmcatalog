@@ -93,9 +93,6 @@
     </script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js">
     </script>
-    <!-- Used in css-theme-switch.js - remove if you don't support light/dark mode -->
-    <script defer src="https://unpkg.com/js-cookie@3.x.x/dist/js.cookie.min.js">
-    </script>
     <%= if Application.get_env(:petal_boilerplate, :enable_analytics) do %>
       <script async src={PetalBoilerplateWeb.Plugs.PlausibleProxy.script_path()}>
       </script>
@@ -108,15 +105,6 @@
     </script>
 
     <.color_scheme_switch_js />
-
-    <script>
-      (function () {
-        const stored = localStorage.getItem("theme");
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const theme = stored || (prefersDark ? "dark" : "light");
-        document.documentElement.classList.toggle("dark", theme === "dark");
-      })();
-    </script>
   </head>
   <body class="antialiased bg-white dark:bg-gray-900">
     {@inner_content}
