@@ -84,9 +84,11 @@ defmodule PetalBoilerplateWeb.Plugs.LLMResponse do
       "<#{markdown_url}>; rel=\"alternate\"; type=\"text/markdown\"",
       "</openapi.json>; rel=\"service-desc\"; type=\"application/vnd.oai.openapi+json;version=3.1\"",
       "</developers>; rel=\"help\"; type=\"text/html\"",
+      "</developers>; rel=\"service-doc\"; type=\"text/html\"",
       "</.well-known/ard.json>; rel=\"ard\"; type=\"application/json\"",
       "</.well-known/ai-catalog.json>; rel=\"ai-catalog\"; type=\"application/json\"",
       "</.well-known/api-catalog>; rel=\"api-catalog\"; type=\"application/linkset+json\"",
+      "</.well-known/mcp.json>; rel=\"alternate\"; type=\"application/json\"",
       "</.well-known/mcp/server-card.json>; rel=\"service-desc\"; type=\"application/mcp-server-card+json\""
     ])
   end

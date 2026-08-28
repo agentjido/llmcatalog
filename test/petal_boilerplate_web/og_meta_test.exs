@@ -2,6 +2,7 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
   use PetalBoilerplateWeb.ConnCase
 
   alias PetalBoilerplate.Catalog
+  alias PetalBoilerplateWeb.PublicRoutes
 
   describe "OpenGraph meta tags" do
     test "home page has correct OG tags", %{conn: conn} do
@@ -27,6 +28,8 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert html =~ ~s(href="/developers")
       assert html =~ ~s(href="/contact")
       assert html =~ ~s(href="/privacy")
+      assert html =~ PublicRoutes.absolute("/.well-known/mcp.json")
+      assert html =~ PublicRoutes.absolute("/openapi.json")
     end
 
     test "about page has correct OG tags", %{conn: conn} do

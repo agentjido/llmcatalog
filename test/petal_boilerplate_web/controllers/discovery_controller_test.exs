@@ -74,6 +74,24 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     refute body =~ "Sitemap:"
   end
 
+  test "machine discovery routes accept their declared media types" do
+    for {path, accept} <- [
+          {"/robots.txt", "text/plain"},
+          {"/sitemap.xml", "application/xml"},
+          {"/llms.txt", "text/plain"},
+          {"/feed", "application/rss+xml"},
+          {"/.well-known/ard.json", "application/json"},
+          {"/.well-known/agent-skills/index.json", "application/json"},
+          {"/.well-known/agent-skills/llm-catalog/SKILL.md", "text/markdown"},
+          {"/.well-known/mcp.json", "application/json"},
+          {"/.well-known/mcp/server-card.json", "application/mcp-server-card+json"},
+          {"/.well-known/api-catalog", "application/linkset+json"}
+        ] do
+      conn = build_conn() |> put_req_header("accept", accept) |> get(path)
+      assert response(conn, 200), "expected #{path} to accept #{accept}"
+    end
+  end
+
   test "sitemap contains only approved search landing pages in stable order", %{conn: conn} do
     body =
       conn
@@ -125,6 +143,10 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert lastmods == expected_lastmods
     assert length(lastmods) == length(locations)
     assert Enum.all?(lastmods, &match?({:ok, _date}, Date.from_iso8601(&1)))
+
+    assert Enum.find(SEO.search_indexable_entries(), &(&1.path == "/developers")).lastmod ==
+             ~D[2026-08-28]
+
     refute body =~ "/history"
 
     for route <- LandingPages.routes() do
@@ -149,6 +171,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert body =~ PublicRoutes.absolute("/models/open-weights")
     assert body =~ PublicRoutes.absolute("/models/video")
     assert body =~ PublicRoutes.absolute("/api/mcp")
+    assert body =~ PublicRoutes.absolute("/.well-known/mcp.json")
     assert body =~ PublicRoutes.absolute("/api/v1/history/recent")
     assert body =~ PublicRoutes.absolute("/developers")
     assert body =~ PublicRoutes.absolute("/openapi.json")
@@ -196,6 +219,25 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
 
     endpoint_card = build_conn() |> get("/api/mcp/server-card") |> json_response(200)
     assert endpoint_card == server_card
+
+    compatibility_manifest =
+      build_conn() |> get("/.well-known/mcp.json") |> json_response(200)
+
+    assert compatibility_manifest["serverUrl"] == PublicRoutes.absolute("/api/mcp")
+    assert compatibility_manifest["transport"] == "streamable-http"
+    assert compatibility_manifest["protocolVersion"] == "2026-07-28"
+
+    assert compatibility_manifest["mcpServers"]["llmcatalog"]["url"] ==
+             PublicRoutes.absolute("/api/mcp")
+
+    assert Enum.map(compatibility_manifest["tools"], & &1["name"]) == [
+             "query_models",
+             "get_model",
+             "list_providers"
+           ]
+
+    assert get_resp_header(build_conn() |> get("/.well-known/mcp.json"), "content-type")
+           |> hd() =~ "application/json"
 
     api_catalog = build_conn() |> get("/.well-known/api-catalog")
     assert response(api_catalog, 200) =~ PublicRoutes.absolute("/openapi.json")

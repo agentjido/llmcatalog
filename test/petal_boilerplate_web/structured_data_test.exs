@@ -43,7 +43,13 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     contact = build_conn() |> get("/contact") |> html_response(200) |> json_ld()
     privacy = build_conn() |> get("/privacy") |> html_response(200) |> json_ld()
 
-    assert Enum.map(developers, & &1["@type"]) == ["TechArticle"]
+    assert Enum.map(developers, & &1["@type"]) == ["TechArticle", "SoftwareSourceCode"]
+
+    package = Enum.find(developers, &(&1["@type"] == "SoftwareSourceCode"))
+    assert package["name"] == "@agentjido/llmdb"
+    assert package["url"] == "https://www.npmjs.com/package/@agentjido/llmdb"
+    assert package["codeRepository"] =~ "github.com/agentjido/llmdb"
+    assert package["programmingLanguage"] == ["JavaScript", "TypeScript"]
     assert Enum.map(contact, & &1["@type"]) == ["ContactPage"]
     assert Enum.map(privacy, & &1["@type"]) == ["WebPage"]
   end

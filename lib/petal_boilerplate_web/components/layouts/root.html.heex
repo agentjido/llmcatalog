@@ -90,6 +90,22 @@
       type="application/mcp-server-card+json"
       href={PetalBoilerplateWeb.PublicRoutes.absolute("/.well-known/mcp/server-card.json")}
     />
+    <link
+      rel="alternate"
+      type="application/json"
+      title="LLM Catalog MCP compatibility manifest"
+      href={PetalBoilerplateWeb.PublicRoutes.absolute("/.well-known/mcp.json")}
+    />
+    <link
+      rel="service-desc"
+      type="application/vnd.oai.openapi+json;version=3.1"
+      href={PetalBoilerplateWeb.PublicRoutes.absolute("/openapi.json")}
+    />
+    <link
+      rel="service-doc"
+      type="text/html"
+      href={PetalBoilerplateWeb.PublicRoutes.absolute("/developers")}
+    />
 
     <%= for json <- structured_data do %>
       <script type="application/ld+json" data-seo-structured-data>

@@ -169,9 +169,9 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
     """
-    # LLM Catalog by Jidoka Labs developer guide
+    # LLM Catalog developer resources by Jidoka Labs
 
-    Use public catalog pages, Markdown copies, history APIs, and lookup tools without an API key.
+    Use the public OpenAPI service, MCP server, Markdown pages, model history API, and official npm package without an API key.
 
     ## Choose the right interface
 
@@ -197,13 +197,16 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
 
     `POST #{endpoint_url}/api/mcp` is an MCP Streamable HTTP server. The current `2026-07-28` protocol is stateless and uses `server/discover` plus metadata on each request. Compatibility support covers `2025-11-25`, `2025-06-18`, `2025-03-26`, and `2024-11-05` clients that use initialization. Methods include `tools/list`, `tools/call`, `resources/list`, and `resources/read`. Tools are `query_models`, `get_model`, and `list_providers`.
 
+    - [Current MCP Server Card](#{endpoint_url}/api/mcp/server-card)
+    - [MCP compatibility manifest](#{endpoint_url}/.well-known/mcp.json)
+
     ## Versioning and rate limits
 
     Stable REST routes use `/api/v1`. The former `/api/history` routes remain as deprecated compatibility aliases and advertise their successor with response headers. Breaking REST changes require a new major path. Public API responses include current IETF `RateLimit-Policy` and `RateLimit` fields. A `429` response also includes `Retry-After`.
 
     ## JavaScript package
 
-    Install [`@agentjido/llmdb`](https://www.npmjs.com/package/@agentjido/llmdb) with `npm install @agentjido/llmdb`. The package does not currently install a command-line executable.
+    Install the official [`@agentjido/llmdb`](https://www.npmjs.com/package/@agentjido/llmdb) package with `npm install @agentjido/llmdb`. Its source is in the [official llmdb repository](https://github.com/agentjido/llmdb/tree/main/packages/llmdb). The npm package metadata links back to `https://llmcatalog.dev`. The package does not currently install a command-line executable.
 
     Canonical URL: #{canonical_url}
     """

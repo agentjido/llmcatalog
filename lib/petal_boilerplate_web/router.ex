@@ -17,6 +17,11 @@ defmodule PetalBoilerplateWeb.Router do
     plug PetalBoilerplateWeb.Plugs.ModelExists
   end
 
+  pipeline :machine do
+    plug PetalBoilerplateWeb.Plug.RequestAudit
+    plug :put_secure_browser_headers
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
     plug PetalBoilerplateWeb.Plug.RequestAudit
@@ -43,6 +48,16 @@ defmodule PetalBoilerplateWeb.Router do
     live "/developers", DevelopersLive, :index
     live "/privacy", PrivacyLive, :index
 
+    # OG image endpoints (PNG images for social sharing)
+    get "/og/default.png", OGImageController, :default
+    get "/og/home.png", OGImageController, :home
+    get "/og/about.png", OGImageController, :about
+    get "/og/model/:provider/*id", OGImageController, :model
+  end
+
+  scope "/", PetalBoilerplateWeb do
+    pipe_through :machine
+
     get "/robots.txt", DiscoveryController, :robots
     get "/sitemap.xml", DiscoveryController, :sitemap
     get "/llms.txt", DiscoveryController, :llms
@@ -51,14 +66,9 @@ defmodule PetalBoilerplateWeb.Router do
     get "/.well-known/ai-catalog.json", DiscoveryController, :ard
     get "/.well-known/agent-skills/index.json", DiscoveryController, :agent_skills
     get "/.well-known/agent-skills/llm-catalog/SKILL.md", DiscoveryController, :agent_skill
+    get "/.well-known/mcp.json", DiscoveryController, :mcp_compatibility_manifest
     get "/.well-known/mcp/server-card.json", DiscoveryController, :mcp_server_card
     get "/.well-known/api-catalog", DiscoveryController, :api_catalog
-
-    # OG image endpoints (PNG images for social sharing)
-    get "/og/default.png", OGImageController, :default
-    get "/og/home.png", OGImageController, :home
-    get "/og/about.png", OGImageController, :about
-    get "/og/model/:provider/*id", OGImageController, :model
   end
 
   scope "/", PetalBoilerplateWeb do

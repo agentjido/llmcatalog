@@ -4,13 +4,13 @@ defmodule PetalBoilerplateWeb.DevelopersLive do
   alias PetalBoilerplateWeb.PublicRoutes
   alias PetalBoilerplateWeb.SEO
 
-  @description "Use the public data and developer interfaces from LLM Catalog by Jidoka Labs."
+  @description "LLM Catalog developer resources for OpenAPI, MCP, Markdown, model history, and the official @agentjido/llmdb JavaScript and TypeScript package."
 
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
      assign(socket,
-       page_title: "Developer guide",
+       page_title: "LLM Catalog developer resources",
        page_description: @description,
        canonical_url: PublicRoutes.absolute("/developers"),
        structured_data: SEO.developers_structured_data(@description)
@@ -42,10 +42,10 @@ defmodule PetalBoilerplateWeb.DevelopersLive do
           >Jidoka Labs</a>
         </p>
         <h1 class="mt-2 text-3xl sm:text-4xl font-bold" style="color: hsl(var(--foreground));">
-          Developer guide
+          LLM Catalog developer resources
         </h1>
         <p class="mt-4 text-lg" style="color: hsl(var(--muted-foreground));">
-          Use public catalog pages, Markdown copies, history APIs, and lookup tools without an API key.
+          Use the public OpenAPI service, MCP server, Markdown pages, model history API, and official npm package without an API key.
         </p>
 
         <.section title="Choose the right interface">
@@ -96,6 +96,14 @@ defmodule PetalBoilerplateWeb.DevelopersLive do
             protocol is stateless. It uses <code>server/discover</code>
             and metadata on each request. The server also supports initialization-based clients for <code>2025-11-25</code>, <code>2025-06-18</code>, <code>2025-03-26</code>, and <code>2024-11-05</code>. Available tools are <code>query_models</code>, <code>get_model</code>, and <code>list_providers</code>.
           </p>
+          <ul class="mt-4 space-y-2 list-disc pl-6" style="color: hsl(var(--muted-foreground));">
+            <li>
+              <a class="link" href="/api/mcp/server-card">Current MCP Server Card</a>
+            </li>
+            <li>
+              <a class="link" href="/.well-known/mcp.json">MCP compatibility manifest</a>
+            </li>
+          </ul>
           <.code>
             curl https://llmcatalog.dev/api/mcp \
             -H 'content-type: application/json' \
@@ -117,7 +125,7 @@ defmodule PetalBoilerplateWeb.DevelopersLive do
           </p>
         </.section>
 
-        <.section title="JavaScript package">
+        <.section title="Official JavaScript and TypeScript package" id="llmdb-package">
           <p style="color: hsl(var(--muted-foreground));">
             The official
             <a
@@ -128,6 +136,12 @@ defmodule PetalBoilerplateWeb.DevelopersLive do
             >@agentjido/llmdb package</a>
             provides the catalog for JavaScript and TypeScript applications.
             It requires Node.js 22.14 or later. The package does not currently install a command-line executable.
+            Its source and package metadata are available in the <a
+              class="link"
+              href="https://github.com/agentjido/llmdb/tree/main/packages/llmdb"
+              target="_blank"
+              rel="noopener noreferrer"
+            >official llmdb repository</a>.
           </p>
           <.code>npm install @agentjido/llmdb
 

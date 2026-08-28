@@ -21,8 +21,10 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
              ~s(</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json;version=3.1")
 
     assert link =~ ~s(</developers>; rel="help"; type="text/html")
+    assert link =~ ~s(</developers>; rel="service-doc"; type="text/html")
     assert link =~ ~s(</.well-known/ard.json>; rel="ard"; type="application/json")
     assert link =~ ~s(</.well-known/api-catalog>; rel="api-catalog")
+    assert link =~ ~s(</.well-known/mcp.json>; rel="alternate"; type="application/json")
     assert link =~ ~s(</.well-known/mcp/server-card.json>; rel="service-desc")
 
     assert vary =~ "Accept"
@@ -60,7 +62,7 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
           {"/llm-models.md", "# LLM Models List"},
           {"/about.md", "# About LLM Catalog"},
           {"/contact.md", "# Contact LLM Catalog"},
-          {"/developers.md", "# LLM Catalog by Jidoka Labs developer guide"},
+          {"/developers.md", "# LLM Catalog developer resources by Jidoka Labs"},
           {"/privacy.md", "# LLM Catalog by Jidoka Labs privacy policy"},
           {"/history.md", "# Recent LLM Model History"}
         ] do

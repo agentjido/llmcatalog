@@ -195,14 +195,43 @@ defmodule PetalBoilerplateWeb.SEO do
 
   @spec developers_structured_data(String.t()) :: [map()]
   def developers_structured_data(description) do
+    package_url = "https://www.npmjs.com/package/@agentjido/llmdb"
+    repository_url = "https://github.com/agentjido/llmdb/tree/main/packages/llmdb"
+
     [
       %{
         "@context" => "https://schema.org",
         "@type" => "TechArticle",
-        "name" => "LLM Catalog developer guide",
+        "name" => "LLM Catalog developer resources",
+        "headline" => "LLM Catalog developer resources: OpenAPI, MCP, and npm",
         "description" => description,
         "url" => PublicRoutes.absolute("/developers"),
-        "publisher" => %{"@id" => PublicRoutes.absolute("/") <> "#organization"}
+        "mainEntityOfPage" => PublicRoutes.absolute("/developers"),
+        "keywords" => [
+          "LLM Catalog developer resources",
+          "LLM Catalog API",
+          "LLM Catalog MCP server",
+          "OpenAPI",
+          "@agentjido/llmdb"
+        ],
+        "publisher" => %{"@id" => PublicRoutes.absolute("/") <> "#organization"},
+        "about" => %{"@id" => PublicRoutes.absolute("/developers#llmdb-package")}
+      },
+      %{
+        "@context" => "https://schema.org",
+        "@type" => "SoftwareSourceCode",
+        "@id" => PublicRoutes.absolute("/developers#llmdb-package"),
+        "name" => "@agentjido/llmdb",
+        "description" =>
+          "The official JavaScript and TypeScript package for local access to LLM Catalog data.",
+        "url" => package_url,
+        "downloadUrl" => package_url,
+        "codeRepository" => repository_url,
+        "programmingLanguage" => ["JavaScript", "TypeScript"],
+        "runtimePlatform" => "Node.js 22.14 or later",
+        "keywords" => ["LLM model data", "LLM pricing", "LLM metadata", "npm package"],
+        "publisher" => %{"@id" => PublicRoutes.absolute("/") <> "#organization"},
+        "sameAs" => [package_url, repository_url]
       }
     ]
   end
@@ -437,6 +466,8 @@ defmodule PetalBoilerplateWeb.SEO do
       _other -> nil
     end
   end
+
+  defp editorial_modified_on("/developers"), do: ~D[2026-08-28]
 
   defp editorial_modified_on(path) do
     case SEOContent.get_page(path) do
