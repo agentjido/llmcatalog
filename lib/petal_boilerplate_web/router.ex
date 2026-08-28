@@ -81,8 +81,7 @@ defmodule PetalBoilerplateWeb.Router do
     get "/v1/history/:provider/*id", HistoryController, :model
     get "/history/recent", HistoryController, :recent
     get "/history/:provider/*id", HistoryController, :model
-    post "/mcp", MCPController, :handle
-    match :*, "/mcp", APIErrorController, :method_not_allowed
+    get "/mcp/server-card", DiscoveryController, :mcp_server_card
     match :*, "/*path", APIErrorController, :not_found
   end
 

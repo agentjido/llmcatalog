@@ -48,8 +48,38 @@ defmodule PetalBoilerplateWeb.Plugs.RateLimit do
   end
 
   defp client_key(conn) do
-    conn.remote_ip
+    trusted_client_ip(conn) || format_ip(conn.remote_ip)
+  end
+
+  defp trusted_client_ip(conn) do
+    case Application.get_env(:petal_boilerplate, :trusted_client_ip_header) do
+      header when is_binary(header) ->
+        conn
+        |> get_req_header(String.downcase(header))
+        |> case do
+          [value] -> parse_ip(value)
+          _missing_or_ambiguous -> nil
+        end
+
+      _not_configured ->
+        nil
+    end
+  end
+
+  defp parse_ip(value) when is_binary(value) do
+    value = String.trim(value)
+
+    case :inet.parse_address(String.to_charlist(value)) do
+      {:ok, ip} -> format_ip(ip)
+      {:error, _reason} -> nil
+    end
+  end
+
+  defp format_ip(ip) when is_tuple(ip) do
+    ip
     |> :inet.ntoa()
     |> to_string()
   end
+
+  defp format_ip(_ip), do: "unknown"
 end

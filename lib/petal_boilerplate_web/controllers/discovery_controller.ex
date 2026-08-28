@@ -25,13 +25,25 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
         Allow: /
 
         User-agent: ClaudeBot
+        Disallow: /
+
+        User-agent: GPTBot
+        Disallow: /
+
+        User-agent: Claude-SearchBot
+        Allow: /
+
+        User-agent: Claude-User
         Allow: /
 
         User-agent: PerplexityBot
         Allow: /
 
-        User-agent: Google-Extended
+        User-agent: Perplexity-User
         Allow: /
+
+        User-agent: Google-Extended
+        Disallow: /
 
         User-agent: CCBot
         Disallow: /
@@ -139,8 +151,9 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     ## Tool interface
 
     - Tools: `query_models`, `get_model`, `list_providers`
-    - Protocol versions: `2025-11-25` and `2025-06-18`
-    - Request methods: `initialize`, `tools/list`, `tools/call`, `resources/list`, and `resources/read`
+    - Current protocol: `2026-07-28` with stateless `server/discover` and per-request metadata.
+    - Compatibility protocols: `2025-11-25`, `2025-06-18`, `2025-03-26`, and `2024-11-05` with initialization.
+    - Request methods: `server/discover`, `initialize`, `tools/list`, `tools/call`, `resources/list`, and `resources/read` as supported by the selected protocol.
     - Tools are read-only and safe to repeat.
 
     Markdown copies are retrieval alternatives. Their response headers identify the canonical HTML page and prevent duplicate indexing.
@@ -158,8 +171,12 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
   def agent_skills(conn, _params),
     do: json_document(conn, DiscoveryDocuments.agent_skills_index())
 
-  def mcp_server_card(conn, _params),
-    do: json_document(conn, DiscoveryDocuments.mcp_server_card())
+  def mcp_server_card(conn, _params) do
+    conn
+    |> put_resp_header("content-type", "application/mcp-server-card+json; charset=utf-8")
+    |> put_resp_header("cache-control", "public, max-age=3600")
+    |> send_resp(200, Jason.encode!(DiscoveryDocuments.mcp_server_card(), pretty: true))
+  end
 
   def api_catalog(conn, _params) do
     conn

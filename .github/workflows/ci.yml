@@ -66,6 +66,9 @@ jobs:
       - name: Compile with warnings as errors
         run: mix compile --warnings-as-errors
 
+      - name: Test WebMCP registration
+        run: node --test assets/js/webmcp.test.js
+
       - name: Run tests
         run: mix test
 

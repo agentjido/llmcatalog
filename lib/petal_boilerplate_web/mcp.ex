@@ -5,8 +5,7 @@ defmodule PetalBoilerplateWeb.MCP do
   All operations are public, read-only, and safe to repeat.
   """
 
-  @latest_protocol_version "2025-11-25"
-  @supported_protocol_versions [@latest_protocol_version, "2025-06-18"]
+  @latest_protocol_version "2026-07-28"
   @server_version "1.0.0"
 
   @overview_uri "llmcatalog://overview"
@@ -14,34 +13,53 @@ defmodule PetalBoilerplateWeb.MCP do
   @providers_uri "llmcatalog://providers"
 
   @spec supported_protocol_versions() :: [String.t()]
-  def supported_protocol_versions, do: @supported_protocol_versions
+  def supported_protocol_versions do
+    [@latest_protocol_version | ExMCP.supported_versions()]
+    |> Enum.uniq()
+  end
+
+  @spec server_info() :: map()
+  def server_info do
+    %{
+      name: "io.github.agentjido/llmcatalog",
+      title: "LLM Catalog by Jidoka Labs",
+      version: @server_version,
+      description: "Read-only tools and resources for comparing large language models.",
+      websiteUrl: PetalBoilerplateWeb.Endpoint.url()
+    }
+  end
+
+  @spec capabilities() :: map()
+  def capabilities do
+    %{
+      tools: %{listChanged: false},
+      resources: %{subscribe: false, listChanged: false}
+    }
+  end
+
+  @spec instructions() :: String.t()
+  def instructions do
+    "Use query_models to find candidates, get_model for one exact provider:model_id, " <>
+      "and list_providers to discover available providers. Verify important prices, " <>
+      "limits, and availability with the model provider."
+  end
 
   @spec initialize(map()) :: map()
   def initialize(params) do
-    requested_version = Map.get(params, "protocolVersion")
+    requested_version = Map.get(params, "protocolVersion", ExMCP.protocol_version())
 
     protocol_version =
-      if requested_version in @supported_protocol_versions do
+      if requested_version in ExMCP.supported_versions() do
         requested_version
       else
-        @latest_protocol_version
+        ExMCP.protocol_version()
       end
 
     %{
       protocolVersion: protocol_version,
-      capabilities: %{
-        tools: %{listChanged: false},
-        resources: %{subscribe: false, listChanged: false}
-      },
-      serverInfo: %{
-        name: "io.github.agentjido.llmcatalog",
-        title: "LLM Catalog by Jidoka Labs",
-        version: @server_version,
-        description: "Read-only tools and resources for comparing large language models.",
-        websiteUrl: PetalBoilerplateWeb.Endpoint.url()
-      },
-      instructions:
-        "Use query_models to find candidates, get_model for one exact provider:model_id, and list_providers to discover available providers. Verify important prices, limits, and availability with the model provider."
+      capabilities: capabilities(),
+      serverInfo: server_info(),
+      instructions: instructions()
     }
   end
 
@@ -58,6 +76,9 @@ defmodule PetalBoilerplateWeb.MCP do
           properties: %{
             provider: %{
               type: "string",
+              minLength: 1,
+              maxLength: 64,
+              pattern: "^[A-Za-z0-9][A-Za-z0-9_-]*$",
               description: "Exact provider identifier, such as openai, anthropic, or google."
             },
             capabilities: %{
@@ -101,9 +122,10 @@ defmodule PetalBoilerplateWeb.MCP do
           type: "object",
           required: ["count", "models"],
           properties: %{
-            count: %{type: "integer"},
+            count: %{type: "integer", minimum: 0, maximum: 50},
             models: %{type: "array", items: %{type: "object", additionalProperties: true}}
-          }
+          },
+          additionalProperties: false
         },
         annotations: read_only_annotations("Search LLM models")
       },
@@ -119,6 +141,8 @@ defmodule PetalBoilerplateWeb.MCP do
             spec: %{
               type: "string",
               minLength: 3,
+              maxLength: 512,
+              pattern: "^[^:\\s]+:.+$",
               description: "Model spec in provider:model_id form, such as openai:gpt-4o."
             }
           },
@@ -127,7 +151,8 @@ defmodule PetalBoilerplateWeb.MCP do
         outputSchema: %{
           type: "object",
           required: ["model"],
-          properties: %{model: %{type: "object", additionalProperties: true}}
+          properties: %{model: %{type: "object", additionalProperties: true}},
+          additionalProperties: false
         },
         annotations: read_only_annotations("Get one LLM model")
       },
@@ -141,8 +166,22 @@ defmodule PetalBoilerplateWeb.MCP do
           type: "object",
           required: ["providers"],
           properties: %{
-            providers: %{type: "array", items: %{type: "object", additionalProperties: true}}
-          }
+            providers: %{
+              type: "array",
+              items: %{
+                type: "object",
+                required: ["id", "name", "base_url", "model_count"],
+                properties: %{
+                  id: %{type: "string"},
+                  name: %{type: "string"},
+                  base_url: %{type: ["string", "null"]},
+                  model_count: %{type: "integer", minimum: 0}
+                },
+                additionalProperties: false
+              }
+            }
+          },
+          additionalProperties: false
         },
         annotations: read_only_annotations("List LLM providers")
       }
@@ -150,10 +189,30 @@ defmodule PetalBoilerplateWeb.MCP do
   end
 
   @spec call_tool(String.t(), map()) :: {:ok, map()} | {:error, String.t()}
-  def call_tool("query_models", arguments) when is_map(arguments) do
+  def call_tool(name, arguments) when is_binary(name) and is_map(arguments) do
+    case tool_definition(name) do
+      nil ->
+        {:error, "Unknown tool: #{name}"}
+
+      tool ->
+        case validate_schema(arguments, tool.inputSchema) do
+          :ok -> execute_tool(name, arguments, tool.outputSchema)
+          {:error, errors} -> {:ok, tool_error(validation_message(name, errors))}
+        end
+    end
+  end
+
+  def call_tool(name, _arguments) when is_binary(name) do
+    case tool_definition(name) do
+      nil -> {:error, "Unknown tool: #{name}"}
+      _tool -> {:ok, tool_error("Invalid arguments for #{name}: expected a JSON object.")}
+    end
+  end
+
+  defp execute_tool("query_models", arguments, output_schema) do
     limit = normalize_limit(arguments["limit"])
 
-    models =
+    structured_content =
       LLMDB.models()
       |> filter_by_provider(arguments["provider"])
       |> filter_by_capabilities(arguments["capabilities"])
@@ -161,44 +220,64 @@ defmodule PetalBoilerplateWeb.MCP do
       |> filter_by_context(arguments["min_context"])
       |> Enum.take(limit)
       |> Enum.map(&serialize_model/1)
+      |> then(&%{count: length(&1), models: &1})
 
-    {:ok, tool_result(%{count: length(models), models: models})}
+    validated_tool_result(structured_content, output_schema)
   end
 
-  def call_tool("get_model", %{"spec" => spec}) when is_binary(spec) do
+  defp execute_tool("get_model", %{"spec" => spec}, output_schema) do
     case LLMDB.model(spec) do
       {:ok, model} ->
-        {:ok, tool_result(%{model: serialize_model(model)})}
+        validated_tool_result(%{model: serialize_model(model)}, output_schema)
 
       {:error, _reason} ->
         {:ok, tool_error("Model not found: #{spec}")}
     end
   end
 
-  def call_tool("get_model", _arguments) do
-    {:ok, tool_error("The get_model tool requires a string spec in provider:model_id form.")}
+  defp execute_tool("list_providers", %{}, output_schema) do
+    structured_content = %{
+      providers:
+        LLMDB.providers()
+        |> Enum.map(fn provider ->
+          %{
+            id: provider.id,
+            name: provider.name || Phoenix.Naming.humanize(provider.id),
+            base_url: provider.base_url,
+            model_count: length(LLMDB.models(provider.id))
+          }
+        end)
+    }
+
+    validated_tool_result(structured_content, output_schema)
   end
 
-  def call_tool("list_providers", arguments) when arguments == %{} or is_nil(arguments) do
-    providers =
-      LLMDB.providers()
-      |> Enum.map(fn provider ->
-        %{
-          id: provider.id,
-          name: provider.name,
-          base_url: provider.base_url,
-          model_count: length(LLMDB.models(provider.id))
-        }
+  defp validated_tool_result(structured_content, output_schema) do
+    case validate_schema(structured_content, output_schema) do
+      :ok -> {:ok, tool_result(structured_content)}
+      {:error, _errors} -> {:ok, tool_error("The catalog returned an invalid tool result.")}
+    end
+  end
+
+  defp tool_definition(name), do: Enum.find(tools(), &(&1.name == name))
+
+  defp validate_schema(value, schema) do
+    ExMCP.Content.SchemaValidator.validate_schema(value, schema)
+  end
+
+  defp validation_message(name, errors) do
+    details =
+      errors
+      |> Enum.take(3)
+      |> Enum.map_join("; ", fn error ->
+        case error.field do
+          field when is_binary(field) and field != "" -> "#{field}: #{error.message}"
+          _field -> error.message
+        end
       end)
 
-    {:ok, tool_result(%{providers: providers})}
+    "Invalid arguments for #{name}: #{details}"
   end
-
-  def call_tool("list_providers", _arguments) do
-    {:ok, tool_error("The list_providers tool does not accept arguments.")}
-  end
-
-  def call_tool(_name, _arguments), do: {:error, "Unknown tool"}
 
   @spec resources() :: [map()]
   def resources do

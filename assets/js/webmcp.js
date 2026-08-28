@@ -1,15 +1,21 @@
-const protocolVersion = "2025-11-25";
+const protocolVersion = "2026-07-28";
 let requestID = 0;
 
 const toolDefinitions = [
   {
     name: "query_models",
+    title: "Search LLM models",
     description:
       "Search and filter the LLM Catalog by provider, capabilities, token prices, and minimum context window.",
     inputSchema: {
       type: "object",
       properties: {
-        provider: {type: "string"},
+        provider: {
+          type: "string",
+          minLength: 1,
+          maxLength: 64,
+          pattern: "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+        },
         capabilities: {
           type: "object",
           properties: {
@@ -30,32 +36,35 @@ const toolDefinitions = [
     },
     annotations: {
       readOnlyHint: true,
-      idempotentHint: true,
-      destructiveHint: false,
-      openWorldHint: false,
+      untrustedContentHint: false,
     },
   },
   {
     name: "get_model",
+    title: "Get one LLM model",
     description:
       "Get one exact LLM Catalog record by provider:model_id, including prices, limits, capabilities, and lifecycle state.",
     inputSchema: {
       type: "object",
       required: ["spec"],
       properties: {
-        spec: {type: "string", minLength: 3},
+        spec: {
+          type: "string",
+          minLength: 3,
+          maxLength: 512,
+          pattern: "^[^:\\s]+:.+$",
+        },
       },
       additionalProperties: false,
     },
     annotations: {
       readOnlyHint: true,
-      idempotentHint: true,
-      destructiveHint: false,
-      openWorldHint: false,
+      untrustedContentHint: false,
     },
   },
   {
     name: "list_providers",
+    title: "List LLM providers",
     description:
       "List every provider in the LLM Catalog with its identifier, display name, base URL, and current model count.",
     inputSchema: {
@@ -65,9 +74,7 @@ const toolDefinitions = [
     },
     annotations: {
       readOnlyHint: true,
-      idempotentHint: true,
-      destructiveHint: false,
-      openWorldHint: false,
+      untrustedContentHint: false,
     },
   },
 ];
@@ -79,12 +86,25 @@ async function callMCPTool(name, argumentsValue, signal) {
       accept: "application/json, text/event-stream",
       "content-type": "application/json",
       "mcp-protocol-version": protocolVersion,
+      "mcp-method": "tools/call",
+      "mcp-name": name,
     },
     body: JSON.stringify({
       jsonrpc: "2.0",
       id: `webmcp-${++requestID}`,
       method: "tools/call",
-      params: {name, arguments: argumentsValue || {}},
+      params: {
+        name,
+        arguments: argumentsValue || {},
+        _meta: {
+          "io.modelcontextprotocol/protocolVersion": protocolVersion,
+          "io.modelcontextprotocol/clientCapabilities": {},
+          "io.modelcontextprotocol/clientInfo": {
+            name: "llmcatalog-webmcp",
+            version: "1.0.0",
+          },
+        },
+      },
     }),
     signal,
   });
@@ -98,16 +118,20 @@ async function callMCPTool(name, argumentsValue, signal) {
   return payload.result;
 }
 
-export function registerWebMCPTools() {
-  const modelContext = document.modelContext || navigator.modelContext;
+export async function registerWebMCPTools() {
+  const modelContext = document.modelContext;
 
   if (!modelContext?.registerTool) {
     return;
   }
 
-  for (const definition of toolDefinitions) {
-    modelContext.registerTool(definition, (argumentsValue, context = {}) =>
-      callMCPTool(definition.name, argumentsValue, context.signal),
-    );
-  }
+  await Promise.all(
+    toolDefinitions.map((definition) =>
+      modelContext.registerTool({
+        ...definition,
+        execute: (argumentsValue, options = {}) =>
+          callMCPTool(definition.name, argumentsValue, options.signal),
+      }),
+    ),
+  );
 }

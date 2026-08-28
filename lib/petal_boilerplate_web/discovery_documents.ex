@@ -42,7 +42,7 @@ defmodule PetalBoilerplateWeb.DiscoveryDocuments do
           identifier: "urn:air:llmcatalog.dev:mcp:catalog",
           displayName: "LLM Catalog MCP server",
           type: "application/mcp-server-card+json",
-          url: PublicRoutes.absolute("/.well-known/mcp/server-card.json"),
+          url: PublicRoutes.absolute("/api/mcp/server-card"),
           description: "Read-only model search, exact model lookup, and provider discovery.",
           tags: ["llm", "models", "pricing", "mcp"],
           capabilities: ["query_models", "get_model", "list_providers"],
@@ -100,12 +100,18 @@ defmodule PetalBoilerplateWeb.DiscoveryDocuments do
   def mcp_server_card do
     %{
       "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
-      name: "io.github.agentjido.llmcatalog",
+      name: "io.github.agentjido/llmcatalog",
       title: "LLM Catalog by Jidoka Labs",
       description:
         "Public, read-only tools and resources for searching and comparing large language models.",
       version: "1.0.0",
       websiteUrl: PublicRoutes.absolute("/"),
+      icons: [
+        %{
+          src: PublicRoutes.absolute("/favicon.ico"),
+          mimeType: "image/x-icon"
+        }
+      ],
       repository: %{
         source: "github",
         url: "https://github.com/agentjido/llmcatalog"

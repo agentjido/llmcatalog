@@ -7,6 +7,9 @@ defmodule PetalBoilerplateWeb.Plugs.APIVersion do
 
   @behaviour Plug
 
+  # 2026-08-28T00:00:00Z, encoded as an HTTP Structured Field Date.
+  @legacy_deprecation_date "@1787875200"
+
   @impl Plug
   def init(opts), do: opts
 
@@ -21,7 +24,7 @@ defmodule PetalBoilerplateWeb.Plugs.APIVersion do
     successor = String.replace_prefix(conn.request_path, "/api/", "/api/v1/")
 
     conn
-    |> put_resp_header("deprecation", "true")
+    |> put_resp_header("deprecation", @legacy_deprecation_date)
     |> put_resp_header(
       "link",
       ~s(<#{successor}>; rel="successor-version", </developers#versioning>; rel="deprecation")

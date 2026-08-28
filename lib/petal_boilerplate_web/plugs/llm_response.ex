@@ -82,7 +82,7 @@ defmodule PetalBoilerplateWeb.Plugs.LLMResponse do
     |> add_link_entries([
       "</llms.txt>; rel=\"alternate\"; type=\"text/plain\"",
       "<#{markdown_url}>; rel=\"alternate\"; type=\"text/markdown\"",
-      "</openapi.json>; rel=\"service-desc\"; type=\"application/json\"",
+      "</openapi.json>; rel=\"service-desc\"; type=\"application/vnd.oai.openapi+json;version=3.1\"",
       "</developers>; rel=\"help\"; type=\"text/html\"",
       "</.well-known/ard.json>; rel=\"ard\"; type=\"application/json\"",
       "</.well-known/ai-catalog.json>; rel=\"ai-catalog\"; type=\"application/json\"",

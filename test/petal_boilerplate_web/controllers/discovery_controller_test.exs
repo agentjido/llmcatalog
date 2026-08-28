@@ -48,7 +48,13 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert body =~ "User-agent: *"
     assert body =~ "Allow: /"
     assert body =~ "User-agent: OAI-SearchBot\nAllow: /"
-    assert body =~ "User-agent: ClaudeBot\nAllow: /"
+    assert body =~ "User-agent: ClaudeBot\nDisallow: /"
+    assert body =~ "User-agent: GPTBot\nDisallow: /"
+    assert body =~ "User-agent: Claude-SearchBot\nAllow: /"
+    assert body =~ "User-agent: Claude-User\nAllow: /"
+    assert body =~ "User-agent: PerplexityBot\nAllow: /"
+    assert body =~ "User-agent: Perplexity-User\nAllow: /"
+    assert body =~ "User-agent: Google-Extended\nDisallow: /"
     assert body =~ "User-agent: CCBot\nDisallow: /"
     assert body =~ "User-agent: Bytespider\nDisallow: /"
     assert body =~ "Sitemap: #{PublicRoutes.absolute("/sitemap.xml")}"
@@ -151,7 +157,9 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert body =~ "## When to use this site"
     assert body =~ "## When not to use this site"
     assert body =~ "MCP Streamable HTTP endpoint"
+    assert body =~ "2026-07-28"
     assert body =~ "2025-11-25"
+    assert body =~ "server/discover"
     assert body =~ "query_models"
     assert get_resp_header(conn, "x-robots-tag") == ["noindex"]
   end
@@ -175,9 +183,19 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     digest = :crypto.hash(:sha256, skill_body) |> Base.encode16(case: :lower)
     assert skill["digest"] == "sha256:#{digest}"
 
-    server_card = build_conn() |> get("/.well-known/mcp/server-card.json") |> json_response(200)
-    assert server_card["name"] == "io.github.agentjido.llmcatalog"
+    card_conn = build_conn() |> get("/.well-known/mcp/server-card.json")
+    server_card = json_response(card_conn, 200)
+
+    assert server_card["name"] == "io.github.agentjido/llmcatalog"
     assert hd(server_card["remotes"])["type"] == "streamable-http"
+    assert hd(server_card["remotes"])["supportedProtocolVersions"] |> hd() == "2026-07-28"
+    assert hd(server_card["icons"])["src"] == PublicRoutes.absolute("/favicon.ico")
+
+    assert get_resp_header(card_conn, "content-type") |> hd() =~
+             "application/mcp-server-card+json"
+
+    endpoint_card = build_conn() |> get("/api/mcp/server-card") |> json_response(200)
+    assert endpoint_card == server_card
 
     api_catalog = build_conn() |> get("/.well-known/api-catalog")
     assert response(api_catalog, 200) =~ PublicRoutes.absolute("/openapi.json")

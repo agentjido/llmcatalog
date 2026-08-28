@@ -47,6 +47,8 @@ if config_env() != :test do
   config :petal_boilerplate,
     canonical_host: System.get_env("CANONICAL_HOST"),
     seo_indexing_enabled: seo_indexing_enabled,
+    # Trust Fly-Client-IP only when the app runs behind Fly Proxy.
+    trusted_client_ip_header: if(System.get_env("FLY_APP_NAME"), do: "fly-client-ip"),
     # Keep this false or unset in local and staging environments.
     enable_analytics: analytics_enabled
 
@@ -86,6 +88,14 @@ if config_env() == :prod do
 
   host = System.get_env("PHX_HOST") || "example.com"
   port = String.to_integer(System.get_env("PORT") || "4000")
+
+  mcp_hosts =
+    [host, "llmcatalog.dev", "www.llmcatalog.dev", "llmdb.xyz", "www.llmdb.xyz"]
+    |> Enum.uniq()
+
+  config :petal_boilerplate, :mcp_transport,
+    allowed_hosts: mcp_hosts,
+    allowed_origins: Enum.map(mcp_hosts, &"https://#{&1}")
 
   config :petal_boilerplate, PetalBoilerplateWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],

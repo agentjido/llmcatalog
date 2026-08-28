@@ -92,15 +92,17 @@ defmodule PetalBoilerplateWeb.DevelopersLive do
         <.section title="Catalog lookup tools">
           <p style="color: hsl(var(--muted-foreground));">
             <code>POST /api/mcp</code>
-            is a stateless MCP Streamable HTTP server. It supports JSON-RPC initialization, <code>tools/list</code>, <code>tools/call</code>, <code>resources/list</code>, and <code>resources/read</code>. Available tools are <code>query_models</code>, <code>get_model</code>, and <code>list_providers</code>. Supported protocol versions are
-            <code>2025-11-25</code>
-            and <code>2025-06-18</code>.
+            is an MCP Streamable HTTP server. The current <code>2026-07-28</code>
+            protocol is stateless. It uses <code>server/discover</code>
+            and metadata on each request. The server also supports initialization-based clients for <code>2025-11-25</code>, <code>2025-06-18</code>, <code>2025-03-26</code>, and <code>2024-11-05</code>. Available tools are <code>query_models</code>, <code>get_model</code>, and <code>list_providers</code>.
           </p>
           <.code>
             curl https://llmcatalog.dev/api/mcp \
             -H 'content-type: application/json' \
             -H 'accept: application/json, text/event-stream' \
-            -d '&#123;"jsonrpc":"2.0","id":1,"method":"initialize","params":&#123;"protocolVersion":"2025-11-25","capabilities":&#123;&#125;,"clientInfo":&#123;"name":"example","version":"1.0"&#125;&#125;&#125;'
+            -H 'mcp-protocol-version: 2026-07-28' \
+            -H 'mcp-method: server/discover' \
+            -d '&#123;"jsonrpc":"2.0","id":1,"method":"server/discover","params":&#123;"_meta":&#123;"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":&#123;&#125;,"io.modelcontextprotocol/clientInfo":&#123;"name":"example","version":"1.0"&#125;&#125;&#125;&#125;'
           </.code>
         </.section>
 

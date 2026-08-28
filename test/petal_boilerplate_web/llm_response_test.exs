@@ -17,7 +17,9 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
     assert link =~
              "<#{PublicRoutes.absolute("/index.md")}>; rel=\"alternate\"; type=\"text/markdown\""
 
-    assert link =~ ~s(</openapi.json>; rel="service-desc"; type="application/json")
+    assert link =~
+             ~s(</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json;version=3.1")
+
     assert link =~ ~s(</developers>; rel="help"; type="text/html")
     assert link =~ ~s(</.well-known/ard.json>; rel="ard"; type="application/json")
     assert link =~ ~s(</.well-known/api-catalog>; rel="api-catalog")

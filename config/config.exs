@@ -14,6 +14,15 @@ config :petal_boilerplate,
   legacy_hosts: ["llmdb.xyz", "www.llmdb.xyz"],
   sync_history_on_start: true
 
+config :petal_boilerplate, :mcp_transport,
+  allowed_hosts: ["llmcatalog.dev", "www.llmcatalog.dev", "llmdb.xyz", "www.llmdb.xyz"],
+  allowed_origins: [
+    "https://llmcatalog.dev",
+    "https://www.llmcatalog.dev",
+    "https://llmdb.xyz",
+    "https://www.llmdb.xyz"
+  ]
+
 config :petal_boilerplate, PetalBoilerplate.Catalog.Trending,
   enabled: true,
   refresh_interval_ms: :timer.hours(6)

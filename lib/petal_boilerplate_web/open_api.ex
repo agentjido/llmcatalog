@@ -11,7 +11,7 @@ defmodule PetalBoilerplateWeb.OpenAPI do
       "openapi" => "3.1.0",
       "info" => %{
         "title" => "LLM Catalog by Jidoka Labs API",
-        "version" => "1.1.0",
+        "version" => "1.2.0",
         "description" =>
           "Public, read-only interfaces for LLM model history and catalog lookup tools. No API key is required. Stable REST operations use a major version in the URL. Breaking REST changes require a new major path. Deprecated routes advertise a successor through Deprecation and Link response headers before removal."
       },
@@ -74,36 +74,58 @@ defmodule PetalBoilerplateWeb.OpenAPI do
           "operationId" => "sendMCPMessage",
           "summary" => "Send a Model Context Protocol message",
           "description" =>
-            "Stateless MCP Streamable HTTP endpoint. Supports JSON-RPC initialize, ping, tools/list, tools/call, resources/list, resources/read, and resources/templates/list for protocol versions 2025-11-25 and 2025-06-18.",
+            "MCP Streamable HTTP endpoint. Protocol 2026-07-28 is stateless and uses server/discover plus metadata on each request. The endpoint also supports initialization-based clients for versions 2025-11-25, 2025-06-18, 2025-03-26, and 2024-11-05.",
+          "parameters" => [
+            mcp_header(
+              "MCP-Protocol-Version",
+              "Protocol version. It is required for current requests and after legacy initialization."
+            ),
+            mcp_header(
+              "Mcp-Method",
+              "For 2026-07-28 requests, this value must match the JSON-RPC method."
+            ),
+            mcp_header(
+              "Mcp-Name",
+              "For named 2026-07-28 operations, this value must match the tool, resource, or prompt name."
+            )
+          ],
           "requestBody" => %{
             "required" => true,
             "content" => %{
               "application/json" => %{
                 "schema" => %{"$ref" => "#/components/schemas/MCPRequest"},
                 "examples" => %{
-                  "initialize" => %{
+                  "discover_current_server" => %{
                     "value" => %{
                       "jsonrpc" => "2.0",
                       "id" => 1,
+                      "method" => "server/discover",
+                      "params" => %{
+                        "_meta" => current_mcp_meta()
+                      }
+                    }
+                  },
+                  "call_current_tool" => %{
+                    "value" => %{
+                      "jsonrpc" => "2.0",
+                      "id" => 2,
+                      "method" => "tools/call",
+                      "params" => %{
+                        "name" => "get_model",
+                        "arguments" => %{"spec" => "openai:gpt-4o"},
+                        "_meta" => current_mcp_meta()
+                      }
+                    }
+                  },
+                  "initialize_legacy_client" => %{
+                    "value" => %{
+                      "jsonrpc" => "2.0",
+                      "id" => 3,
                       "method" => "initialize",
                       "params" => %{
                         "protocolVersion" => "2025-11-25",
                         "capabilities" => %{},
                         "clientInfo" => %{"name" => "example", "version" => "1.0"}
-                      }
-                    }
-                  },
-                  "list" => %{
-                    "value" => %{"jsonrpc" => "2.0", "id" => 2, "method" => "tools/list"}
-                  },
-                  "call" => %{
-                    "value" => %{
-                      "jsonrpc" => "2.0",
-                      "id" => 3,
-                      "method" => "tools/call",
-                      "params" => %{
-                        "name" => "get_model",
-                        "arguments" => %{"spec" => "openai:gpt-4o"}
                       }
                     }
                   }
@@ -121,8 +143,10 @@ defmodule PetalBoilerplateWeb.OpenAPI do
                 }
               }
             },
-            "400" => problem_response("Invalid tool request."),
-            "405" => problem_response("Method not allowed."),
+            "400" => mcp_response("Malformed JSON-RPC or MCP metadata."),
+            "403" => mcp_response("The Origin or Host is not allowed."),
+            "405" => problem_response("The HTTP method is not supported by this transport."),
+            "413" => mcp_response("The request body exceeds 256,000 bytes."),
             "429" => rate_limit_response()
           },
           "security" => []
@@ -170,6 +194,7 @@ defmodule PetalBoilerplateWeb.OpenAPI do
           "method" => %{
             "type" => "string",
             "enum" => [
+              "server/discover",
               "initialize",
               "ping",
               "tools/list",
@@ -218,6 +243,17 @@ defmodule PetalBoilerplateWeb.OpenAPI do
     }
   end
 
+  defp mcp_response(description) do
+    %{
+      "description" => description,
+      "content" => %{
+        "application/json" => %{
+          "schema" => %{"type" => "object", "additionalProperties" => true}
+        }
+      }
+    }
+  end
+
   defp rate_limit_response do
     %{
       "description" => "The public API request quota was exceeded.",
@@ -241,6 +277,24 @@ defmodule PetalBoilerplateWeb.OpenAPI do
   end
 
   defp header(description), do: %{"description" => description, "schema" => %{"type" => "string"}}
+
+  defp mcp_header(name, description) do
+    %{
+      "name" => name,
+      "in" => "header",
+      "required" => false,
+      "description" => description,
+      "schema" => %{"type" => "string"}
+    }
+  end
+
+  defp current_mcp_meta do
+    %{
+      "io.modelcontextprotocol/protocolVersion" => "2026-07-28",
+      "io.modelcontextprotocol/clientCapabilities" => %{},
+      "io.modelcontextprotocol/clientInfo" => %{"name" => "example", "version" => "1.0"}
+    }
+  end
 
   defp legacy_history_operation(operation_id) do
     %{

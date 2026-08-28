@@ -195,7 +195,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
 
     ## Catalog lookup tools
 
-    `POST #{endpoint_url}/api/mcp` is a stateless MCP Streamable HTTP server. It supports protocol versions `2025-11-25` and `2025-06-18`, JSON-RPC initialization, `tools/list`, `tools/call`, `resources/list`, and `resources/read`. Tools are `query_models`, `get_model`, and `list_providers`.
+    `POST #{endpoint_url}/api/mcp` is an MCP Streamable HTTP server. The current `2026-07-28` protocol is stateless and uses `server/discover` plus metadata on each request. Compatibility support covers `2025-11-25`, `2025-06-18`, `2025-03-26`, and `2024-11-05` clients that use initialization. Methods include `tools/list`, `tools/call`, `resources/list`, and `resources/read`. Tools are `query_models`, `get_model`, and `list_providers`.
 
     ## Versioning and rate limits
 
