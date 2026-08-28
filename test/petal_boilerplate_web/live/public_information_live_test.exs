@@ -4,6 +4,7 @@ defmodule PetalBoilerplateWeb.PublicInformationLiveTest do
   test "developer guide documents supported interfaces and package limits", %{conn: conn} do
     html = conn |> get("/developers") |> html_response(200)
 
+    assert html =~ "LLM Catalog developer resources"
     assert html =~ "LLM Catalog by Jidoka Labs"
     assert html =~ "OpenAPI 3.1 document"
     assert html =~ "@agentjido/llmdb"
@@ -13,6 +14,8 @@ defmodule PetalBoilerplateWeb.PublicInformationLiveTest do
     assert html =~ "Versioning and deprecation"
     assert html =~ "RateLimit-Policy"
     assert html =~ "application/problem+json"
+    assert html =~ "/.well-known/mcp.json"
+    assert html =~ "github.com/agentjido/llmdb/tree/main/packages/llmdb"
     assert html =~ ~s(rel="canonical" href="#{PetalBoilerplateWeb.Endpoint.url()}/developers")
   end
 

@@ -126,6 +126,45 @@ defmodule PetalBoilerplateWeb.DiscoveryDocuments do
     }
   end
 
+  @doc """
+  Returns a broad compatibility manifest for clients that probe the
+  `/.well-known/mcp.json` compatibility location.
+
+  This document is not the MCP Server Card. The normative Server Card remains
+  available at `/api/mcp/server-card` and intentionally follows its current
+  schema without duplicating runtime primitive listings.
+  """
+  @spec mcp_compatibility_manifest() :: map()
+  def mcp_compatibility_manifest do
+    endpoint = PublicRoutes.absolute("/api/mcp")
+    versions = MCP.supported_protocol_versions()
+
+    %{
+      name: "io.github.agentjido/llmcatalog",
+      title: "LLM Catalog by Jidoka Labs",
+      description:
+        "Public, read-only MCP tools and resources for searching and comparing large language models.",
+      version: "1.0.0",
+      url: endpoint,
+      serverUrl: endpoint,
+      transport: "streamable-http",
+      protocolVersion: hd(versions),
+      supportedProtocolVersions: versions,
+      serverCard: PublicRoutes.absolute("/api/mcp/server-card"),
+      mcpServers: %{
+        llmcatalog: %{
+          type: "http",
+          url: endpoint
+        }
+      },
+      tools:
+        Enum.map(
+          MCP.tools(),
+          &Map.take(&1, [:name, :title, :description, :inputSchema, :annotations])
+        )
+    }
+  end
+
   @spec api_catalog() :: map()
   def api_catalog do
     %{

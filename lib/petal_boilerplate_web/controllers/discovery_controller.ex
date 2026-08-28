@@ -138,6 +138,7 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     - Model history JSON uses `#{endpoint_url}/api/v1/history/:provider/:model_id`.
     - [Agentic Resource Discovery catalog](#{endpoint_url}/.well-known/ard.json)
     - [MCP server card](#{endpoint_url}/.well-known/mcp/server-card.json)
+    - [MCP compatibility manifest](#{endpoint_url}/.well-known/mcp.json)
     - [Agent skill index](#{endpoint_url}/.well-known/agent-skills/index.json)
     - [RFC 9727 API catalog](#{endpoint_url}/.well-known/api-catalog)
     - The MCP Streamable HTTP endpoint is `POST #{endpoint_url}/api/mcp`.
@@ -177,6 +178,9 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     |> put_resp_header("cache-control", "public, max-age=3600")
     |> send_resp(200, Jason.encode!(DiscoveryDocuments.mcp_server_card(), pretty: true))
   end
+
+  def mcp_compatibility_manifest(conn, _params),
+    do: json_document(conn, DiscoveryDocuments.mcp_compatibility_manifest())
 
   def api_catalog(conn, _params) do
     conn
