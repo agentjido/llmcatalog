@@ -43,6 +43,9 @@ defmodule PetalBoilerplateWeb.Endpoint do
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
+  # MCP reads and validates the raw JSON-RPC body before the general parsers.
+  plug PetalBoilerplateWeb.Plugs.MCPTransport
+
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],

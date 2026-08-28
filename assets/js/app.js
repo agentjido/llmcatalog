@@ -22,6 +22,11 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 import hooks from "./hooks";
+import { registerWebMCPTools } from "./webmcp";
+
+registerWebMCPTools().catch((error) => {
+  console.warn("WebMCP tool registration failed", error);
+});
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")

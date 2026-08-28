@@ -24,7 +24,8 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert heading_texts(html, "h2") |> Enum.take(1) == ["Models"]
 
       assert html =~ "models across"
-      refute html =~ ~s(href="/developers")
+      assert html =~ ~s(href="/developers")
+      assert html =~ ~s(href="/contact")
       assert html =~ ~s(href="/privacy")
     end
 

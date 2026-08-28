@@ -1,5 +1,18 @@
 import Config
 
+config :petal_boilerplate, :mcp_transport,
+  allowed_hosts: [
+    "www.example.com",
+    "localhost",
+    "127.0.0.1",
+    "::1",
+    "llmcatalog.dev",
+    "www.llmcatalog.dev",
+    "llmdb.xyz",
+    "www.llmdb.xyz"
+  ],
+  allowed_origins: ["http://www.example.com", "https://www.example.com"]
+
 config :petal_boilerplate, PetalBoilerplate.Catalog.Trending, enabled: false
 
 # Configure your database

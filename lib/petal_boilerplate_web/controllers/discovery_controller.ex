@@ -6,6 +6,7 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
   use PetalBoilerplateWeb, :controller
 
   alias PetalBoilerplateWeb.PublicRoutes
+  alias PetalBoilerplateWeb.DiscoveryDocuments
   alias PetalBoilerplateWeb.SEO
 
   @feed_limit 50
@@ -16,6 +17,39 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
         """
         User-agent: *
         Allow: /
+
+        User-agent: OAI-SearchBot
+        Allow: /
+
+        User-agent: ChatGPT-User
+        Allow: /
+
+        User-agent: ClaudeBot
+        Disallow: /
+
+        User-agent: GPTBot
+        Disallow: /
+
+        User-agent: Claude-SearchBot
+        Allow: /
+
+        User-agent: Claude-User
+        Allow: /
+
+        User-agent: PerplexityBot
+        Allow: /
+
+        User-agent: Perplexity-User
+        Allow: /
+
+        User-agent: Google-Extended
+        Disallow: /
+
+        User-agent: CCBot
+        Disallow: /
+
+        User-agent: Bytespider
+        Disallow: /
 
         Sitemap: #{PublicRoutes.absolute("/sitemap.xml")}
         """
@@ -90,6 +124,7 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     - [Open-weight LLM models](#{endpoint_url}/models/open-weights)
     - [Video AI models](#{endpoint_url}/models/video)
     - [About](#{endpoint_url}/about)
+    - [Contact](#{endpoint_url}/contact)
     - [Privacy policy](#{endpoint_url}/privacy)
     - [Recent history](#{endpoint_url}/history)
     - Model pages use `#{endpoint_url}/models/:provider/:model_id`.
@@ -99,9 +134,13 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     - [Developer guide](#{endpoint_url}/developers)
     - [OpenAPI 3.1 document](#{endpoint_url}/openapi.json)
     - [JavaScript and TypeScript package](https://www.npmjs.com/package/@agentjido/llmdb)
-    - [Recent history JSON](#{endpoint_url}/api/history/recent)
-    - Model history JSON uses `#{endpoint_url}/api/history/:provider/:model_id`.
-    - The tool endpoint is `POST #{endpoint_url}/api/mcp`.
+    - [Recent history JSON](#{endpoint_url}/api/v1/history/recent)
+    - Model history JSON uses `#{endpoint_url}/api/v1/history/:provider/:model_id`.
+    - [Agentic Resource Discovery catalog](#{endpoint_url}/.well-known/ard.json)
+    - [MCP server card](#{endpoint_url}/.well-known/mcp/server-card.json)
+    - [Agent skill index](#{endpoint_url}/.well-known/agent-skills/index.json)
+    - [RFC 9727 API catalog](#{endpoint_url}/.well-known/api-catalog)
+    - The MCP Streamable HTTP endpoint is `POST #{endpoint_url}/api/mcp`.
     - No API key is required for these public, read-only interfaces.
 
     ## Discovery
@@ -112,8 +151,10 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     ## Tool interface
 
     - Tools: `query_models`, `get_model`, `list_providers`
-    - Request shapes: `tools/list` and `tools/call`
-    - This is a small tool interface, not a complete MCP protocol server.
+    - Current protocol: `2026-07-28` with stateless `server/discover` and per-request metadata.
+    - Compatibility protocols: `2025-11-25`, `2025-06-18`, `2025-03-26`, and `2024-11-05` with initialization.
+    - Request methods: `server/discover`, `initialize`, `tools/list`, `tools/call`, `resources/list`, and `resources/read` as supported by the selected protocol.
+    - Tools are read-only and safe to repeat.
 
     Markdown copies are retrieval alternatives. Their response headers identify the canonical HTML page and prevent duplicate indexing.
     """
@@ -123,6 +164,35 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     |> put_resp_header("cache-control", "public, max-age=3600")
     |> put_resp_header("x-robots-tag", "noindex")
     |> send_resp(200, body)
+  end
+
+  def ard(conn, _params), do: json_document(conn, DiscoveryDocuments.ard_catalog())
+
+  def agent_skills(conn, _params),
+    do: json_document(conn, DiscoveryDocuments.agent_skills_index())
+
+  def mcp_server_card(conn, _params) do
+    conn
+    |> put_resp_header("content-type", "application/mcp-server-card+json; charset=utf-8")
+    |> put_resp_header("cache-control", "public, max-age=3600")
+    |> send_resp(200, Jason.encode!(DiscoveryDocuments.mcp_server_card(), pretty: true))
+  end
+
+  def api_catalog(conn, _params) do
+    conn
+    |> put_resp_header(
+      "content-type",
+      ~s(application/linkset+json;profile="https://www.rfc-editor.org/info/rfc9727")
+    )
+    |> put_resp_header("cache-control", "public, max-age=3600")
+    |> send_resp(200, Jason.encode!(DiscoveryDocuments.api_catalog(), pretty: true))
+  end
+
+  def agent_skill(conn, _params) do
+    conn
+    |> put_resp_content_type("text/markdown", "utf-8")
+    |> put_resp_header("cache-control", "public, max-age=3600")
+    |> send_resp(200, DiscoveryDocuments.skill_markdown())
   end
 
   def feed(conn, _params) do
@@ -248,5 +318,12 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
 
   defp history_module do
     Application.get_env(:petal_boilerplate, :history_module, PetalBoilerplate.History)
+  end
+
+  defp json_document(conn, document) do
+    conn
+    |> put_resp_content_type("application/json", "utf-8")
+    |> put_resp_header("cache-control", "public, max-age=3600")
+    |> send_resp(200, Jason.encode!(document, pretty: true))
   end
 end

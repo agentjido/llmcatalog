@@ -65,10 +65,10 @@ defmodule PetalBoilerplateWeb.Plugs.CanonicalHostTest do
     conn =
       conn
       |> on_host("llmdb.xyz")
-      |> post("/api/mcp", %{"method" => "tools/list"})
+      |> mcp_discover()
 
-    assert %{"tools" => tools} = json_response(conn, 200)
-    assert tools != []
+    assert %{"result" => %{"supportedVersions" => versions}} = json_response(conn, 200)
+    assert "2026-07-28" in versions
     assert get_resp_header(conn, "location") == []
   end
 
@@ -85,10 +85,10 @@ defmodule PetalBoilerplateWeb.Plugs.CanonicalHostTest do
     conn =
       conn
       |> on_host(@canonical_host)
-      |> post("/api/mcp", %{"method" => "tools/list"})
+      |> mcp_discover()
 
-    assert %{"tools" => tools} = json_response(conn, 200)
-    assert tools != []
+    assert %{"result" => %{"supportedVersions" => versions}} = json_response(conn, 200)
+    assert "2026-07-28" in versions
     assert get_resp_header(conn, "location") == []
   end
 
@@ -131,5 +131,27 @@ defmodule PetalBoilerplateWeb.Plugs.CanonicalHostTest do
 
   defp on_host(conn, host) do
     %{conn | host: host, scheme: :https, port: 443}
+  end
+
+  defp mcp_discover(conn) do
+    meta = %{
+      "io.modelcontextprotocol/protocolVersion" => "2026-07-28",
+      "io.modelcontextprotocol/clientCapabilities" => %{},
+      "io.modelcontextprotocol/clientInfo" => %{"name" => "host-test", "version" => "1.0"}
+    }
+
+    body = %{
+      "jsonrpc" => "2.0",
+      "id" => 1,
+      "method" => "server/discover",
+      "params" => %{"_meta" => meta}
+    }
+
+    conn
+    |> put_req_header("content-type", "application/json")
+    |> put_req_header("accept", "application/json, text/event-stream")
+    |> put_req_header("mcp-protocol-version", "2026-07-28")
+    |> put_req_header("mcp-method", "server/discover")
+    |> post("/api/mcp", Jason.encode!(body))
   end
 end

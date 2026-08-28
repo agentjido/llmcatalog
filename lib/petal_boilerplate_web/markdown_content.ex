@@ -14,7 +14,15 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
 
   @spec eligible_public_path?(String.t()) :: boolean()
   def eligible_public_path?(path)
-      when path in ["/", "/about", "/developers", "/history", "/llm-models", "/privacy"],
+      when path in [
+             "/",
+             "/about",
+             "/contact",
+             "/developers",
+             "/history",
+             "/llm-models",
+             "/privacy"
+           ],
       do: true
 
   def eligible_public_path?(path) when is_binary(path) do
@@ -25,6 +33,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
   @spec resolve(String.t(), String.t()) :: {:ok, String.t()} | :no_match
   def resolve("/", canonical_url), do: {:ok, home_markdown(canonical_url)}
   def resolve("/about", canonical_url), do: {:ok, about_markdown(canonical_url)}
+  def resolve("/contact", canonical_url), do: {:ok, contact_markdown(canonical_url)}
   def resolve("/developers", canonical_url), do: {:ok, developers_markdown(canonical_url)}
   def resolve("/history", canonical_url), do: {:ok, history_markdown(canonical_url)}
   def resolve("/llm-models", canonical_url), do: {:ok, llm_models_markdown(canonical_url)}
@@ -68,6 +77,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     - [Open-weight LLM models](#{endpoint_url}/models/open-weights)
     - [Video AI models](#{endpoint_url}/models/video)
     - [About LLM Catalog](#{endpoint_url}/about)
+    - [Contact LLM Catalog](#{endpoint_url}/contact)
     - [Developer guide](#{endpoint_url}/developers)
     - [Privacy policy](#{endpoint_url}/privacy)
     - [Recent model history](#{endpoint_url}/history)
@@ -75,7 +85,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     - [RSS history feed](#{endpoint_url}/feed)
     - [LLM retrieval guidance](#{endpoint_url}/llms.txt)
     - [OpenAPI document](#{endpoint_url}/openapi.json)
-    - Tool endpoint: `POST #{endpoint_url}/api/mcp`
+    - MCP Streamable HTTP endpoint: `POST #{endpoint_url}/api/mcp`
     """
   end
 
@@ -127,6 +137,34 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     """
   end
 
+  defp contact_markdown(canonical_url) do
+    """
+    # Contact LLM Catalog
+
+    Use the contact route that matches the request. Do not put secrets, credentials, private customer data, or sensitive personal data in a public issue.
+
+    ## Incorrect model data
+
+    Use the structured model metadata form at #{PetalBoilerplateWeb.ModelMetadataFeedback.issue_url()}. Include a public provider source that supports the correction.
+
+    ## Site or API problem
+
+    Open a reproducible issue at https://github.com/agentjido/llmcatalog/issues. Include the public URL, expected result, actual result, and a minimal reproduction.
+
+    ## Security or privacy
+
+    Use the private contact form at https://jidokahq.com/#contact for a security report, privacy question, or other matter that must not be public.
+
+    ## Community support
+
+    Use https://jido.run/discord for public discussion. GitHub remains the source of record for reproducible defects.
+
+    LLM Catalog has no paid support plan or formal response-time agreement. For an urgent production decision, confirm catalog values directly with the model provider.
+
+    Canonical URL: #{canonical_url}
+    """
+  end
+
   defp developers_markdown(canonical_url) do
     endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
@@ -149,15 +187,19 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
 
     ## JSON APIs
 
-    - `GET #{endpoint_url}/api/history/recent?limit=25`
-    - `GET #{endpoint_url}/api/history/:provider/:model_id?limit=100`
+    - `GET #{endpoint_url}/api/v1/history/recent?limit=25`
+    - `GET #{endpoint_url}/api/v1/history/:provider/:model_id?limit=100`
     - [OpenAPI 3.1 document](#{endpoint_url}/openapi.json)
 
     API errors use `application/problem+json` and include `code`, `status`, `detail`, `instance`, and `resolution` fields.
 
     ## Catalog lookup tools
 
-    `POST #{endpoint_url}/api/mcp` accepts `tools/list` and `tools/call`. Tools are `query_models`, `get_model`, and `list_providers`. This is a small tool interface, not a complete MCP protocol server.
+    `POST #{endpoint_url}/api/mcp` is an MCP Streamable HTTP server. The current `2026-07-28` protocol is stateless and uses `server/discover` plus metadata on each request. Compatibility support covers `2025-11-25`, `2025-06-18`, `2025-03-26`, and `2024-11-05` clients that use initialization. Methods include `tools/list`, `tools/call`, `resources/list`, and `resources/read`. Tools are `query_models`, `get_model`, and `list_providers`.
+
+    ## Versioning and rate limits
+
+    Stable REST routes use `/api/v1`. The former `/api/history` routes remain as deprecated compatibility aliases and advertise their successor with response headers. Breaking REST changes require a new major path. Public API responses include current IETF `RateLimit-Policy` and `RateLimit` fields. A `429` response also includes `Retry-After`.
 
     ## JavaScript package
 

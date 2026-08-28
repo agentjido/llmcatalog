@@ -81,8 +81,8 @@ defmodule PetalBoilerplateWeb.DevelopersLive do
             These read-only routes return JSON. The optional <code>limit</code>
             value must be from 1 through 1000.
           </p>
-          <.code>GET /api/history/recent?limit=25
-            GET /api/history/:provider/:model_id?limit=100</.code>
+          <.code>GET /api/v1/history/recent?limit=25
+            GET /api/v1/history/:provider/:model_id?limit=100</.code>
           <p class="mt-4" style="color: hsl(var(--muted-foreground));">
             See the <a class="link" href="/openapi.json">OpenAPI 3.1 document</a>
             for request and response schemas.
@@ -92,14 +92,29 @@ defmodule PetalBoilerplateWeb.DevelopersLive do
         <.section title="Catalog lookup tools">
           <p style="color: hsl(var(--muted-foreground));">
             <code>POST /api/mcp</code>
-            accepts the documented <code>tools/list</code>
-            and <code>tools/call</code>
-            request shapes. Available tools are <code>query_models</code>, <code>get_model</code>, and <code>list_providers</code>. This is a small tool interface.
-            It is not a complete MCP protocol server.
+            is an MCP Streamable HTTP server. The current <code>2026-07-28</code>
+            protocol is stateless. It uses <code>server/discover</code>
+            and metadata on each request. The server also supports initialization-based clients for <code>2025-11-25</code>, <code>2025-06-18</code>, <code>2025-03-26</code>, and <code>2024-11-05</code>. Available tools are <code>query_models</code>, <code>get_model</code>, and <code>list_providers</code>.
           </p>
-          <.code>curl https://llmcatalog.dev/api/mcp \
+          <.code>
+            curl https://llmcatalog.dev/api/mcp \
             -H 'content-type: application/json' \
-            -d '&#123;"method":"tools/list"&#125;'</.code>
+            -H 'accept: application/json, text/event-stream' \
+            -H 'mcp-protocol-version: 2026-07-28' \
+            -H 'mcp-method: server/discover' \
+            -d '&#123;"jsonrpc":"2.0","id":1,"method":"server/discover","params":&#123;"_meta":&#123;"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":&#123;&#125;,"io.modelcontextprotocol/clientInfo":&#123;"name":"example","version":"1.0"&#125;&#125;&#125;&#125;'
+          </.code>
+        </.section>
+
+        <.section title="Versioning and deprecation" id="versioning">
+          <p style="color: hsl(var(--muted-foreground));">
+            Stable REST operations use a major version in the URL, beginning with <code>/api/v1</code>. Backward-compatible response fields can be added within v1.
+            A breaking request or response change requires a new major path. The former
+            <code>/api/history</code>
+            routes remain as deprecated compatibility aliases and send <code>Deprecation</code>
+            and <code>Link: rel="successor-version"</code>
+            headers. No removal date is scheduled.
+          </p>
         </.section>
 
         <.section title="JavaScript package">
@@ -128,8 +143,11 @@ defmodule PetalBoilerplateWeb.DevelopersLive do
 
         <.section title="Data and service limits">
           <p style="color: hsl(var(--muted-foreground));">
-            Public interfaces have no authentication and no formal availability guarantee. Cache responses when practical.
-            Check provider documentation before you depend on a price, feature, model name, or service limit.
+            Public interfaces have no authentication and no formal availability guarantee. The API allows 120 requests per client IP in each 60-second window on each service instance. Responses send current IETF
+            <code>RateLimit-Policy</code>
+            and <code>RateLimit</code>
+            fields plus compatibility fields. A <code>429</code>
+            response also sends <code>Retry-After</code>. Cache responses when practical. Check provider documentation before you depend on a price, feature, model name, or service limit.
           </p>
         </.section>
       </main>

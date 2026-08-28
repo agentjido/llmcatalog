@@ -1,5 +1,9 @@
 import Config
 
+config :petal_boilerplate, :mcp_transport,
+  allowed_hosts: ["localhost", "127.0.0.1", "::1"],
+  allowed_origins: ["http://localhost:4000", "http://127.0.0.1:4000"]
+
 # Configure your database
 config :petal_boilerplate, PetalBoilerplate.Repo,
   username: "postgres",

@@ -93,7 +93,7 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
     assert render(view) =~ "GB"
   end
 
-  test "site header exposes social and theme actions without developer menu links", %{conn: conn} do
+  test "site header exposes social, developer, and theme actions", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/")
 
     assert has_element?(
@@ -115,8 +115,9 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
            )
 
     assert has_element?(view, ~s(header button[aria-label="Change color theme"]))
-    refute has_element?(view, ~s(nav[aria-label="Site navigation"] a[href="/developers"]))
-    refute has_element?(view, ~s(nav[aria-label="Site navigation"] a[href="/openapi.json"]))
+    assert has_element?(view, ~s(nav[aria-label="Site navigation"] a[href="/developers"]))
+    assert has_element?(view, ~s(nav[aria-label="Site navigation"] a[href="/openapi.json"]))
+    assert has_element?(view, ~s(nav[aria-label="Site navigation"] a[href="/contact"]))
 
     assert has_element?(
              view,

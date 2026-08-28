@@ -9,8 +9,11 @@ defmodule PetalBoilerplate.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      # No patched cowlib Hex release is available yet.
-      hex: [ignore_advisories: ["CVE-2026-43969", "CVE-2026-43966"]],
+      # No patched cowlib Hex release is available yet. This application does
+      # not call the affected cookie, HTTP string, or Link encoder functions.
+      hex: [
+        ignore_advisories: ["CVE-2026-43971", "CVE-2026-43969", "CVE-2026-43966"]
+      ],
       deps: deps(),
       listeners: [Phoenix.CodeReloader]
     ]
@@ -75,6 +78,9 @@ defmodule PetalBoilerplate.MixProject do
 
       # Domain
       {:llm_db, "~> 2026.8"},
+
+      # Agent protocols
+      {:ex_mcp, "~> 1.1.1"},
 
       # Dev & test
       {:phoenix_live_reload, "~> 1.6", only: [:dev, :test]},

@@ -24,6 +24,7 @@ defmodule PetalBoilerplateWeb.SEO do
   @search_indexable_paths [
     "/",
     "/about",
+    "/contact",
     "/developers",
     "/llm-models",
     "/privacy",
@@ -105,7 +106,15 @@ defmodule PetalBoilerplateWeb.SEO do
         "@type" => "Organization",
         "@id" => organization_id,
         "name" => "Jidoka Labs",
+        "description" =>
+          "Jidoka Labs builds reliable agent software and maintains the open-source LLM Catalog and llmdb projects.",
         "url" => "https://jidokahq.com",
+        "contactPoint" => %{
+          "@type" => "ContactPoint",
+          "contactType" => "technical support",
+          "url" => PublicRoutes.absolute("/contact"),
+          "availableLanguage" => ["English"]
+        },
         "sameAs" => [
           "https://github.com/agentjido",
           "https://www.npmjs.com/package/@agentjido/llmdb"
@@ -143,6 +152,30 @@ defmodule PetalBoilerplateWeb.SEO do
           "name" => "LLM Catalog by Jidoka Labs",
           "url" => home_url
         }
+      },
+      %{
+        "@context" => "https://schema.org",
+        "@type" => "FAQPage",
+        "name" => "LLM Catalog questions",
+        "url" => home_url <> "#frequently-asked-questions",
+        "mainEntity" => [
+          faq_question(
+            "What is LLM Catalog?",
+            "LLM Catalog is a public database for comparing model providers, identifiers, capabilities, modalities, context windows, and recorded token prices."
+          ),
+          faq_question(
+            "Can software and AI agents use LLM Catalog?",
+            "Yes. The site provides Markdown pages, a versioned OpenAPI service, a read-only MCP server, and the @agentjido/llmdb npm package without an API key."
+          ),
+          faq_question(
+            "Does a zero recorded price guarantee free model access?",
+            "No. A zero value only reports the current catalog record. Provider limits, eligibility rules, and prices can change."
+          ),
+          faq_question(
+            "Where does the catalog data come from?",
+            "The open-source llmdb project normalizes public catalogs, provider APIs, and curated corrections into the records shown here."
+          )
+        ]
       }
     ]
   end
@@ -183,6 +216,20 @@ defmodule PetalBoilerplateWeb.SEO do
         "name" => "LLM Catalog privacy policy",
         "description" => description,
         "url" => PublicRoutes.absolute("/privacy")
+      }
+    ]
+  end
+
+  @spec contact_structured_data(String.t()) :: [map()]
+  def contact_structured_data(description) do
+    [
+      %{
+        "@context" => "https://schema.org",
+        "@type" => "ContactPage",
+        "name" => "Contact LLM Catalog",
+        "description" => description,
+        "url" => PublicRoutes.absolute("/contact"),
+        "about" => %{"@id" => PublicRoutes.absolute("/") <> "#organization"}
       }
     ]
   end
@@ -364,6 +411,14 @@ defmodule PetalBoilerplateWeb.SEO do
       "@context" => "https://schema.org",
       "@type" => "BreadcrumbList",
       "itemListElement" => items
+    }
+  end
+
+  defp faq_question(name, answer) do
+    %{
+      "@type" => "Question",
+      "name" => name,
+      "acceptedAnswer" => %{"@type" => "Answer", "text" => answer}
     }
   end
 
