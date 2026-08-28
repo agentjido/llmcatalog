@@ -8,9 +8,21 @@ defmodule PetalBoilerplateWeb.PublicInformationLiveTest do
     assert html =~ "OpenAPI 3.1 document"
     assert html =~ "@agentjido/llmdb"
     assert html =~ "does not currently install a command-line executable"
-    assert html =~ "not a complete MCP protocol server"
+    assert html =~ "stateless MCP Streamable HTTP server"
+    assert html =~ "Versioning and deprecation"
+    assert html =~ "RateLimit-Policy"
     assert html =~ "application/problem+json"
     assert html =~ ~s(rel="canonical" href="#{PetalBoilerplateWeb.Endpoint.url()}/developers")
+  end
+
+  test "contact page gives public and private support routes", %{conn: conn} do
+    html = conn |> get("/contact") |> html_response(200)
+
+    assert html =~ "Contact LLM Catalog"
+    assert html =~ "Incorrect model data"
+    assert html =~ "github.com/agentjido/llmcatalog/issues"
+    assert html =~ "https://jidokahq.com/#contact"
+    assert html =~ "no paid support plan"
   end
 
   test "privacy policy states current analytics behavior", %{conn: conn} do

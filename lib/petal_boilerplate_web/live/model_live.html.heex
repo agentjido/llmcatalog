@@ -231,6 +231,88 @@
     <% end %>
   </section>
 
+  <section
+    :if={@live_action == :index}
+    class="mx-auto w-full max-w-5xl border-t px-4 py-10 sm:px-6"
+    style="border-color: hsl(var(--border));"
+    aria-labelledby="agent-access-heading"
+  >
+    <h2 id="agent-access-heading" class="text-2xl font-semibold tracking-tight">
+      Developer and agent access
+    </h2>
+    <p class="mt-3 max-w-3xl leading-7" style="color: hsl(var(--muted-foreground));">
+      Use the same public catalog through machine-readable interfaces. No account or API key is required for these read-only services.
+    </p>
+
+    <div class="mt-6 grid gap-4 md:grid-cols-3">
+      <article class="rounded-lg border p-5" style="border-color: hsl(var(--border));">
+        <h3 class="font-semibold">Versioned REST API</h3>
+        <p class="mt-2 text-sm leading-6" style="color: hsl(var(--muted-foreground));">
+          Read model metadata history through documented <code>/api/v1</code>
+          routes and typed JSON responses.
+        </p>
+        <a class="mt-3 inline-block text-sm font-medium link" href="/openapi.json">OpenAPI 3.1</a>
+      </article>
+      <article class="rounded-lg border p-5" style="border-color: hsl(var(--border));">
+        <h3 class="font-semibold">MCP and WebMCP tools</h3>
+        <p class="mt-2 text-sm leading-6" style="color: hsl(var(--muted-foreground));">
+          Search models, read exact records, and list providers through read-only agent tools.
+        </p>
+        <a class="mt-3 inline-block text-sm font-medium link" href="/developers">Developer guide</a>
+      </article>
+      <article class="rounded-lg border p-5" style="border-color: hsl(var(--border));">
+        <h3 class="font-semibold">Local data package</h3>
+        <p class="mt-2 text-sm leading-6" style="color: hsl(var(--muted-foreground));">
+          Install the catalog for JavaScript and TypeScript applications that need local model metadata.
+        </p>
+        <a
+          class="mt-3 inline-block text-sm font-medium link"
+          href="https://www.npmjs.com/package/@agentjido/llmdb"
+          target="_blank"
+          rel="noopener noreferrer"
+        >@agentjido/llmdb</a>
+      </article>
+    </div>
+  </section>
+
+  <section
+    :if={@live_action == :index}
+    id="frequently-asked-questions"
+    class="mx-auto w-full max-w-5xl border-t px-4 py-10 sm:px-6"
+    style="border-color: hsl(var(--border));"
+    aria-labelledby="faq-heading"
+  >
+    <h2 id="faq-heading" class="text-2xl font-semibold tracking-tight">
+      Frequently asked questions
+    </h2>
+    <div class="mt-6 grid gap-x-8 gap-y-6 md:grid-cols-2">
+      <article>
+        <h3 class="font-semibold">What is LLM Catalog?</h3>
+        <p class="mt-2 leading-7" style="color: hsl(var(--muted-foreground));">
+          LLM Catalog is a public database for comparing model providers, identifiers, capabilities, modalities, context windows, and recorded token prices.
+        </p>
+      </article>
+      <article>
+        <h3 class="font-semibold">Can software and AI agents use LLM Catalog?</h3>
+        <p class="mt-2 leading-7" style="color: hsl(var(--muted-foreground));">
+          Yes. The site provides Markdown pages, a versioned OpenAPI service, a read-only MCP server, and the @agentjido/llmdb npm package without an API key.
+        </p>
+      </article>
+      <article>
+        <h3 class="font-semibold">Does a zero recorded price guarantee free model access?</h3>
+        <p class="mt-2 leading-7" style="color: hsl(var(--muted-foreground));">
+          No. A zero value only reports the current catalog record. Provider limits, eligibility rules, and prices can change.
+        </p>
+      </article>
+      <article>
+        <h3 class="font-semibold">Where does the catalog data come from?</h3>
+        <p class="mt-2 leading-7" style="color: hsl(var(--muted-foreground));">
+          The open-source llmdb project normalizes public catalogs, provider APIs, and curated corrections into the records shown here.
+        </p>
+      </article>
+    </div>
+  </section>
+
   <%= if MapSet.size(@selected_ids) > 0 do %>
     <div
       class="sticky bottom-0 z-40 border-t"

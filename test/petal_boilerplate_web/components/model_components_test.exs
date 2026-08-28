@@ -11,7 +11,7 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
     refute empty_html =~ ~s(aria-label="Clear search")
   end
 
-  test "header links to the model metadata issue form" do
+  test "header links to developer resources and the model metadata issue form" do
     html = render_component(&ModelComponents.header/1, search_value: "")
 
     assert html =~ ~s(nav aria-label="Site navigation")
@@ -30,9 +30,10 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
     assert html =~ ~s(aria-label="Change color theme")
     assert html =~ "Report incorrect model data"
     assert html =~ "template=model_metadata.yml"
-    refute html =~ ~s(href="/developers")
-    refute html =~ ~s(href="/openapi.json")
-    refute html =~ "www.npmjs.com/package/@agentjido/llmdb"
+    assert html =~ ~s(href="/developers")
+    assert html =~ ~s(href="/openapi.json")
+    assert html =~ ~s(href="/contact")
+    assert html =~ "www.npmjs.com/package/@agentjido/llmdb"
   end
 
   test "model detail modal renders proposed advanced model metadata" do

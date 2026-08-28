@@ -40,7 +40,7 @@ defmodule PetalBoilerplateWeb.CatalogLandingLiveTest do
 
   test "includes all approved landing pages in the curated sitemap source" do
     assert Enum.all?(LandingPages.routes(), &(&1 in SEO.search_indexable_paths()))
-    assert length(SEO.search_indexable_paths()) == 13
+    assert length(SEO.search_indexable_paths()) == 14
   end
 
   test "zero-price page uses conservative free-offer language", %{conn: conn} do

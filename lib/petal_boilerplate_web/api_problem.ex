@@ -11,6 +11,7 @@ defmodule PetalBoilerplateWeb.APIProblem do
     bad_request: "Bad request",
     not_found: "Not found",
     method_not_allowed: "Method not allowed",
+    too_many_requests: "Too many requests",
     service_unavailable: "Service unavailable"
   }
 

@@ -63,7 +63,7 @@ defmodule PetalBoilerplateWeb.Plugs.LLMResponse do
           |> put_resp_header("x-robots-tag", "noindex")
           |> add_link_entries(["<#{canonical_url}>; rel=\"canonical\""])
           |> put_resp_content_type("text/markdown", "utf-8")
-          |> send_resp(200, markdown)
+          |> send_resp(200, add_frontmatter(markdown, canonical_url))
           |> halt()
 
         :no_match ->
@@ -83,7 +83,11 @@ defmodule PetalBoilerplateWeb.Plugs.LLMResponse do
       "</llms.txt>; rel=\"alternate\"; type=\"text/plain\"",
       "<#{markdown_url}>; rel=\"alternate\"; type=\"text/markdown\"",
       "</openapi.json>; rel=\"service-desc\"; type=\"application/json\"",
-      "</developers>; rel=\"help\"; type=\"text/html\""
+      "</developers>; rel=\"help\"; type=\"text/html\"",
+      "</.well-known/ard.json>; rel=\"ard\"; type=\"application/json\"",
+      "</.well-known/ai-catalog.json>; rel=\"ai-catalog\"; type=\"application/json\"",
+      "</.well-known/api-catalog>; rel=\"api-catalog\"; type=\"application/linkset+json\"",
+      "</.well-known/mcp/server-card.json>; rel=\"service-desc\"; type=\"application/mcp-server-card+json\""
     ])
   end
 
@@ -117,6 +121,26 @@ defmodule PetalBoilerplateWeb.Plugs.LLMResponse do
     |> String.split(",")
     |> Enum.map(&String.trim/1)
     |> Enum.reject(&(&1 == ""))
+  end
+
+  defp add_frontmatter(markdown, canonical_url) do
+    title =
+      case Regex.run(~r/^#\s+(.+)$/m, markdown, capture: :all_but_first) do
+        [heading] -> String.trim(heading)
+        _match -> "LLM Catalog by Jidoka Labs"
+      end
+
+    """
+    ---
+    title: #{Jason.encode!(title)}
+    description: #{Jason.encode!("Machine-readable Markdown for #{title} from LLM Catalog by Jidoka Labs.")}
+    canonical: #{Jason.encode!(canonical_url)}
+    canonical_url: #{Jason.encode!(canonical_url)}
+    source: "LLM Catalog by Jidoka Labs"
+    ---
+
+    #{String.trim_leading(markdown)}
+    """
   end
 
   defp exact_html_model?(path), do: match?({:ok, _model}, PublicRoutes.model_from_path(path))

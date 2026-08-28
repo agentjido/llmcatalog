@@ -177,8 +177,34 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 <a href="/about" class="rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]">
                   About
                 </a>
+                <a
+                  href="/developers"
+                  class="rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
+                >
+                  Developers
+                </a>
+                <a
+                  href="/openapi.json"
+                  class="rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
+                >
+                  OpenAPI
+                </a>
+                <a
+                  href="/contact"
+                  class="rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
+                >
+                  Contact
+                </a>
                 <a href="/privacy" class="rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]">
                   Privacy
+                </a>
+                <a
+                  href="https://www.npmjs.com/package/@agentjido/llmdb"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
+                >
+                  npm package
                 </a>
               </div>
               <a

@@ -20,6 +20,8 @@ defmodule PetalBoilerplateWeb.Router do
   pipeline :api do
     plug :accepts, ["json"]
     plug PetalBoilerplateWeb.Plug.RequestAudit
+    plug PetalBoilerplateWeb.Plugs.RateLimit
+    plug PetalBoilerplateWeb.Plugs.APIVersion
   end
 
   scope "/", PetalBoilerplateWeb do
@@ -37,6 +39,7 @@ defmodule PetalBoilerplateWeb.Router do
     live "/models/video", CatalogLandingLive, :video
     live "/history", HistoryLive, :index
     live "/about", AboutLive, :index
+    live "/contact", ContactLive, :index
     live "/developers", DevelopersLive, :index
     live "/privacy", PrivacyLive, :index
 
@@ -44,6 +47,12 @@ defmodule PetalBoilerplateWeb.Router do
     get "/sitemap.xml", DiscoveryController, :sitemap
     get "/llms.txt", DiscoveryController, :llms
     get "/feed", DiscoveryController, :feed
+    get "/.well-known/ard.json", DiscoveryController, :ard
+    get "/.well-known/ai-catalog.json", DiscoveryController, :ard
+    get "/.well-known/agent-skills/index.json", DiscoveryController, :agent_skills
+    get "/.well-known/agent-skills/llm-catalog/SKILL.md", DiscoveryController, :agent_skill
+    get "/.well-known/mcp/server-card.json", DiscoveryController, :mcp_server_card
+    get "/.well-known/api-catalog", DiscoveryController, :api_catalog
 
     # OG image endpoints (PNG images for social sharing)
     get "/og/default.png", OGImageController, :default
@@ -68,6 +77,8 @@ defmodule PetalBoilerplateWeb.Router do
   scope "/api", PetalBoilerplateWeb do
     pipe_through :api
 
+    get "/v1/history/recent", HistoryController, :recent
+    get "/v1/history/:provider/*id", HistoryController, :model
     get "/history/recent", HistoryController, :recent
     get "/history/:provider/*id", HistoryController, :model
     post "/mcp", MCPController, :handle

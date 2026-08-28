@@ -47,8 +47,11 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
 
     assert body =~ "User-agent: *"
     assert body =~ "Allow: /"
+    assert body =~ "User-agent: OAI-SearchBot\nAllow: /"
+    assert body =~ "User-agent: ClaudeBot\nAllow: /"
+    assert body =~ "User-agent: CCBot\nDisallow: /"
+    assert body =~ "User-agent: Bytespider\nDisallow: /"
     assert body =~ "Sitemap: #{PublicRoutes.absolute("/sitemap.xml")}"
-    refute body =~ "Disallow: /"
     refute body =~ "Disallow: /models/"
     assert get_resp_header(conn, "content-type") |> hd() =~ "text/plain"
   end
@@ -98,6 +101,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert SEO.search_indexable_paths() == [
              "/",
              "/about",
+             "/contact",
              "/developers",
              "/llm-models",
              "/privacy",
@@ -139,15 +143,45 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert body =~ PublicRoutes.absolute("/models/open-weights")
     assert body =~ PublicRoutes.absolute("/models/video")
     assert body =~ PublicRoutes.absolute("/api/mcp")
+    assert body =~ PublicRoutes.absolute("/api/v1/history/recent")
     assert body =~ PublicRoutes.absolute("/developers")
     assert body =~ PublicRoutes.absolute("/openapi.json")
     assert body =~ PublicRoutes.absolute("/privacy")
     assert body =~ "https://www.npmjs.com/package/@agentjido/llmdb"
     assert body =~ "## When to use this site"
     assert body =~ "## When not to use this site"
-    assert body =~ "not a complete MCP protocol server"
+    assert body =~ "MCP Streamable HTTP endpoint"
+    assert body =~ "2025-11-25"
     assert body =~ "query_models"
     assert get_resp_header(conn, "x-robots-tag") == ["noindex"]
+  end
+
+  test "well-known documents advertise the API, MCP server, and agent skill", %{conn: conn} do
+    ard = conn |> get("/.well-known/ard.json") |> json_response(200)
+    assert ard["specVersion"] == "1.0"
+    assert Enum.any?(ard["entries"], &(&1["url"] == PublicRoutes.absolute("/openapi.json")))
+
+    skill_index =
+      build_conn() |> get("/.well-known/agent-skills/index.json") |> json_response(200)
+
+    [skill] = skill_index["skills"]
+    assert skill["name"] == "llm-catalog"
+    assert skill["digest"] =~ "sha256:"
+
+    skill_body = build_conn() |> get(skill["url"]) |> response(200)
+    assert skill_body =~ "name: llm-catalog"
+    assert skill_body =~ "https://llmcatalog.dev/api/mcp"
+
+    digest = :crypto.hash(:sha256, skill_body) |> Base.encode16(case: :lower)
+    assert skill["digest"] == "sha256:#{digest}"
+
+    server_card = build_conn() |> get("/.well-known/mcp/server-card.json") |> json_response(200)
+    assert server_card["name"] == "io.github.agentjido.llmcatalog"
+    assert hd(server_card["remotes"])["type"] == "streamable-http"
+
+    api_catalog = build_conn() |> get("/.well-known/api-catalog")
+    assert response(api_catalog, 200) =~ PublicRoutes.absolute("/openapi.json")
+    assert get_resp_header(api_catalog, "content-type") |> hd() =~ "application/linkset+json"
   end
 
   test "RSS feed uses stable event IDs, dates, and model links", %{conn: conn} do

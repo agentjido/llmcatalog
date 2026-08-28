@@ -80,6 +80,16 @@
       title="LLM Catalog Model History"
       href={PetalBoilerplateWeb.PublicRoutes.absolute("/feed")}
     />
+    <link rel="ard" href={PetalBoilerplateWeb.PublicRoutes.absolute("/.well-known/ard.json")} />
+    <link
+      rel="ai-catalog"
+      href={PetalBoilerplateWeb.PublicRoutes.absolute("/.well-known/ai-catalog.json")}
+    />
+    <link
+      rel="service-desc"
+      type="application/mcp-server-card+json"
+      href={PetalBoilerplateWeb.PublicRoutes.absolute("/.well-known/mcp/server-card.json")}
+    />
 
     <%= for json <- structured_data do %>
       <script type="application/ld+json" data-seo-structured-data>

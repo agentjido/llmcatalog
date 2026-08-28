@@ -8,6 +8,7 @@
 import Config
 
 config :petal_boilerplate,
+  api_rate_limit: [limit: 120, window_seconds: 60],
   ecto_repos: [],
   history_module: PetalBoilerplate.History,
   legacy_hosts: ["llmdb.xyz", "www.llmdb.xyz"],

@@ -8,15 +8,35 @@ defmodule PetalBoilerplateWeb.OpenAPIControllerTest do
     assert document["openapi"] == "3.1.0"
     assert document["info"]["title"] == "LLM Catalog by Jidoka Labs API"
 
-    assert document["paths"]["/api/history/recent"]["get"]["operationId"] ==
+    assert document["paths"]["/api/v1/history/recent"]["get"]["operationId"] ==
              "listRecentModelHistory"
 
-    assert document["paths"]["/api/history/{provider}/{model_id}"]["get"]["operationId"] ==
+    assert document["paths"]["/api/v1/history/{provider}/{model_id}"]["get"]["operationId"] ==
              "getModelHistory"
 
-    assert document["paths"]["/api/mcp"]["post"]["operationId"] == "invokeCatalogTool"
+    assert document["paths"]["/api/history/recent"]["get"]["deprecated"]
+    assert document["x-api-versioning"]["current"] == "v1"
+    assert document["paths"]["/api/mcp"]["post"]["operationId"] == "sendMCPMessage"
+    assert document["paths"]["/api/mcp"]["post"]["responses"]["429"]
     assert "resolution" in document["components"]["schemas"]["Problem"]["required"]
     assert get_resp_header(conn, "x-robots-tag") == ["noindex"]
+  end
+
+  test "versioned routes publish quota fields and old routes publish deprecation fields", %{
+    conn: conn
+  } do
+    versioned = get(conn, "/api/v1/history/recent?limit=1")
+
+    assert get_resp_header(versioned, "api-version") == ["1"]
+    assert get_resp_header(versioned, "ratelimit-policy") != []
+    assert get_resp_header(versioned, "ratelimit") != []
+    assert get_resp_header(versioned, "deprecation") == []
+
+    legacy = build_conn() |> get("/api/history/recent?limit=1")
+
+    assert get_resp_header(legacy, "deprecation") == ["true"]
+    assert get_resp_header(legacy, "link") |> hd() =~ ~s(rel="successor-version")
+    assert get_resp_header(legacy, "link") |> hd() =~ "/api/v1/history/recent"
   end
 
   test "unknown API routes and wrong methods return problem JSON", %{conn: conn} do

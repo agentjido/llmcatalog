@@ -19,6 +19,9 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
 
     assert link =~ ~s(</openapi.json>; rel="service-desc"; type="application/json")
     assert link =~ ~s(</developers>; rel="help"; type="text/html")
+    assert link =~ ~s(</.well-known/ard.json>; rel="ard"; type="application/json")
+    assert link =~ ~s(</.well-known/api-catalog>; rel="api-catalog")
+    assert link =~ ~s(</.well-known/mcp/server-card.json>; rel="service-desc")
 
     assert vary =~ "Accept"
   end
@@ -43,6 +46,10 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
 
     assert body =~ "# GPT-4o"
     assert body =~ "Provider: openai"
+    assert body =~ ~s(title: "GPT-4o")
+    assert body =~ ~s(description: "Machine-readable Markdown for GPT-4o)
+    assert body =~ ~s(canonical: "#{PublicRoutes.absolute(path)}")
+    assert body =~ ~s(canonical_url: "#{PublicRoutes.absolute(path)}")
   end
 
   test "explicit Markdown routes return deterministic page equivalents", %{conn: conn} do
@@ -50,6 +57,7 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
           {"/index.md", "# LLM Catalog by Jidoka Labs"},
           {"/llm-models.md", "# LLM Models List"},
           {"/about.md", "# About LLM Catalog"},
+          {"/contact.md", "# Contact LLM Catalog"},
           {"/developers.md", "# LLM Catalog by Jidoka Labs developer guide"},
           {"/privacy.md", "# LLM Catalog by Jidoka Labs privacy policy"},
           {"/history.md", "# Recent LLM Model History"}

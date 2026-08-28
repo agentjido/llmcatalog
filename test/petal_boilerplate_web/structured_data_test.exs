@@ -1,7 +1,7 @@
 defmodule PetalBoilerplateWeb.StructuredDataTest do
   use PetalBoilerplateWeb.ConnCase, async: false
 
-  test "home page emits Organization, WebSite, and Dataset JSON-LD", %{conn: conn} do
+  test "home page emits Organization, WebSite, Dataset, and FAQ JSON-LD", %{conn: conn} do
     html =
       conn
       |> get("/")
@@ -11,12 +11,20 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     organization = Enum.find(schemas, &(&1["@type"] == "Organization"))
     website = Enum.find(schemas, &(&1["@type"] == "WebSite"))
     dataset = Enum.find(schemas, &(&1["@type"] == "Dataset"))
+    faq = Enum.find(schemas, &(&1["@type"] == "FAQPage"))
     home_url = PetalBoilerplateWeb.Endpoint.url() <> "/"
 
-    assert Enum.map(schemas, & &1["@type"]) == ["Organization", "WebSite", "Dataset"]
+    assert Enum.map(schemas, & &1["@type"]) == [
+             "Organization",
+             "WebSite",
+             "Dataset",
+             "FAQPage"
+           ]
+
     assert website["url"] == home_url
     assert dataset["url"] == home_url
     assert organization["name"] == "Jidoka Labs"
+    assert organization["contactPoint"]["url"] == home_url <> "contact"
     assert "https://github.com/agentjido" in organization["sameAs"]
     assert "https://www.npmjs.com/package/@agentjido/llmdb" in organization["sameAs"]
     assert website["name"] == "LLM Catalog by Jidoka Labs"
@@ -27,13 +35,16 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     assert dataset["license"] == "https://www.apache.org/licenses/LICENSE-2.0"
     assert dataset["isAccessibleForFree"] == true
     assert dataset["version"] == to_string(Application.spec(:llm_db, :vsn))
+    assert length(faq["mainEntity"]) == 4
   end
 
-  test "developer and privacy pages emit page-specific JSON-LD", %{conn: conn} do
+  test "developer, contact, and privacy pages emit page-specific JSON-LD", %{conn: conn} do
     developers = conn |> get("/developers") |> html_response(200) |> json_ld()
+    contact = build_conn() |> get("/contact") |> html_response(200) |> json_ld()
     privacy = build_conn() |> get("/privacy") |> html_response(200) |> json_ld()
 
     assert Enum.map(developers, & &1["@type"]) == ["TechArticle"]
+    assert Enum.map(contact, & &1["@type"]) == ["ContactPage"]
     assert Enum.map(privacy, & &1["@type"]) == ["WebPage"]
   end
 

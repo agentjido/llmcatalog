@@ -2,243 +2,125 @@ defmodule PetalBoilerplateWeb.MCPController do
   use PetalBoilerplateWeb, :controller
 
   alias PetalBoilerplateWeb.APIProblem
+  alias PetalBoilerplateWeb.MCP
 
-  def handle(conn, %{"method" => "tools/list"}) do
-    tools = [
-      %{
-        name: "query_models",
-        description:
-          "Search and filter LLM models by capabilities, provider, cost, and other criteria",
-        inputSchema: %{
-          type: "object",
-          properties: %{
-            provider: %{
-              type: "string",
-              description: "Filter by provider (openai, anthropic, google, etc)"
-            },
-            capabilities: %{
-              type: "object",
-              properties: %{
-                chat: %{type: "boolean"},
-                embeddings: %{type: "boolean"},
-                reasoning: %{type: "boolean"},
-                tools: %{type: "boolean"},
-                vision: %{type: "boolean"}
-              }
-            },
-            max_cost_input: %{
-              type: "number",
-              description: "Maximum input cost per million tokens"
-            },
-            max_cost_output: %{
-              type: "number",
-              description: "Maximum output cost per million tokens"
-            },
-            min_context: %{type: "integer", description: "Minimum context window size"},
-            limit: %{type: "integer", description: "Maximum number of results to return"}
-          }
-        }
-      },
-      %{
-        name: "get_model",
-        description:
-          "Get detailed information about a specific model by spec (provider:model_id)",
-        inputSchema: %{
-          type: "object",
-          properties: %{
-            spec: %{
-              type: "string",
-              description: "Model spec in format 'provider:model_id' (e.g. 'openai:gpt-4o')"
-            }
-          },
-          required: ["spec"]
-        }
-      },
-      %{
-        name: "list_providers",
-        description: "Get list of all LLM providers",
-        inputSchema: %{type: "object", properties: %{}}
-      }
-    ]
+  @jsonrpc "2.0"
 
-    json(conn, %{tools: tools})
-  end
-
-  def handle(conn, %{
-        "method" => "tools/call",
-        "params" => %{"name" => "query_models", "arguments" => args}
-      }) do
-    all_models = LLMDB.models()
-
-    filtered =
-      all_models
-      |> filter_by_provider(args["provider"])
-      |> filter_by_capabilities(args["capabilities"])
-      |> filter_by_cost(args["max_cost_input"], args["max_cost_output"])
-      |> filter_by_context(args["min_context"])
-      |> limit_results(args["limit"])
-
-    results =
-      Enum.map(filtered, fn model ->
-        %{
-          spec: "#{model.provider}:#{model.id}",
-          name: model.name,
-          provider: model.provider,
-          family: model.family,
-          capabilities: serialize_capabilities(model.capabilities),
-          cost: model.cost,
-          limits: model.limits,
-          modalities: model.modalities
-        }
-      end)
-
-    json(conn, %{content: [%{type: "text", text: Jason.encode!(results, pretty: true)}]})
-  end
-
-  def handle(conn, %{
-        "method" => "tools/call",
-        "params" => %{"name" => "get_model", "arguments" => %{"spec" => spec}}
-      }) do
-    case LLMDB.model(spec) do
-      {:ok, model} ->
-        result = %{
-          spec: "#{model.provider}:#{model.id}",
-          id: model.id,
-          name: model.name,
-          provider: model.provider,
-          family: model.family,
-          aliases: model.aliases,
-          tags: model.tags,
-          capabilities: serialize_capabilities(model.capabilities),
-          cost: model.cost,
-          limits: model.limits,
-          modalities: model.modalities,
-          deprecated: model.deprecated
-        }
-
-        json(conn, %{content: [%{type: "text", text: Jason.encode!(result, pretty: true)}]})
-
-      {:error, _} ->
-        json(conn, %{content: [%{type: "text", text: "Model not found: #{spec}"}], isError: true})
+  def handle(conn, %{"jsonrpc" => @jsonrpc} = request) do
+    if Map.has_key?(request, "id") do
+      handle_request(conn, request)
+    else
+      handle_notification(conn, request)
     end
   end
 
-  def handle(conn, %{"method" => "tools/call", "params" => %{"name" => "list_providers"}}) do
-    providers =
-      LLMDB.providers()
-      |> Enum.map(fn provider ->
-        %{
-          id: provider.id,
-          name: provider.name,
-          base_url: provider.base_url,
-          model_count: length(LLMDB.models(provider.id))
-        }
-      end)
-
-    json(conn, %{content: [%{type: "text", text: Jason.encode!(providers, pretty: true)}]})
+  # Compatibility for clients that used the former small tool interface.
+  def handle(conn, %{"method" => "tools/list"}) do
+    json(conn, %{tools: MCP.tools()})
   end
 
-  def handle(conn, _params) do
+  def handle(conn, %{
+        "method" => "tools/call",
+        "params" => %{"name" => name} = params
+      }) do
+    case MCP.call_tool(name, Map.get(params, "arguments", %{})) do
+      {:ok, result} -> json(conn, result)
+      {:error, message} -> invalid_legacy_request(conn, message)
+    end
+  end
+
+  def handle(conn, _params), do: invalid_legacy_request(conn, "Unsupported tool request.")
+
+  defp handle_request(conn, %{"id" => id, "method" => "initialize"} = request) do
+    result = MCP.initialize(Map.get(request, "params", %{}))
+    jsonrpc_result(conn, id, result, result.protocolVersion)
+  end
+
+  defp handle_request(conn, %{"id" => id, "method" => "ping"}) do
+    jsonrpc_result(conn, id, %{})
+  end
+
+  defp handle_request(conn, %{"id" => id, "method" => "tools/list"}) do
+    jsonrpc_result(conn, id, %{tools: MCP.tools()})
+  end
+
+  defp handle_request(
+         conn,
+         %{"id" => id, "method" => "tools/call", "params" => %{"name" => name} = params}
+       ) do
+    case MCP.call_tool(name, Map.get(params, "arguments", %{})) do
+      {:ok, result} -> jsonrpc_result(conn, id, result)
+      {:error, message} -> jsonrpc_error(conn, id, -32602, message)
+    end
+  end
+
+  defp handle_request(conn, %{"id" => id, "method" => "resources/list"}) do
+    jsonrpc_result(conn, id, %{resources: MCP.resources()})
+  end
+
+  defp handle_request(
+         conn,
+         %{"id" => id, "method" => "resources/read", "params" => %{"uri" => uri}}
+       ) do
+    case MCP.read_resource(uri) do
+      {:ok, result} -> jsonrpc_result(conn, id, result)
+      {:error, :not_found} -> jsonrpc_error(conn, id, -32002, "Resource not found", %{uri: uri})
+    end
+  end
+
+  defp handle_request(conn, %{"id" => id, "method" => "resources/templates/list"}) do
+    jsonrpc_result(conn, id, %{resourceTemplates: []})
+  end
+
+  defp handle_request(conn, %{"id" => id}) do
+    jsonrpc_error(conn, id, -32601, "Method not found")
+  end
+
+  defp handle_notification(conn, %{"method" => method})
+       when method in ["notifications/initialized", "notifications/cancelled"] do
+    conn
+    |> put_resp_header("cache-control", "no-store")
+    |> send_resp(202, "")
+  end
+
+  defp handle_notification(conn, _request) do
+    conn
+    |> put_resp_header("cache-control", "no-store")
+    |> send_resp(202, "")
+  end
+
+  defp jsonrpc_result(conn, id, result, protocol_version \\ nil) do
+    conn
+    |> maybe_put_protocol_version(protocol_version)
+    |> put_resp_header("cache-control", "no-store")
+    |> put_resp_content_type("application/json", "utf-8")
+    |> send_resp(200, Jason.encode!(%{jsonrpc: @jsonrpc, id: id, result: result}))
+  end
+
+  defp jsonrpc_error(conn, id, code, message, data \\ nil) do
+    error = %{code: code, message: message}
+    error = if is_nil(data), do: error, else: Map.put(error, :data, data)
+
+    conn
+    |> put_resp_header("cache-control", "no-store")
+    |> put_resp_content_type("application/json", "utf-8")
+    |> send_resp(200, Jason.encode!(%{jsonrpc: @jsonrpc, id: id, error: error}))
+  end
+
+  defp maybe_put_protocol_version(conn, nil), do: conn
+
+  defp maybe_put_protocol_version(conn, protocol_version) do
+    put_resp_header(conn, "mcp-protocol-version", protocol_version)
+  end
+
+  defp invalid_legacy_request(conn, detail) do
     APIProblem.respond(
       conn,
       :bad_request,
       "invalid_tool_request",
-      "The request does not match a supported tool operation.",
-      resolution: "Use tools/list or tools/call as documented on /developers."
+      detail,
+      resolution:
+        "Send a JSON-RPC 2.0 initialize request, then use tools/list or tools/call as documented on /developers."
     )
-  end
-
-  defp filter_by_provider(models, nil), do: models
-
-  defp filter_by_provider(models, provider) when is_binary(provider) do
-    provider_atom = String.to_existing_atom(provider)
-    Enum.filter(models, fn model -> model.provider == provider_atom end)
-  rescue
-    ArgumentError -> models
-  end
-
-  defp filter_by_capabilities(models, nil), do: models
-
-  defp filter_by_capabilities(models, caps) when is_map(caps) do
-    Enum.filter(models, fn model ->
-      model_caps = model.capabilities || %{}
-
-      Enum.all?(caps, fn {key, required} ->
-        key_atom = if is_binary(key), do: String.to_existing_atom(key), else: key
-
-        cond do
-          not required -> true
-          key_atom == :chat -> Map.get(model_caps, :chat) == true
-          key_atom == :embeddings -> Map.get(model_caps, :embeddings) == true
-          key_atom == :reasoning -> get_in(model_caps, [:reasoning, :enabled]) == true
-          key_atom == :tools -> get_in(model_caps, [:tools, :enabled]) == true
-          key_atom == :vision -> :image in (get_in(model_caps, [:modalities, :input]) || [])
-          true -> false
-        end
-      end)
-    end)
-  rescue
-    ArgumentError -> models
-  end
-
-  defp filter_by_cost(models, max_in, max_out) do
-    models
-    |> filter_by_cost_input(max_in)
-    |> filter_by_cost_output(max_out)
-  end
-
-  defp filter_by_cost_input(models, nil), do: models
-
-  defp filter_by_cost_input(models, max_cost) when is_number(max_cost) do
-    Enum.filter(models, fn model ->
-      case get_in(model.cost, [:input]) do
-        cost when is_number(cost) -> cost <= max_cost
-        _ -> false
-      end
-    end)
-  end
-
-  defp filter_by_cost_output(models, nil), do: models
-
-  defp filter_by_cost_output(models, max_cost) when is_number(max_cost) do
-    Enum.filter(models, fn model ->
-      case get_in(model.cost, [:output]) do
-        cost when is_number(cost) -> cost <= max_cost
-        _ -> false
-      end
-    end)
-  end
-
-  defp filter_by_context(models, nil), do: models
-
-  defp filter_by_context(models, min_context) when is_integer(min_context) do
-    Enum.filter(models, fn model ->
-      case get_in(model.limits, [:context]) do
-        context when is_integer(context) -> context >= min_context
-        _ -> false
-      end
-    end)
-  end
-
-  defp limit_results(models, nil), do: models
-
-  defp limit_results(models, limit) when is_integer(limit) and limit > 0 do
-    Enum.take(models, limit)
-  end
-
-  defp limit_results(models, _), do: models
-
-  defp serialize_capabilities(nil), do: %{}
-
-  defp serialize_capabilities(caps) do
-    %{
-      chat: Map.get(caps, :chat, false),
-      embeddings: Map.get(caps, :embeddings, false),
-      reasoning: get_in(caps, [:reasoning, :enabled]) || false,
-      tools: get_in(caps, [:tools, :enabled]) || false,
-      tools_streaming: get_in(caps, [:tools, :streaming]) || false,
-      json_native: get_in(caps, [:json, :native]) || false,
-      streaming_text: get_in(caps, [:streaming, :text]) || false
-    }
   end
 end
