@@ -77,7 +77,7 @@ defmodule PetalBoilerplate.MixProject do
       {:zoi, "~> 0.18"},
 
       # Domain
-      {:llm_db, "~> 2026.8"},
+      {:llm_db, "~> 2026.9"},
 
       # Agent protocols
       {:ex_mcp, "~> 1.1.1"},

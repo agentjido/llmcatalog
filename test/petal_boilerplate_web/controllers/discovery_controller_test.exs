@@ -145,7 +145,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert Enum.all?(lastmods, &match?({:ok, _date}, Date.from_iso8601(&1)))
 
     assert Enum.find(SEO.search_indexable_entries(), &(&1.path == "/developers")).lastmod ==
-             ~D[2026-08-28]
+             ~D[2026-09-01]
 
     refute body =~ "/history"
 
