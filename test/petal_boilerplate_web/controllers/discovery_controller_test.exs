@@ -144,8 +144,14 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert length(lastmods) == length(locations)
     assert Enum.all?(lastmods, &match?({:ok, _date}, Date.from_iso8601(&1)))
 
+    {:ok, catalog_generated_at, _offset} =
+      DateTime.from_iso8601(LLMDB.Packaged.snapshot()["generated_at"])
+
+    expected_developers_lastmod =
+      Enum.max([~D[2026-08-28], DateTime.to_date(catalog_generated_at)], Date)
+
     assert Enum.find(SEO.search_indexable_entries(), &(&1.path == "/developers")).lastmod ==
-             ~D[2026-09-01]
+             expected_developers_lastmod
 
     refute body =~ "/history"
 
