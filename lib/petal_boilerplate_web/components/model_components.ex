@@ -156,6 +156,18 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                 LLM models list
               </a>
               <a
+                href="/models/evaluation"
+                class="block rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
+              >
+                Evaluation models
+              </a>
+              <a
+                href="/providers"
+                class="block rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
+              >
+                Providers
+              </a>
+              <a
                 href="/rankings/ai-models"
                 class="block rounded-md px-2 py-2 text-sm hover:bg-[hsl(var(--muted))]"
               >
@@ -246,6 +258,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   @capability_colors %{
     chat: "--cap-chat",
+    evaluate: "--cap-tools",
     tools: "--cap-tools",
     vision: "--cap-vision",
     reasoning: "--cap-reason",
@@ -263,6 +276,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   @capability_labels %{
     chat: "Chat",
+    evaluate: "Evaluate",
     tools: "Tools",
     vision: "Vision",
     reasoning: "Reasoning",
@@ -280,6 +294,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   @capability_icons %{
     chat: "hero-chat-bubble-left",
+    evaluate: "hero-check-circle",
     tools: "hero-wrench",
     vision: "hero-eye",
     reasoning: "hero-academic-cap",
@@ -664,6 +679,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   defp capabilities_filter_content(assigns) do
     capabilities = [
       {:chat, "Chat"},
+      {:evaluate, "Evaluate"},
       {:tools, "Tools"},
       {:streaming_text, "Streaming"},
       {:reasoning, "Reasoning"},
@@ -1676,6 +1692,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
   defp model_capability_labels(model) do
     [
+      {:evaluate, model_has_capability?(model, :evaluate)},
       {:reasoning, model_has_capability?(model, :reasoning)},
       {:tools, model_has_capability?(model, :tools)},
       {:batch, model_has_capability?(model, :batch)},
@@ -1835,6 +1852,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             <h3 class="text-sm font-semibold mb-3">Capabilities</h3>
             <div class="flex flex-wrap gap-2">
               <.capability_badge :if={model_has_capability?(@model, :chat)} capability={:chat} />
+              <.capability_badge
+                :if={model_has_capability?(@model, :evaluate)}
+                capability={:evaluate}
+              />
               <.capability_badge
                 :if={model_has_capability?(@model, :reasoning)}
                 capability={:reasoning}
@@ -2129,6 +2150,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   def comparison_modal(assigns) do
     capabilities = [
       :chat,
+      :evaluate,
       :tools,
       :batch,
       :citations,
@@ -2463,6 +2485,9 @@ defmodule PetalBoilerplateWeb.ModelComponents do
     do: capability_enabled?(model.capabilities, [:reasoning, :enabled])
 
   defp model_has_capability?(model, :embeddings), do: embeddings_enabled?(model.capabilities)
+
+  defp model_has_capability?(model, :evaluate),
+    do: capability_enabled?(model.capabilities, [:evaluate])
 
   defp model_has_capability?(model, :json_output) do
     capability_enabled?(model.capabilities, [:json, :native]) ||
@@ -3252,6 +3277,18 @@ defmodule PetalBoilerplateWeb.ModelComponents do
                         style="border-color: hsl(var(--border));"
                       />
                       <span class="text-sm">Chat</span>
+                    </label>
+
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="cap_evaluate"
+                        value="true"
+                        checked={@filters.capabilities.evaluate}
+                        class="rounded"
+                        style="border-color: hsl(var(--border));"
+                      />
+                      <span class="text-sm">Evaluate</span>
                     </label>
 
                     <label class="flex items-center gap-2 cursor-pointer">

@@ -34,6 +34,7 @@ defmodule PetalBoilerplate.Catalog do
 
   @capability_definitions [
     {:chat, [:chat], "Chat", "Supports conversational chat interactions"},
+    {:evaluate, [:evaluate], "Evaluate", "Returns typed decisions for evaluation questions"},
     {:embeddings, [:embeddings], "Embed", "Can generate text embeddings for semantic search"},
     {:reasoning, [:reasoning, :enabled], "Reason",
      "Extended thinking and chain-of-thought reasoning"},

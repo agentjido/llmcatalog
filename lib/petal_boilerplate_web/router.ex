@@ -34,6 +34,7 @@ defmodule PetalBoilerplateWeb.Router do
 
     live "/", ModelLive, :index
     live "/llm-models", LLMModelsLive, :index
+    live "/providers", ProvidersLive, :index
     live "/rankings/cheapest-llm-api", CatalogLandingLive, :cheapest
     live "/rankings/free-llm-api", CatalogLandingLive, :free
     live "/rankings/ai-models", CatalogLandingLive, :ai_models
@@ -42,6 +43,7 @@ defmodule PetalBoilerplateWeb.Router do
     live "/models/long-context", CatalogLandingLive, :long_context
     live "/models/open-weights", CatalogLandingLive, :open_weights
     live "/models/video", CatalogLandingLive, :video
+    live "/models/evaluation", EvaluationLive, :index
     live "/history", HistoryLive, :index
     live "/about", AboutLive, :index
     live "/contact", ContactLive, :index

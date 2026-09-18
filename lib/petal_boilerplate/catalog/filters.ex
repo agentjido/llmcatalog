@@ -90,6 +90,14 @@ defmodule PetalBoilerplate.Catalog.Filters do
       target: :tools
     },
     %{
+      key: :evaluate,
+      label: "Evaluate",
+      icon: "hero-check-circle",
+      description: "Models with an explicit evaluation capability",
+      filter_type: :capability,
+      target: :evaluate
+    },
+    %{
       key: :vision,
       label: "Vision",
       icon: "hero-eye",
