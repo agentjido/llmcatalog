@@ -17,6 +17,7 @@ defmodule PetalBoilerplateWeb.SEO do
 
   alias PetalBoilerplate.SEOContent
   alias PetalBoilerplate.SEOContent.Page
+  alias PetalBoilerplate.Catalog.ProviderDirectory
   alias PetalBoilerplateWeb.LandingLinks
   alias PetalBoilerplateWeb.PublicRoutes
 
@@ -27,6 +28,7 @@ defmodule PetalBoilerplateWeb.SEO do
     "/contact",
     "/developers",
     "/llm-models",
+    "/providers",
     "/privacy",
     "/rankings/ai-models",
     "/rankings/cheapest-llm-api",
@@ -35,7 +37,8 @@ defmodule PetalBoilerplateWeb.SEO do
     "/models/tool-calling",
     "/models/long-context",
     "/models/open-weights",
-    "/models/video"
+    "/models/video",
+    "/models/evaluation"
   ]
 
   @spec default_description() :: String.t()
@@ -191,6 +194,27 @@ defmodule PetalBoilerplateWeb.SEO do
         "url" => PublicRoutes.absolute("/about")
       }
     ]
+  end
+
+  defp directory_breadcrumb_structured_data(label, route) do
+    %{
+      "@context" => "https://schema.org",
+      "@type" => "BreadcrumbList",
+      "itemListElement" => [
+        %{
+          "@type" => "ListItem",
+          "position" => 1,
+          "name" => "LLM Catalog",
+          "item" => PublicRoutes.absolute("/")
+        },
+        %{
+          "@type" => "ListItem",
+          "position" => 2,
+          "name" => label,
+          "item" => PublicRoutes.absolute(route)
+        }
+      ]
+    }
   end
 
   @spec developers_structured_data(String.t()) :: [map()]
@@ -355,6 +379,71 @@ defmodule PetalBoilerplateWeb.SEO do
       })
 
     [collection_page, breadcrumb_structured_data(page.route)]
+  end
+
+  @spec provider_directory_structured_data([map()]) :: [map()]
+  def provider_directory_structured_data(entries) do
+    url = PublicRoutes.absolute("/providers")
+
+    [
+      %{
+        "@context" => "https://schema.org",
+        "@type" => "CollectionPage",
+        "name" => "Model Provider Directory",
+        "description" => "Catalog providers and their model record counts.",
+        "url" => url,
+        "mainEntity" => %{
+          "@type" => "ItemList",
+          "numberOfItems" => length(entries),
+          "itemListElement" =>
+            entries
+            |> Enum.with_index(1)
+            |> Enum.map(fn {entry, position} ->
+              %{
+                "@type" => "ListItem",
+                "position" => position,
+                "name" => entry.name,
+                "url" => PublicRoutes.absolute(ProviderDirectory.catalog_path(entry.id))
+              }
+            end)
+        }
+      },
+      directory_breadcrumb_structured_data("Providers", "/providers")
+    ]
+  end
+
+  @spec evaluation_structured_data(map()) :: [map()]
+  def evaluation_structured_data(snapshot) do
+    url = PublicRoutes.absolute("/models/evaluation")
+
+    items =
+      snapshot.sections
+      |> Enum.flat_map(& &1.entries)
+      |> Enum.with_index(1)
+      |> Enum.map(fn {entry, position} ->
+        %{
+          "@type" => "ListItem",
+          "position" => position,
+          "name" => "#{entry.representative.provider}:#{entry.model_id}",
+          "url" => PublicRoutes.absolute(PublicRoutes.model_path(entry.representative))
+        }
+      end)
+
+    [
+      %{
+        "@context" => "https://schema.org",
+        "@type" => "CollectionPage",
+        "name" => "Evaluation Models",
+        "description" => "Active catalog models with an explicit Evaluate capability.",
+        "url" => url,
+        "mainEntity" => %{
+          "@type" => "ItemList",
+          "numberOfItems" => snapshot.total_count,
+          "itemListElement" => items
+        }
+      },
+      directory_breadcrumb_structured_data("Evaluation Models", "/models/evaluation")
+    ]
   end
 
   @spec model_structured_data(map(), String.t()) :: [map()]

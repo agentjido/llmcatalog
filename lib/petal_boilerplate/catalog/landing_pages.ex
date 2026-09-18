@@ -57,6 +57,49 @@ defmodule PetalBoilerplate.Catalog.LandingPages do
   def snapshot(:ai_models, _page), do: ranking_snapshot()
   def snapshot(:video, _page), do: video_snapshot()
 
+  @doc """
+  Builds evaluation sections from explicit catalog capability data.
+  Accepts models so a new provider can be checked without changing page code.
+  """
+  def evaluation_snapshot(models) when is_list(models) do
+    offers =
+      models
+      |> Enum.filter(&active_evaluation_offer?/1)
+      |> Enum.sort_by(&{to_string(&1.provider), &1.model_id})
+
+    sections =
+      offers
+      |> Enum.group_by(&to_string(&1.provider))
+      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.map(fn {provider, provider_offers} ->
+        section(
+          Phoenix.Naming.humanize(provider),
+          "Exact evaluation model specs served by #{Phoenix.Naming.humanize(provider)}.",
+          Enum.map(provider_offers, &offer_entry(&1, evaluation_reason(&1)))
+        )
+      end)
+
+    base_snapshot(sections, length(offers), "Evaluation model specs")
+    |> Map.merge(%{
+      provider_count: length(sections),
+      last_updated: latest_date(Enum.map(offers, &offer_entry/1))
+    })
+  end
+
+  defp active_evaluation_offer?(model) do
+    Map.get(model, :deprecated) != true and Map.get(model, :retired) != true and
+      evaluate_capability?(Map.get(model, :capabilities, %{}))
+  end
+
+  defp evaluate_capability?(%{evaluate: true}), do: true
+  defp evaluate_capability?(%{"evaluate" => true}), do: true
+  defp evaluate_capability?(_), do: false
+
+  defp evaluation_reason(%{catalog_only: true}),
+    do: "Catalog only; ReqLLM call support is not confirmed"
+
+  defp evaluation_reason(_model), do: "Explicit Evaluate capability"
+
   @spec markdown_rows(action(), non_neg_integer()) :: [map()]
   def markdown_rows(action, limit \\ 50) do
     snapshot = snapshot(action, 1)

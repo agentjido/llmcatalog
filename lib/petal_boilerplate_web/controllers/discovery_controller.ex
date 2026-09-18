@@ -115,6 +115,8 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
 
     - [Catalog](#{endpoint_url}/)
     - [Deduplicated LLM models list](#{endpoint_url}/llm-models)
+    - [Evaluation models](#{endpoint_url}/models/evaluation)
+    - [Provider directory](#{endpoint_url}/providers)
     - [AI model rankings](#{endpoint_url}/rankings/ai-models)
     - [Cheapest LLM APIs](#{endpoint_url}/rankings/cheapest-llm-api)
     - [Zero-price LLM API offers](#{endpoint_url}/rankings/free-llm-api)

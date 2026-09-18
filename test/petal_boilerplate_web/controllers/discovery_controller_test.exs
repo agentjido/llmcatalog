@@ -128,6 +128,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
              "/contact",
              "/developers",
              "/llm-models",
+             "/providers",
              "/privacy",
              "/rankings/ai-models",
              "/rankings/cheapest-llm-api",
@@ -136,7 +137,8 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
              "/models/tool-calling",
              "/models/long-context",
              "/models/open-weights",
-             "/models/video"
+             "/models/video",
+             "/models/evaluation"
            ]
 
     assert locations == expected_locations

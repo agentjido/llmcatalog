@@ -6,6 +6,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
   alias PetalBoilerplate.Catalog
   alias PetalBoilerplate.Catalog.LandingPages
   alias PetalBoilerplate.Catalog.LLMModelsList
+  alias PetalBoilerplate.Catalog.ProviderDirectory
   alias PetalBoilerplate.SEOContent
   alias PetalBoilerplateWeb.LandingLinks
   alias PetalBoilerplateWeb.PublicRoutes
@@ -21,6 +22,8 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
              "/developers",
              "/history",
              "/llm-models",
+             "/models/evaluation",
+             "/providers",
              "/privacy"
            ],
       do: true
@@ -37,6 +40,8 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
   def resolve("/developers", canonical_url), do: {:ok, developers_markdown(canonical_url)}
   def resolve("/history", canonical_url), do: {:ok, history_markdown(canonical_url)}
   def resolve("/llm-models", canonical_url), do: {:ok, llm_models_markdown(canonical_url)}
+  def resolve("/models/evaluation", canonical_url), do: {:ok, evaluation_markdown(canonical_url)}
+  def resolve("/providers", canonical_url), do: {:ok, providers_markdown(canonical_url)}
   def resolve("/privacy", canonical_url), do: {:ok, privacy_markdown(canonical_url)}
 
   def resolve(path, canonical_url) do
@@ -54,6 +59,79 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     end
   end
 
+  defp evaluation_markdown(canonical_url) do
+    snapshot = LandingPages.evaluation_snapshot(Catalog.list_all_models())
+
+    sections =
+      Enum.map_join(snapshot.sections, "\n\n", fn section ->
+        rows =
+          Enum.map_join(section.entries, "\n", fn entry ->
+            spec = "#{entry.representative.provider}:#{entry.model_id}"
+            link = PublicRoutes.absolute(PublicRoutes.model_path(entry.representative))
+
+            status =
+              if Map.get(entry.representative, :catalog_only) == true,
+                do: "Catalog only; ReqLLM call support is not confirmed",
+                else: "Catalog model"
+
+            "| [#{markdown_escape(spec)}](#{link}) | #{number_or_na(entry.context)} | #{landing_price(entry, :evaluation)} | #{status} |"
+          end)
+
+        """
+        ## #{section.title}
+
+        | Exact model spec | Context | Input / output price | Status |
+        | --- | ---: | ---: | --- |
+        #{rows}
+        """
+      end)
+
+    """
+    # Evaluation Models
+
+    Active catalog records with an explicit `capabilities.evaluate: true` field. These models return typed decisions for evaluation questions. A catalog capability does not confirm that ReqLLM can call the model.
+
+    - Model specs: #{snapshot.total_count}
+    - Providers: #{snapshot.provider_count}
+    - Known prices are catalog input and output rates per one million tokens. Evaluation billing can use other units; confirm with the provider.
+
+    #{sections}
+
+    [Browse all providers](#{PublicRoutes.absolute("/providers")})
+
+    Canonical URL: #{canonical_url}
+    """
+  end
+
+  defp providers_markdown(canonical_url) do
+    entries = ProviderDirectory.entries()
+
+    rows =
+      Enum.map_join(entries, "\n", fn entry ->
+        catalog_url = PublicRoutes.absolute(ProviderDirectory.catalog_path(entry.id))
+        evaluation_url = PublicRoutes.absolute("/models/evaluation")
+
+        evaluation =
+          if entry.evaluation_count > 0,
+            do: "[#{entry.evaluation_count}](#{evaluation_url})",
+            else: "0"
+
+        "| #{markdown_escape(entry.name)} | `#{markdown_escape(entry.id)}` | [#{entry.model_count}](#{catalog_url}) | #{evaluation} |"
+      end)
+
+    """
+    # Model Provider Directory
+
+    All #{length(entries)} catalog providers. Model counts include all catalog records, including deprecated, retired, and catalog-only records. Evaluation counts include active records with explicit Evaluate metadata. A catalog capability does not confirm ReqLLM call support.
+
+    | Provider | ID | Model records | Evaluation models |
+    | --- | --- | ---: | ---: |
+    #{rows}
+
+    Canonical URL: #{canonical_url}
+    """
+  end
+
   defp home_markdown(canonical_url) do
     model_count = Catalog.total_model_count()
     provider_count = length(Catalog.list_providers())
@@ -68,6 +146,8 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
 
     - [Browse models](#{canonical_url})
     - [Deduplicated LLM models list](#{endpoint_url}/llm-models)
+    - [Evaluation models](#{endpoint_url}/models/evaluation)
+    - [Provider directory](#{endpoint_url}/providers)
     - [AI model rankings](#{endpoint_url}/rankings/ai-models)
     - [Cheapest LLM APIs](#{endpoint_url}/rankings/cheapest-llm-api)
     - [Zero-price LLM API offers](#{endpoint_url}/rankings/free-llm-api)
@@ -360,9 +440,18 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
 
   defp landing_price(_entry, :video), do: "See model record"
 
+  defp landing_price(entry, :evaluation) do
+    "#{evaluation_price(entry.cost_in)} / #{evaluation_price(entry.cost_out)}"
+  end
+
   defp landing_price(entry, _action) do
     "#{cost_or_na(entry.cost_in)} / #{cost_or_na(entry.cost_out)}"
   end
+
+  defp evaluation_price(value) when is_number(value),
+    do: "$#{:erlang.float_to_binary(value * 1.0, decimals: 3)}"
+
+  defp evaluation_price(_value), do: "N/A"
 
   defp methodology_markdown(methodology) do
     inclusion = markdown_list(methodology.inclusion_criteria)
