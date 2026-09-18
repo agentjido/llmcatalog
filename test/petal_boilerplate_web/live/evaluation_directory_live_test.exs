@@ -13,6 +13,8 @@ defmodule PetalBoilerplateWeb.EvaluationDirectoryLiveTest do
     assert html =~ "typesafe:jev-latest"
     assert html =~ "typesafe:jev-preview"
     assert html =~ "typesafe:jev-1.13.0"
+    assert html =~ "openrouter:typesafe/jev-1.13"
+    assert html =~ "openrouter:~typesafe/jev-latest"
     assert html =~ ~s(href="/models/typesafe/jev-latest")
     assert html =~ ~s(rel="canonical" href="#{PublicRoutes.absolute("/models/evaluation")}")
     assert html =~ ~s(href="/models/evaluation.md")

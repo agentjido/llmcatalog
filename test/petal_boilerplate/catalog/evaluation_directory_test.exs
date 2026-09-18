@@ -8,16 +8,29 @@ defmodule PetalBoilerplate.Catalog.EvaluationDirectoryTest do
   alias PetalBoilerplate.Catalog.ProviderDirectory
   alias PetalBoilerplateWeb.PublicRoutes
 
-  test "packaged catalog includes the three direct TypeSafe evaluation specs" do
+  test "packaged catalog includes direct and gateway Jev evaluation specs" do
     snapshot = LandingPages.evaluation_snapshot(Catalog.list_all_models())
 
-    typesafe =
-      snapshot.sections
-      |> Enum.find(&(&1.title == "Typesafe"))
-      |> Map.fetch!(:entries)
+    specs_by_provider =
+      Map.new(snapshot.sections, fn section ->
+        {section.title, Enum.map(section.entries, & &1.model_id)}
+      end)
 
-    assert Enum.map(typesafe, & &1.model_id) == ["jev-1.13.0", "jev-latest", "jev-preview"]
-    assert Enum.all?(typesafe, &MapSet.member?(&1.representative.__caps, :evaluate))
+    for {provider, expected_specs} <- %{
+          "Cloudflare workers ai" => ["typesafe/jev"],
+          "Openrouter" => ["typesafe/jev-1.13", "~typesafe/jev-latest"],
+          "Typesafe" => ["jev-1.13.0", "jev-latest", "jev-preview"],
+          "Vercel" => ["typesafe-ai/jev"]
+        } do
+      assert MapSet.subset?(
+               MapSet.new(expected_specs),
+               MapSet.new(Map.fetch!(specs_by_provider, provider))
+             )
+    end
+
+    assert Enum.all?(snapshot.sections, fn section ->
+             Enum.all?(section.entries, &MapSet.member?(&1.representative.__caps, :evaluate))
+           end)
   end
 
   test "evaluation list uses only explicit active capability across providers" do
