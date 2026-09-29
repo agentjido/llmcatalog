@@ -3,8 +3,9 @@ defmodule PetalBoilerplateWeb.ModelReleaseTest do
 
   alias PetalBoilerplate.Catalog
 
-  test "the published catalog serves Astra and Gemini 3.8 Flash pages", %{conn: conn} do
+  test "the published catalog serves Sol 6.1, Astra, and Gemini 3.8 Flash pages", %{conn: conn} do
     for {provider, model_id, name} <- [
+          {"openai", "gpt-6.1-sol", "GPT-6.1 Sol"},
           {"openai", "gpt-6-astra", "GPT-6 Astra"},
           {"google", "gemini-3.8-flash", "Gemini 3.8 Flash"}
         ] do
@@ -20,7 +21,7 @@ defmodule PetalBoilerplateWeb.ModelReleaseTest do
   test "the catalog preserves Astra access and reasoning metadata" do
     model = Catalog.get_model("openai", "gpt-6-astra")
 
-    assert model.extra["availability"] == "limited"
+    assert model.extra["availability"] == "general"
     assert model.capabilities.reasoning.effort.values == ["low", "medium", "high", "xhigh", "max"]
     assert model.limits.context == 1_050_000
     assert model.limits.output == 128_000
