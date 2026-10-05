@@ -769,9 +769,9 @@ defmodule PetalBoilerplateWeb.ModelLive do
     provider_count = length(Catalog.list_providers())
 
     assign(socket,
-      page_title: "LLM Catalog by Jidoka Labs",
+      page_title: "Compare LLM Models, Pricing, and Capabilities",
       page_description:
-        "Browse and compare #{format_number(model_count)} LLM models. Filter by provider, capabilities, pricing, modalities, and context windows.",
+        "Compare #{format_number(model_count)} LLM models across #{format_number(provider_count)} providers. Filter by price, context window, capabilities, and modalities.",
       canonical_url: PublicRoutes.absolute("/"),
       og_image: PublicRoutes.absolute("/og/home.png"),
       robots: if(map_size(params) > 0, do: ["noindex", "follow"]),

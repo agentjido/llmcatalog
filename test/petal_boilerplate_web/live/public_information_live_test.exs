@@ -5,7 +5,8 @@ defmodule PetalBoilerplateWeb.PublicInformationLiveTest do
     html = conn |> get("/developers") |> html_response(200)
 
     assert html =~ "LLM Catalog developer resources"
-    assert html =~ "LLM Catalog by Jidoka Labs"
+    assert html =~ "LLM Catalog by"
+    assert html =~ "Jidoka Labs"
     assert html =~ "OpenAPI 3.1 document"
     assert html =~ "@agentjido/llmdb"
     assert html =~ "does not currently install a command-line executable"

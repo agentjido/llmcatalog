@@ -27,7 +27,8 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     assert organization["contactPoint"]["url"] == home_url <> "contact"
     assert "https://github.com/agentjido" in organization["sameAs"]
     assert "https://www.npmjs.com/package/@agentjido/llmdb" in organization["sameAs"]
-    assert website["name"] == "LLM Catalog by Jidoka Labs"
+    assert website["name"] == "LLM Catalog"
+    assert website["alternateName"] == ["LLM Catalog by Jidoka Labs", "llmcatalog.dev"]
     assert website["publisher"] == %{"@id" => organization["@id"]}
 
     assert dataset["creator"] == %{"@id" => organization["@id"]}
