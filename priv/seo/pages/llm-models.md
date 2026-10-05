@@ -9,7 +9,15 @@
       "large language models list",
       "list of LLM models",
       "LLM model database",
-      "AI models list"
+      "AI models list",
+      "LLM models catalog",
+      "LLM catalog request"
+    ],
+    competitor_keywords: [
+      "LM Studio models list",
+      "LM Studio models download",
+      "LM Studio best model for roleplay",
+      "LM Studio image generation models"
     ],
     intent: :informational,
     audience: "Developers and technical teams that need a current directory of text-generation models",
@@ -20,9 +28,9 @@
   review: %{
     status: :approved,
     reviewed_by: "Mike Hostetler",
-    reviewed_at: "2026-07-30",
+    reviewed_at: "2026-10-05",
     stale_after_days: 30,
-    notes: "Approved for production as the main LLM model directory hub."
+    notes: "Added related Google search suggestions and kept LM Studio phrases in the competitor watchlist instead of visible page copy."
   },
   sources: [
     %{
@@ -113,7 +121,9 @@
       "LLM models list",
       "large language models list",
       "list of LLM models",
-      "LLM model database"
+      "LLM model database",
+      "LLM models catalog",
+      "LLM catalog request"
     ],
     og_title: "LLM Models List",
     og_description: "A current list of active text-generation models with provider, context, capability, and price data."

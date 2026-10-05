@@ -9,17 +9,24 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       conn = get(conn, ~p"/")
       html = html_response(conn, 200)
       model_count = Catalog.format_number(Catalog.total_model_count())
+      provider_count = Catalog.list_providers() |> length() |> Catalog.format_number()
       endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
-      assert html =~ ~s(property="og:title" content="LLM Catalog by Jidoka Labs")
-      assert html =~ ~s(property="og:description" content="Browse and compare #{model_count})
+      assert html =~
+               ~s(property="og:title" content="Compare LLM Models, Pricing, and Capabilities")
+
+      assert html =~
+               ~s(property="og:description" content="Compare #{model_count} LLM models across #{provider_count} providers.)
+
+      assert html =~ ~s(property="og:site_name" content="LLM Catalog")
       assert html =~ ~s(property="og:url" content="#{endpoint_url}/")
       assert html =~ ~s(property="og:type" content="website")
       assert html =~ ~s(property="og:image")
       assert html =~ ~s(rel="canonical" href="#{endpoint_url}/")
+      assert html =~ ~s(<link rel="icon" href="/favicon.ico" sizes="64x64">)
 
       assert html =~
-               ~s(<title data-suffix=" · llmcatalog.dev">LLM Catalog by Jidoka Labs · llmcatalog.dev</title>)
+               ~s(<title data-suffix=" · LLM Catalog">Compare LLM Models, Pricing, and Capabilities · LLM Catalog</title>)
 
       assert heading_texts(html, "h1") == ["LLM Catalog"]
       assert heading_texts(html, "h2") |> Enum.take(1) == ["Models"]

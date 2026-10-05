@@ -10,7 +10,7 @@ defmodule PetalBoilerplateWeb.SEO do
       SEO.OpenGraph.build(
         description:
           "Browse and compare large language models by provider, capabilities, pricing, modalities, and context windows.",
-        site_name: "LLM Catalog by Jidoka Labs",
+        site_name: "LLM Catalog",
         locale: "en_US"
       ),
     twitter: SEO.Twitter.build(card: :summary_large_image)
@@ -90,9 +90,9 @@ defmodule PetalBoilerplateWeb.SEO do
 
   def site_config(_conn) do
     SEO.Site.build(
-      default_title: "LLM Catalog by Jidoka Labs",
+      default_title: "LLM Catalog",
       description: @default_description,
-      title_suffix: " · llmcatalog.dev"
+      title_suffix: " · LLM Catalog"
     )
   end
 
@@ -127,8 +127,8 @@ defmodule PetalBoilerplateWeb.SEO do
         "@context" => "https://schema.org",
         "@type" => "WebSite",
         "@id" => website_id,
-        "name" => "LLM Catalog by Jidoka Labs",
-        "alternateName" => ["LLM Catalog", "llmcatalog.dev"],
+        "name" => "LLM Catalog",
+        "alternateName" => ["LLM Catalog by Jidoka Labs", "llmcatalog.dev"],
         "description" => @default_description,
         "url" => home_url,
         "publisher" => %{"@id" => organization_id}

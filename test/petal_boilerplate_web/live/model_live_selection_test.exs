@@ -57,7 +57,7 @@ defmodule PetalBoilerplateWeb.ModelLiveSelectionTest do
     render_click(view, "close_model", %{})
 
     assert_patch(view, "/")
-    assert page_title(view) == "LLM Catalog by Jidoka Labs"
+    assert page_title(view) == "Compare LLM Models, Pricing, and Capabilities"
     refute has_element?(view, "#model-detail-dialog")
     assert has_element?(view, "##{model.id}")
     assert has_element?(view, "#catalog-heading")

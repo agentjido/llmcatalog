@@ -175,6 +175,7 @@ defmodule PetalBoilerplate.SEOContent.Page do
   defp validate_keyword_set!(filename, search) do
     primary = normalize_keyword(search.primary_keyword)
     secondary = Enum.map(search.secondary_keywords, &normalize_keyword/1)
+    competitors = Enum.map(search.competitor_keywords, &normalize_keyword/1)
 
     if primary in secondary do
       raise ArgumentError,
@@ -183,6 +184,15 @@ defmodule PetalBoilerplate.SEOContent.Page do
 
     if length(secondary) != length(Enum.uniq(secondary)) do
       raise ArgumentError, "secondary keywords in #{inspect(filename)} must be unique"
+    end
+
+    if length(competitors) != length(Enum.uniq(competitors)) do
+      raise ArgumentError, "competitor keywords in #{inspect(filename)} must be unique"
+    end
+
+    if Enum.any?(competitors, &(&1 == primary or &1 in secondary)) do
+      raise ArgumentError,
+            "competitor keywords in #{inspect(filename)} must not repeat target keywords"
     end
   end
 
