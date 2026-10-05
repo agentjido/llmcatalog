@@ -5,7 +5,12 @@
   description: "Browse active text-generation provider offers whose catalog records show $0 input and output token prices. A zero price does not guarantee permanent free access, availability, or a specific usage allowance.",
   search: %{
     primary_keyword: "free LLM API",
-    secondary_keywords: ["free LLM API models", "zero cost LLM API", "LLM API free tier"],
+    secondary_keywords: [
+      "free LLM API models",
+      "zero cost LLM API",
+      "LLM API free tier",
+      "free LLM catalog"
+    ],
     intent: :commercial,
     audience: "Developers who want to test language-model APIs without recorded token charges",
     locale: "en-US",
@@ -15,9 +20,9 @@
   review: %{
     status: :approved,
     reviewed_by: "Mike Hostetler",
-    reviewed_at: "2026-08-25",
+    reviewed_at: "2026-10-05",
     stale_after_days: 30,
-    notes: "Approved with conservative language. Zero token prices are not presented as a permanent free-access guarantee."
+    notes: "Added the free LLM catalog search phrase. Zero token prices are not presented as a permanent free-access guarantee."
   },
   sources: [
     %{
@@ -88,7 +93,13 @@
   seo: %{
     title: "Free LLM API Models With Zero Token Prices",
     description: "Find LLM API offers with recorded $0 input and output token prices. Check provider quotas, other charges, availability, and current terms.",
-    related_terms: ["free LLM API", "zero cost LLM API", "LLM API free tier", "free AI API"],
+    related_terms: [
+      "free LLM API",
+      "zero cost LLM API",
+      "LLM API free tier",
+      "free AI API",
+      "free LLM catalog"
+    ],
     og_title: "LLM API Offers With Zero Token Prices",
     og_description: "A catalog list of active text offers with $0 input and output token prices, with clear limits on what zero price means."
   }

@@ -5,7 +5,12 @@
   description: "Browse active text-generation model identities whose catalog metadata marks open weights as true. The list does not claim that the models use an open-source license.",
   search: %{
     primary_keyword: "open weight LLM models",
-    secondary_keywords: ["open weights models list", "open weight language models", "downloadable LLM weights"],
+    secondary_keywords: [
+      "open weights models list",
+      "open weight language models",
+      "downloadable LLM weights",
+      "LLM models download"
+    ],
     intent: :informational,
     audience: "Developers and researchers who need a catalog filter for models with available weights",
     locale: "en-US",
@@ -15,9 +20,9 @@
   review: %{
     status: :approved,
     reviewed_by: "Mike Hostetler",
-    reviewed_at: "2026-07-30",
+    reviewed_at: "2026-10-05",
     stale_after_days: 30,
-    notes: "Approved for the initial production search test. Do not change open-weight wording to open source."
+    notes: "Added the LLM models download search phrase. The page still directs users to verify publisher download sources and licenses."
   },
   sources: [
     %{
@@ -77,7 +82,13 @@
   seo: %{
     title: "Open-Weight LLM Models List",
     description: "Browse active open-weight LLM identities with providers, context windows, capabilities, and prices. License claims are excluded.",
-    related_terms: ["open weight LLM", "open weights models", "LLM weights", "self-hosted model"],
+    related_terms: [
+      "open weight LLM",
+      "open weights models",
+      "LLM weights",
+      "self-hosted model",
+      "LLM models download"
+    ],
     og_title: "Open-Weight LLM Models",
     og_description: "A catalog list based on the explicit open_weights field, with a clear license warning."
   }

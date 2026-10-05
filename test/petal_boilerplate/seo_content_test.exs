@@ -26,13 +26,15 @@ defmodule PetalBoilerplate.SEOContentTest do
     assert page.page_type == :directory
     assert %SearchTarget{} = page.search
     assert page.search.primary_keyword == "LLM models list"
+    assert "LLM models catalog" in page.search.secondary_keywords
+    assert "LM Studio models list" in page.search.competitor_keywords
     assert page.search.intent == :informational
     assert page.status == :published
 
     assert %Review{
              status: :approved,
              reviewed_by: "Mike Hostetler",
-             reviewed_at: ~D[2026-07-30]
+             reviewed_at: ~D[2026-10-05]
            } = page.review
 
     assert Enum.all?(page.sources, &match?(%Source{}, &1))
@@ -44,8 +46,8 @@ defmodule PetalBoilerplate.SEOContentTest do
     assert page.source_path =~ "/priv/seo/pages/llm-models.md"
     assert page.markdown =~ "## What this page can answer"
     assert page.body =~ "<h2>What this page can answer</h2>"
-    refute Page.stale?(page, ~D[2026-07-30])
-    assert Page.stale?(page, ~D[2026-08-30])
+    refute Page.stale?(page, ~D[2026-10-05])
+    assert Page.stale?(page, ~D[2026-11-05])
   end
 
   test "looks up published content by its normalized route" do
@@ -81,9 +83,13 @@ defmodule PetalBoilerplate.SEOContentTest do
 
     assert Enum.all?(pages, fn page ->
              reviewed_at =
-               if page.route == "/rankings/free-llm-api",
-                 do: ~D[2026-08-25],
-                 else: ~D[2026-07-30]
+               if page.route in [
+                    "/llm-models",
+                    "/models/open-weights",
+                    "/rankings/free-llm-api"
+                  ],
+                  do: ~D[2026-10-05],
+                  else: ~D[2026-07-30]
 
              match?(
                %Review{
@@ -154,6 +160,19 @@ defmodule PetalBoilerplate.SEOContentTest do
     assert_raise ArgumentError, ~r/must not repeat the primary keyword/, fn ->
       Page.build(
         "duplicate-keyword.md",
+        Map.put(attrs, :search, search),
+        "<p>Visible copy</p>"
+      )
+    end
+  end
+
+  test "page validation keeps competitor keywords separate from targets" do
+    attrs = valid_frontmatter()
+    search = Map.put(attrs.search, :competitor_keywords, ["LLM MODELS CATALOG"])
+
+    assert_raise ArgumentError, ~r/must not repeat target keywords/, fn ->
+      Page.build(
+        "duplicate-competitor-keyword.md",
         Map.put(attrs, :search, search),
         "<p>Visible copy</p>"
       )

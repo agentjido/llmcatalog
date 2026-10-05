@@ -21,6 +21,16 @@ defmodule PetalBoilerplate.SEOContent.SearchTarget do
                 )
                 |> Zoi.max(20)
                 |> Zoi.default([]),
+              competitor_keywords:
+                Zoi.list(
+                  Zoi.string(description: "Competitor search phrase to monitor")
+                  |> Zoi.trim()
+                  |> Zoi.min(2)
+                  |> Zoi.max(120),
+                  description: "Competitor phrases tracked without targeting them in visible copy"
+                )
+                |> Zoi.max(20)
+                |> Zoi.default([]),
               intent:
                 Zoi.enum([:informational, :commercial, :transactional, :navigational],
                   description: "Primary search intent"
