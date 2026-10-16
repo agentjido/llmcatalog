@@ -24,7 +24,7 @@ export default {
     if ((e.key === '/' && !isInputField) || 
         (e.key === 'k' && modifierKey)) {
       e.preventDefault();
-      const input = document.getElementById('model-search-input');
+      const input = this.el.querySelector('input[type="text"]');
       if (input) {
         input.focus();
         input.select();

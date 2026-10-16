@@ -43,6 +43,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
 
         <form
           id="model-search-form"
+          phx-hook="SearchFocus"
           phx-change="filter"
           phx-debounce="300"
           class="mx-auto min-w-0 w-full max-w-xl"
