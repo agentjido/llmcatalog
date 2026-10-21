@@ -17,18 +17,21 @@ defmodule PetalBoilerplateWeb.SEO do
 
   alias PetalBoilerplate.SEOContent
   alias PetalBoilerplate.SEOContent.Page
-  alias PetalBoilerplate.Catalog.ProviderDirectory
+  alias PetalBoilerplate.Catalog
+  alias PetalBoilerplate.Catalog.ProviderPage
   alias PetalBoilerplateWeb.LandingLinks
   alias PetalBoilerplateWeb.PublicRoutes
 
   @default_description "Browse and compare large language models by provider, capabilities, pricing, modalities, and context windows."
-  @search_indexable_paths [
+  @search_indexable_paths_before_providers [
     "/",
     "/about",
     "/contact",
     "/developers",
     "/llm-models",
-    "/providers",
+    "/providers"
+  ]
+  @search_indexable_paths_after_providers [
     "/privacy",
     "/rankings/ai-models",
     "/rankings/cheapest-llm-api",
@@ -61,7 +64,10 @@ defmodule PetalBoilerplateWeb.SEO do
   its page has enough unique content and a clear search purpose.
   """
   @spec search_indexable_paths() :: [String.t()]
-  def search_indexable_paths, do: @search_indexable_paths
+  def search_indexable_paths do
+    @search_indexable_paths_before_providers ++
+      ProviderPage.indexable_routes() ++ @search_indexable_paths_after_providers
+  end
 
   @doc """
   Returns the approved sitemap paths and their last significant change date.
@@ -73,10 +79,10 @@ defmodule PetalBoilerplateWeb.SEO do
   def search_indexable_entries do
     catalog_date = catalog_modified_on()
 
-    Enum.map(@search_indexable_paths, fn path ->
+    Enum.map(search_indexable_paths(), fn path ->
       %{
         path: path,
-        lastmod: latest_date(catalog_date, editorial_modified_on(path))
+        lastmod: search_indexable_modified_on(path, catalog_date)
       }
     end)
   end
@@ -85,7 +91,7 @@ defmodule PetalBoilerplateWeb.SEO do
   def search_indexable_path?(path) when is_binary(path) do
     path
     |> PublicRoutes.normalize_path()
-    |> then(&Enum.member?(@search_indexable_paths, &1))
+    |> then(&Enum.member?(search_indexable_paths(), &1))
   end
 
   def site_config(_conn) do
@@ -102,6 +108,8 @@ defmodule PetalBoilerplateWeb.SEO do
     dataset_version = Application.spec(:llm_db, :vsn) |> to_string()
     organization_id = home_url <> "#organization"
     website_id = home_url <> "#website"
+    dataset_id = home_url <> "#dataset"
+    data_catalog_id = home_url <> "#data-catalog"
 
     [
       %{
@@ -136,11 +144,13 @@ defmodule PetalBoilerplateWeb.SEO do
       %{
         "@context" => "https://schema.org",
         "@type" => "Dataset",
+        "@id" => dataset_id,
         "name" => "LLM Catalog by Jidoka Labs",
         "description" =>
           "A catalog of #{model_count} large language models from #{provider_count} providers.",
         "url" => home_url,
         "creator" => %{"@id" => organization_id},
+        "publisher" => %{"@id" => organization_id},
         "license" => "https://www.apache.org/licenses/LICENSE-2.0",
         "isAccessibleForFree" => true,
         "version" => dataset_version,
@@ -152,6 +162,7 @@ defmodule PetalBoilerplateWeb.SEO do
         ],
         "includedInDataCatalog" => %{
           "@type" => "DataCatalog",
+          "@id" => data_catalog_id,
           "name" => "LLM Catalog by Jidoka Labs",
           "url" => home_url
         }
@@ -403,13 +414,126 @@ defmodule PetalBoilerplateWeb.SEO do
                 "@type" => "ListItem",
                 "position" => position,
                 "name" => entry.name,
-                "url" => PublicRoutes.absolute(ProviderDirectory.catalog_path(entry.id))
+                "url" => PublicRoutes.absolute(ProviderPage.browse_path(entry.id))
               }
             end)
         }
       },
       directory_breadcrumb_structured_data("Providers", "/providers")
     ]
+  end
+
+  @spec provider_page_structured_data(map()) :: [map()]
+  def provider_page_structured_data(snapshot) do
+    home_url = PublicRoutes.absolute("/")
+    page_url = PublicRoutes.absolute(snapshot.route)
+    organization_id = home_url <> "#organization"
+    website_id = home_url <> "#website"
+    catalog_dataset_id = home_url <> "#dataset"
+    data_catalog_id = home_url <> "#data-catalog"
+    provider_dataset_id = page_url <> "#dataset"
+    item_list_id = page_url <> "#model-list"
+
+    items =
+      snapshot.default_models
+      |> Enum.take(Catalog.default_page_size())
+      |> Enum.with_index(1)
+      |> Enum.map(fn {model, position} ->
+        %{
+          "@type" => "ListItem",
+          "position" => position,
+          "name" => model.name || model.model_id,
+          "url" => PublicRoutes.absolute(PublicRoutes.model_path(model))
+        }
+      end)
+
+    item_list = %{
+      "@type" => "ItemList",
+      "@id" => item_list_id,
+      "name" => "#{snapshot.name} model records in the default catalog order",
+      "itemListOrder" => "https://schema.org/ItemListOrderDescending",
+      "numberOfItems" => snapshot.default_model_count,
+      "itemListElement" => items
+    }
+
+    collection_page =
+      compact_map(%{
+        "@context" => "https://schema.org",
+        "@type" => "CollectionPage",
+        "@id" => page_url <> "#webpage",
+        "name" => snapshot.title,
+        "headline" => snapshot.heading,
+        "description" => "#{snapshot.description} #{snapshot.summary}",
+        "url" => page_url,
+        "dateModified" => snapshot.last_updated,
+        "keywords" => snapshot.search_terms,
+        "publisher" => %{"@id" => organization_id},
+        "isPartOf" => %{"@id" => website_id},
+        "about" => %{
+          "@type" => "Organization",
+          "name" => snapshot.name
+        },
+        "mainEntity" => [%{"@id" => provider_dataset_id}, item_list]
+      })
+
+    provider_dataset =
+      compact_map(%{
+        "@context" => "https://schema.org",
+        "@type" => "Dataset",
+        "@id" => provider_dataset_id,
+        "name" => "#{snapshot.name} model catalog dataset",
+        "description" => "#{snapshot.description} #{snapshot.summary}",
+        "url" => page_url,
+        "creator" => %{"@id" => organization_id},
+        "publisher" => %{"@id" => organization_id},
+        "license" => "https://www.apache.org/licenses/LICENSE-2.0",
+        "isAccessibleForFree" => true,
+        "version" => Application.spec(:llm_db, :vsn) |> to_string(),
+        "dateModified" => snapshot.last_updated,
+        "keywords" => snapshot.search_terms,
+        "isPartOf" => %{"@id" => catalog_dataset_id},
+        "includedInDataCatalog" => %{
+          "@type" => "DataCatalog",
+          "@id" => data_catalog_id,
+          "name" => "LLM Catalog by Jidoka Labs",
+          "url" => home_url
+        },
+        "distribution" => [
+          %{
+            "@type" => "DataDownload",
+            "encodingFormat" => "text/markdown",
+            "contentUrl" => PublicRoutes.absolute(PublicRoutes.markdown_path(snapshot.route))
+          }
+        ]
+      })
+
+    breadcrumb =
+      %{
+        "@context" => "https://schema.org",
+        "@type" => "BreadcrumbList",
+        "itemListElement" => [
+          %{
+            "@type" => "ListItem",
+            "position" => 1,
+            "name" => "LLM Catalog",
+            "item" => PublicRoutes.absolute("/")
+          },
+          %{
+            "@type" => "ListItem",
+            "position" => 2,
+            "name" => "Providers",
+            "item" => PublicRoutes.absolute("/providers")
+          },
+          %{
+            "@type" => "ListItem",
+            "position" => 3,
+            "name" => snapshot.name,
+            "item" => page_url
+          }
+        ]
+      }
+
+    [collection_page, provider_dataset, breadcrumb]
   end
 
   @spec evaluation_structured_data(map()) :: [map()]
@@ -565,7 +689,17 @@ defmodule PetalBoilerplateWeb.SEO do
     end
   end
 
-  defp parse_date(value) do
+  defp search_indexable_modified_on(path, catalog_date) do
+    provider_date =
+      case ProviderPage.fetch_path(path) do
+        {:ok, snapshot} -> parse_date(snapshot.last_updated)
+        :error -> catalog_date
+      end
+
+    latest_date(provider_date, editorial_modified_on(path))
+  end
+
+  defp parse_date(value) when is_binary(value) do
     case DateTime.from_iso8601(value) do
       {:ok, date_time, _offset} ->
         DateTime.to_date(date_time)
@@ -577,6 +711,8 @@ defmodule PetalBoilerplateWeb.SEO do
         end
     end
   end
+
+  defp parse_date(_value), do: nil
 
   defp latest_date(nil, nil), do: nil
   defp latest_date(%Date{} = date, nil), do: date

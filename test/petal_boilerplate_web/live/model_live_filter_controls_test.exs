@@ -51,6 +51,30 @@ defmodule PetalBoilerplateWeb.ModelLiveFilterControlsTest do
     refute has_element?(view, "#filters-dialog")
   end
 
+  test "provider quick filters open the clean provider route", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/?caps=tools")
+
+    render_click(view, "quick_filter", %{"kind" => "anthropic"})
+
+    assert_redirect(view, "/provider/anthropic?caps=tools")
+  end
+
+  test "active provider quick filter returns to all models", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/provider/anthropic?caps=tools&page=2")
+
+    render_click(view, "quick_filter", %{"kind" => "anthropic"})
+
+    assert_redirect(view, "/?caps=tools")
+  end
+
+  test "active provider quick filter keeps an explicit sort choice", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/provider/anthropic?dir=desc&sort=popular")
+
+    render_click(view, "quick_filter", %{"kind" => "anthropic"})
+
+    assert_redirect(view, "/?dir=desc&sort=popular")
+  end
+
   test "model rows hide unknown architecture badges", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/?architecture=unknown")
 

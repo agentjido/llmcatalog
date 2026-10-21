@@ -4,6 +4,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
   alias PetalBoilerplateWeb.PublicRoutes
   alias PetalBoilerplateWeb.SEO
   alias PetalBoilerplate.Catalog.LandingPages
+  alias PetalBoilerplate.Catalog.ProviderPage
 
   defmodule FeedHistory do
     def recent(50) do
@@ -129,6 +130,16 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
              "/developers",
              "/llm-models",
              "/providers",
+             "/provider/amazon-bedrock",
+             "/provider/anthropic",
+             "/provider/azure",
+             "/provider/deepseek",
+             "/provider/google",
+             "/provider/groq",
+             "/provider/mistral",
+             "/provider/openai",
+             "/provider/openrouter",
+             "/provider/xai",
              "/privacy",
              "/rankings/ai-models",
              "/rankings/cheapest-llm-api",
@@ -155,6 +166,11 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert Enum.find(SEO.search_indexable_entries(), &(&1.path == "/developers")).lastmod ==
              expected_developers_lastmod
 
+    {:ok, anthropic} = ProviderPage.fetch("anthropic")
+
+    assert Enum.find(SEO.search_indexable_entries(), &(&1.path == anthropic.route)).lastmod ==
+             Date.from_iso8601!(anthropic.last_updated)
+
     refute body =~ "/history"
 
     for route <- LandingPages.routes() do
@@ -178,6 +194,14 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert body =~ PublicRoutes.absolute("/models/long-context")
     assert body =~ PublicRoutes.absolute("/models/open-weights")
     assert body =~ PublicRoutes.absolute("/models/video")
+    assert body =~ PublicRoutes.absolute("/provider/anthropic")
+    assert body =~ PublicRoutes.absolute("/provider/openai")
+    assert body =~ PublicRoutes.absolute("/provider/openrouter")
+
+    for route <- PetalBoilerplate.Catalog.ProviderPage.indexable_routes() do
+      assert body =~ PublicRoutes.absolute(route)
+    end
+
     assert body =~ PublicRoutes.absolute("/api/mcp")
     assert body =~ PublicRoutes.absolute("/.well-known/mcp.json")
     assert body =~ PublicRoutes.absolute("/api/v1/history/recent")

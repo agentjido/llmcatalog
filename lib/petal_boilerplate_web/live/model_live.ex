@@ -3,6 +3,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   alias PetalBoilerplate.Catalog
   alias PetalBoilerplate.Catalog.Filters
+  alias PetalBoilerplate.Catalog.ProviderPage
   alias PetalBoilerplateWeb.PublicRoutes
   alias PetalBoilerplateWeb.SEO
 
@@ -37,18 +38,46 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   defp apply_action(socket, :index, params) do
     filters = Filters.from_params(params)
-    sort = sort_from_params(params)
+    sort = sort_from_params(params, Catalog.default_sort())
+    page = page_from_params(params)
 
     socket =
       socket
       |> assign_og_meta(:index, nil, params)
-      |> assign(selected_model: nil)
+      |> assign(
+        selected_model: nil,
+        provider_page: nil,
+        catalog_total: Catalog.total_model_count()
+      )
       |> clear_history_assigns()
 
-    if socket.assigns.filters == filters and socket.assigns.sort == sort do
+    if socket.assigns.filters == filters and socket.assigns.sort == sort and
+         socket.assigns.page == page do
       socket
     else
-      apply_filters(socket, filters, sort: sort)
+      apply_filters(socket, filters, sort: sort, page: page)
+    end
+  end
+
+  defp apply_action(socket, action, params) do
+    case ProviderPage.fetch_action(action) do
+      {:ok, snapshot} ->
+        filters = provider_filters(params)
+        sort = sort_from_params(params, provider_default_sort())
+        page = page_from_params(params)
+
+        socket
+        |> assign_provider_meta(snapshot, params)
+        |> assign(
+          selected_model: nil,
+          provider_page: snapshot,
+          catalog_total: snapshot.model_count
+        )
+        |> clear_history_assigns()
+        |> apply_filters(filters, sort: sort, page: page)
+
+      :error ->
+        socket
     end
   end
 
@@ -107,18 +136,24 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   @impl true
   def mount(params, _session, socket) do
-    filters = Filters.from_params(params)
-    sort = sort_from_params(params)
+    provider_page = provider_page_for_action(socket.assigns.live_action)
+    filters = if provider_page, do: provider_filters(params), else: Filters.from_params(params)
+    default_sort = if provider_page, do: provider_default_sort(), else: Catalog.default_sort()
+    sort = sort_from_params(params, default_sort)
+    page = page_from_params(params)
     providers = Catalog.list_providers()
-    {page_models, total, total_pages, page} = Catalog.query_models(filters, sort, 1)
+    query_filters = scoped_filters(filters, provider_page)
+    {page_models, total, total_pages, page} = Catalog.query_models(query_filters, sort, page)
 
     {:ok,
      socket
-     |> assign_og_meta(:index, nil, params)
+     |> assign_initial_meta(provider_page, params)
      |> assign(
        providers: providers,
+       provider_page: provider_page,
        models: page_models,
-       catalog_total: Catalog.total_model_count(),
+       catalog_total:
+         if(provider_page, do: provider_page.model_count, else: Catalog.total_model_count()),
        filters: filters,
        sort: sort,
        total: total,
@@ -167,17 +202,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
   @impl true
   def handle_event("page", %{"page" => page_str}, socket) do
     page = String.to_integer(page_str)
-
-    {page_models, total, total_pages, page} =
-      Catalog.query_models(socket.assigns.filters, socket.assigns.sort, page)
-
-    {:noreply,
-     assign(socket,
-       models: page_models,
-       page: page,
-       total: total,
-       total_pages: total_pages
-     )}
+    {:noreply, apply_filters(socket, socket.assigns.filters, page: page, push_url: true)}
   end
 
   @impl true
@@ -200,7 +225,10 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   @impl true
   def handle_event("close_model", _params, socket) do
-    {:noreply, push_patch(socket, to: index_path(socket.assigns.filters, socket.assigns.sort))}
+    {:noreply,
+     push_patch(socket,
+       to: index_path(socket, socket.assigns.filters, socket.assigns.sort, socket.assigns.page)
+     )}
   end
 
   @impl true
@@ -244,8 +272,20 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   @impl true
   def handle_event("quick_filter", %{"kind" => kind}, socket) do
-    filters = Filters.apply_quick_filter(socket.assigns.filters, kind)
-    {:noreply, apply_filters(socket, filters, push_url: true)}
+    case ProviderPage.published_path(kind) do
+      route when is_binary(route) ->
+        path =
+          case socket.assigns.provider_page do
+            %{route: ^route} -> all_models_quick_filter_path(socket)
+            _other -> provider_quick_filter_path(socket, route)
+          end
+
+        {:noreply, push_navigate(socket, to: path)}
+
+      nil ->
+        filters = Filters.apply_quick_filter(socket.assigns.filters, kind)
+        {:noreply, apply_filters(socket, filters, push_url: true)}
+    end
   end
 
   @impl true
@@ -402,11 +442,13 @@ defmodule PetalBoilerplateWeb.ModelLive do
   defp toggle_direction(:desc), do: :asc
 
   defp apply_filters(socket, %Filters{} = filters, opts \\ []) do
+    filters = normalize_filters(filters, socket.assigns.provider_page)
     previous_filters = socket.assigns.filters
     previous_sort = socket.assigns.sort
     sort = Keyword.get(opts, :sort, socket.assigns.sort)
     page = Keyword.get(opts, :page, 1)
-    {page_models, total, total_pages, page} = Catalog.query_models(filters, sort, page)
+    query_filters = scoped_filters(filters, socket.assigns.provider_page)
+    {page_models, total, total_pages, page} = Catalog.query_models(query_filters, sort, page)
 
     socket =
       socket
@@ -425,7 +467,7 @@ defmodule PetalBoilerplateWeb.ModelLive do
     if Keyword.get(opts, :push_url, false) do
       socket
       |> maybe_track_catalog_change(previous_filters, previous_sort, filters, sort, total)
-      |> push_patch(to: index_path(filters, sort), replace: true)
+      |> push_patch(to: index_path(socket, filters, sort, page), replace: true)
     else
       socket
     end
@@ -596,11 +638,51 @@ defmodule PetalBoilerplateWeb.ModelLive do
     Application.get_env(:petal_boilerplate, :history_module, PetalBoilerplate.History)
   end
 
-  defp index_path(filters, sort) do
+  defp index_path(socket, filters, sort, page) do
+    base_path =
+      case socket.assigns.provider_page do
+        %{route: route} -> route
+        _other -> "/"
+      end
+
+    default_sort =
+      if socket.assigns.provider_page, do: provider_default_sort(), else: Catalog.default_sort()
+
+    catalog_path(base_path, filters, sort, default_sort, page)
+  end
+
+  defp provider_quick_filter_path(socket, route) do
+    filters = Filters.clear_providers(socket.assigns.filters)
+
+    sort =
+      if socket.assigns.sort == Catalog.default_sort() do
+        provider_default_sort()
+      else
+        socket.assigns.sort
+      end
+
+    catalog_path(route, filters, sort, provider_default_sort(), 1)
+  end
+
+  defp all_models_quick_filter_path(socket) do
+    filters = Filters.clear_providers(socket.assigns.filters)
+
+    sort =
+      if socket.assigns.sort == provider_default_sort() do
+        Catalog.default_sort()
+      else
+        socket.assigns.sort
+      end
+
+    catalog_path("/", filters, sort, Catalog.default_sort(), 1)
+  end
+
+  defp catalog_path(base_path, filters, sort, default_sort, page) do
     query_params =
       filters
       |> Filters.to_params()
-      |> maybe_put_sort(sort)
+      |> maybe_put_sort(sort, default_sort)
+      |> maybe_put_page(page)
 
     query_string =
       query_params
@@ -610,11 +692,11 @@ defmodule PetalBoilerplateWeb.ModelLive do
       end)
       |> Enum.join("&")
 
-    if query_string == "", do: "/", else: "/?" <> query_string
+    if query_string == "", do: base_path, else: base_path <> "?" <> query_string
   end
 
-  defp maybe_put_sort(params, sort) do
-    if sort == Catalog.default_sort() do
+  defp maybe_put_sort(params, sort, default_sort) do
+    if sort == default_sort do
       params
     else
       params
@@ -623,12 +705,50 @@ defmodule PetalBoilerplateWeb.ModelLive do
     end
   end
 
-  defp sort_from_params(params) do
+  defp maybe_put_page(params, page) when is_integer(page) and page > 1,
+    do: Map.put(params, "page", page)
+
+  defp maybe_put_page(params, _page), do: params
+
+  defp sort_from_params(params, default_sort) do
     with sort_key when is_binary(sort_key) <- Map.get(params, "sort"),
          {:ok, field} <- fetch_sort_field(sort_key) do
       %{by: field, dir: parse_sort_direction(Map.get(params, "dir"), field)}
     else
-      _ -> Catalog.default_sort()
+      _ -> default_sort
+    end
+  end
+
+  defp provider_default_sort, do: %{by: :newest, dir: :desc}
+
+  defp page_from_params(%{"page" => page}) when is_binary(page) do
+    case Integer.parse(page) do
+      {number, ""} when number > 0 -> number
+      _other -> 1
+    end
+  end
+
+  defp page_from_params(_params), do: 1
+
+  defp provider_filters(params) do
+    params
+    |> Map.delete("providers")
+    |> Filters.from_params()
+  end
+
+  defp normalize_filters(filters, nil), do: filters
+  defp normalize_filters(filters, _provider_page), do: Filters.clear_providers(filters)
+
+  defp scoped_filters(filters, nil), do: filters
+
+  defp scoped_filters(filters, provider_page) do
+    Filters.set_providers(filters, [provider_page.id])
+  end
+
+  defp provider_page_for_action(action) do
+    case ProviderPage.fetch_action(action) do
+      {:ok, snapshot} -> snapshot
+      :error -> nil
     end
   end
 
@@ -761,6 +881,29 @@ defmodule PetalBoilerplateWeb.ModelLive do
 
   def format_number(value), do: Catalog.format_number(value)
   def format_cost(value), do: Catalog.format_cost(value)
+
+  defp assign_initial_meta(socket, nil, params), do: assign_og_meta(socket, :index, nil, params)
+
+  defp assign_initial_meta(socket, snapshot, params),
+    do: assign_provider_meta(socket, snapshot, params)
+
+  defp assign_provider_meta(socket, snapshot, params) do
+    robots =
+      if snapshot.search_visibility == :index and map_size(params) == 0 do
+        nil
+      else
+        ["noindex", "follow"]
+      end
+
+    assign(socket,
+      page_title: snapshot.title,
+      page_description: snapshot.description,
+      canonical_url: PublicRoutes.absolute(snapshot.route),
+      og_image: PublicRoutes.absolute("/og/home.png"),
+      robots: robots,
+      structured_data: SEO.provider_page_structured_data(snapshot)
+    )
+  end
 
   defp assign_og_meta(socket, action, model), do: assign_og_meta(socket, action, model, %{})
 

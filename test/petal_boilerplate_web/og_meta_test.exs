@@ -28,7 +28,7 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert html =~
                ~s(<title data-suffix=" · LLM Catalog">Compare LLM Models, Pricing, and Capabilities · LLM Catalog</title>)
 
-      assert heading_texts(html, "h1") == ["LLM Catalog"]
+      assert heading_texts(html, "h1") == ["LLM Catalog: Compare Models and API Prices"]
       assert heading_texts(html, "h2") |> Enum.take(1) == ["Models"]
 
       assert html =~ "models across"

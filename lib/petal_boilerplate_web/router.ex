@@ -35,6 +35,16 @@ defmodule PetalBoilerplateWeb.Router do
     live "/", ModelLive, :index
     live "/llm-models", LLMModelsLive, :index
     live "/providers", ProvidersLive, :index
+    live "/provider/amazon-bedrock", ModelLive, :provider_amazon_bedrock
+    live "/provider/anthropic", ModelLive, :provider_anthropic
+    live "/provider/azure", ModelLive, :provider_azure
+    live "/provider/deepseek", ModelLive, :provider_deepseek
+    live "/provider/google", ModelLive, :provider_google
+    live "/provider/groq", ModelLive, :provider_groq
+    live "/provider/mistral", ModelLive, :provider_mistral
+    live "/provider/openai", ModelLive, :provider_openai
+    live "/provider/openrouter", ModelLive, :provider_openrouter
+    live "/provider/xai", ModelLive, :provider_xai
     live "/rankings/cheapest-llm-api", CatalogLandingLive, :cheapest
     live "/rankings/free-llm-api", CatalogLandingLive, :free
     live "/rankings/ai-models", CatalogLandingLive, :ai_models

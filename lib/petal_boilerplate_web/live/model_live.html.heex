@@ -16,29 +16,104 @@
   <PetalBoilerplateWeb.ModelComponents.header search_value={@search_value} />
 
   <section
-    :if={@live_action == :index}
-    class="px-4 py-5 sm:px-6 sm:py-7"
-    aria-labelledby="catalog-heading"
+    id="catalog-context"
+    class="border-b px-4 py-4 sm:px-6 sm:py-5"
+    style="border-color: hsl(var(--border)); background-color: hsl(var(--muted) / 0.16);"
+    aria-labelledby={if @provider_page, do: "provider-heading", else: "catalog-heading"}
   >
-    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-      <h1 id="catalog-heading" class="text-2xl font-semibold tracking-tight sm:text-3xl">
-        LLM Catalog
+    <div :if={@live_action == :index} class="max-w-5xl">
+      <p
+        class="text-[11px] font-medium uppercase tracking-[0.16em]"
+        style="color: hsl(var(--primary));"
+      >
+        LLM model catalog
+      </p>
+      <h1 id="catalog-heading" class="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+        LLM Catalog: Compare Models and API Prices
       </h1>
-      <span class="text-sm" style="color: hsl(var(--muted-foreground));">
-        by
-        <a
-          href="https://jidokahq.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
-          style="text-underline-offset: 3px;"
-        >Jidoka Labs</a>
-      </span>
+      <p class="mt-2 max-w-3xl text-sm leading-5" style="color: hsl(var(--muted-foreground));">
+        Compare model prices, capabilities, context windows, and modalities across the current catalog.
+      </p>
+      <div
+        class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs"
+        style="color: hsl(var(--muted-foreground));"
+      >
+        <span><strong class="font-semibold text-foreground">{format_number(@catalog_total)}</strong>
+        models</span>
+        <span><strong class="font-semibold text-foreground">{length(@providers)}</strong>
+        providers</span>
+        <span>
+          Maintained by
+          <a
+            href="https://jidokahq.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="font-medium hover:underline"
+            style="color: hsl(var(--foreground)); text-underline-offset: 3px;"
+          >Jidoka Labs</a>
+        </span>
+      </div>
     </div>
-    <p class="mt-2 max-w-3xl text-sm leading-6" style="color: hsl(var(--muted-foreground));">
-      Compare {format_number(@catalog_total)} models across {length(@providers)} providers by price,
-      capabilities, context window, and modality.
-    </p>
+
+    <div :if={@provider_page} class="max-w-5xl">
+      <nav
+        aria-label="Breadcrumb"
+        class="text-[11px] font-medium uppercase tracking-[0.12em]"
+        style="color: hsl(var(--muted-foreground));"
+      >
+        <.link navigate="/" class="hover:underline">LLM Catalog</.link>
+        <span aria-hidden="true"> / </span>
+        <a href="/providers" class="hover:underline">Providers</a>
+        <span aria-hidden="true"> / </span>
+        <span aria-current="page" style="color: hsl(var(--primary));">{@provider_page.name}</span>
+      </nav>
+      <h1
+        id="provider-heading"
+        class="mt-1.5 max-w-5xl text-2xl font-semibold tracking-tight sm:text-3xl"
+      >
+        {@provider_page.heading}
+      </h1>
+      <p class="mt-2 max-w-4xl text-sm leading-5" style="color: hsl(var(--muted-foreground));">
+        {@provider_page.description}
+      </p>
+      <p class="mt-1 max-w-4xl text-xs leading-5" style="color: hsl(var(--muted-foreground));">
+        {@provider_page.summary}
+      </p>
+      <div
+        id="provider-summary"
+        class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs"
+        style="color: hsl(var(--muted-foreground));"
+      >
+        <span><strong class="font-semibold text-foreground">{format_number(
+          @provider_page.model_count
+        )}</strong>
+        records</span>
+        <span><strong class="font-semibold text-foreground">{format_number(
+          @provider_page.active_count
+        )}</strong>
+        active</span>
+        <span><strong class="font-semibold text-foreground">{format_number(
+          @provider_page.dated_model_count
+        )}</strong>
+        release dates</span>
+        <span :if={@provider_page.last_updated}>
+          Updated
+          <time datetime={@provider_page.last_updated}>{@provider_page.last_updated}</time>
+        </span>
+        <a
+          href={PetalBoilerplateWeb.PublicRoutes.markdown_path(@provider_page.route)}
+          class="font-medium hover:underline"
+          style="color: hsl(var(--primary));"
+        >Read as Markdown</a>
+        <a
+          href="/providers"
+          class="font-medium hover:underline"
+          style="color: hsl(var(--primary));"
+        >
+          All providers
+        </a>
+      </div>
+    </div>
   </section>
 
   <PetalBoilerplateWeb.ModelComponents.filter_bar
@@ -46,6 +121,9 @@
     providers={@providers}
     active_quick_filters={@active_quick_filters}
     filters_open={@filters_open}
+    provider_locked={not is_nil(@provider_page)}
+    active_provider_id={if @provider_page, do: @provider_page.id}
+    active_provider_name={if @provider_page, do: @provider_page.name}
   />
 
   <PetalBoilerplateWeb.ModelComponents.model_detail_modal
@@ -66,7 +144,9 @@
   >
     <div class="mb-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
       <div>
-        <h2 id="model-results-heading" class="text-base font-semibold">Models</h2>
+        <h2 id="model-results-heading" class="text-base font-semibold">
+          {if @provider_page, do: "Compare #{@provider_page.name} models", else: "Models"}
+        </h2>
         <p class="mt-0.5 text-xs sm:text-sm" style="color: hsl(var(--muted-foreground));">
           <span class="font-medium" style="color: hsl(var(--foreground));">{@total}</span>
           of {@catalog_total}
@@ -229,6 +309,60 @@
         </button>
       </div>
     <% end %>
+  </section>
+
+  <section
+    :if={@provider_page}
+    id="related-provider-links"
+    class="mx-auto w-full max-w-6xl border-t px-4 py-10 sm:px-6"
+    style="border-color: hsl(var(--border));"
+    aria-labelledby="related-provider-links-heading"
+  >
+    <div
+      class="mb-8 rounded-lg border p-4 text-sm leading-6"
+      style="border-color: hsl(var(--border)); background-color: hsl(var(--muted) / 0.2); color: hsl(var(--muted-foreground));"
+    >
+      <p class="font-medium" style="color: hsl(var(--foreground));">About this provider data</p>
+      <p class="mt-1">
+        Records use the current LLM Catalog snapshot. Confirm important prices, limits, and
+        availability with {@provider_page.name} before production use. The default list uses
+        release date, with a stable name and model ID fallback.
+      </p>
+    </div>
+
+    <h2 id="related-provider-links-heading" class="text-2xl font-semibold tracking-tight">
+      Compare other model providers
+    </h2>
+    <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <a
+        :for={link <- @provider_page.related_providers}
+        href={link.route}
+        class="rounded-lg border p-4 hover:shadow-sm"
+        style="border-color: hsl(var(--border));"
+      >
+        <h3 class="font-semibold hover:underline">{link.label}</h3>
+        <p class="mt-1 text-xs leading-5" style="color: hsl(var(--muted-foreground));">
+          {link.description}
+        </p>
+      </a>
+    </div>
+
+    <h2 id="related-catalog-links-heading" class="mt-10 text-2xl font-semibold tracking-tight">
+      Explore related LLM model lists
+    </h2>
+    <div id="related-catalog-links" class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <a
+        :for={link <- @provider_page.catalog_links}
+        href={link.route}
+        class="rounded-lg border p-4 hover:shadow-sm"
+        style="border-color: hsl(var(--border));"
+      >
+        <h3 class="font-semibold hover:underline">{link.label}</h3>
+        <p class="mt-1 text-xs leading-5" style="color: hsl(var(--muted-foreground));">
+          {link.description}
+        </p>
+      </a>
+    </div>
   </section>
 
   <section

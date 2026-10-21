@@ -60,9 +60,18 @@ defmodule PetalBoilerplateWeb.ModelComponents do
               id="search-input"
               value={@search_value}
               placeholder="Search models"
+              aria-keyshortcuts="/"
               class="h-9 w-full rounded-md border py-0 pl-9 pr-9 text-sm focus:ring-2"
               style="border-color: hsl(var(--border)); background-color: hsl(var(--background)); color: hsl(var(--foreground));"
             />
+            <kbd
+              :if={@search_value == ""}
+              aria-hidden="true"
+              class="pointer-events-none absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded border font-mono text-xs"
+              style="border-color: hsl(var(--border)); color: hsl(var(--muted-foreground));"
+            >
+              /
+            </kbd>
             <button
               :if={@search_value != ""}
               type="button"
@@ -346,9 +355,13 @@ defmodule PetalBoilerplateWeb.ModelComponents do
   attr :providers, :list, required: true
   attr :active_quick_filters, :list, default: []
   attr :filters_open, :boolean, required: true
+  attr :provider_locked, :boolean, default: false
+  attr :active_provider_id, :string, default: nil
+  attr :active_provider_name, :string, default: nil
 
   def filter_bar(assigns) do
-    quick_filters = Filters.quick_filters()
+    quick_filters = maybe_add_active_provider(Filters.quick_filters(), assigns)
+
     assigns = assign(assigns, :quick_filters, quick_filters)
 
     ~H"""
@@ -366,7 +379,10 @@ defmodule PetalBoilerplateWeb.ModelComponents do
             <.quick_filter_pill
               label={qf.label}
               kind={to_string(qf.key)}
-              active={qf.key in @active_quick_filters}
+              active={
+                qf.key in @active_quick_filters or
+                  to_string(qf.key) == @active_provider_id
+              }
             />
           <% end %>
         </div>
@@ -454,6 +470,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         </div>
         <div class="px-4 pb-10">
           <.filter_section
+            :if={!@provider_locked}
             title={"Providers #{provider_count_label(@filters)}"}
             open={MapSet.size(@filters.provider_ids) > 0}
           >
@@ -552,6 +569,32 @@ defmodule PetalBoilerplateWeb.ModelComponents do
       </.focus_wrap>
     </div>
     """
+  end
+
+  defp maybe_add_active_provider(quick_filters, %{active_provider_id: nil}), do: quick_filters
+
+  defp maybe_add_active_provider(quick_filters, assigns) do
+    provider_present? =
+      Enum.any?(quick_filters, fn quick_filter ->
+        quick_filter.filter_type == :provider and
+          to_string(quick_filter.key) == assigns.active_provider_id
+      end)
+
+    if provider_present? do
+      quick_filters
+    else
+      {provider_filters, other_filters} =
+        Enum.split_while(quick_filters, &(&1.filter_type == :provider))
+
+      provider_filters ++
+        [
+          %{
+            key: assigns.active_provider_id,
+            label: assigns.active_provider_name,
+            filter_type: :provider
+          }
+        ] ++ other_filters
+    end
   end
 
   attr :title, :string, required: true

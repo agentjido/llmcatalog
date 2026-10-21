@@ -1,6 +1,10 @@
 defmodule PetalBoilerplateWeb.StructuredDataTest do
   use PetalBoilerplateWeb.ConnCase, async: false
 
+  alias PetalBoilerplate.Catalog
+  alias PetalBoilerplate.Catalog.ProviderPage
+  alias PetalBoilerplateWeb.PublicRoutes
+
   test "home page emits Organization, WebSite, Dataset, and FAQ JSON-LD", %{conn: conn} do
     html =
       conn
@@ -23,6 +27,7 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
 
     assert website["url"] == home_url
     assert dataset["url"] == home_url
+    assert dataset["@id"] == home_url <> "#dataset"
     assert organization["name"] == "Jidoka Labs"
     assert organization["contactPoint"]["url"] == home_url <> "contact"
     assert "https://github.com/agentjido" in organization["sameAs"]
@@ -32,11 +37,75 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     assert website["publisher"] == %{"@id" => organization["@id"]}
 
     assert dataset["creator"] == %{"@id" => organization["@id"]}
+    assert dataset["publisher"] == %{"@id" => organization["@id"]}
+    assert dataset["includedInDataCatalog"]["@id"] == home_url <> "#data-catalog"
 
     assert dataset["license"] == "https://www.apache.org/licenses/LICENSE-2.0"
     assert dataset["isAccessibleForFree"] == true
     assert dataset["version"] == to_string(Application.spec(:llm_db, :vsn))
     assert length(faq["mainEntity"]) == 4
+  end
+
+  test "provider page data matches the default visible model list", %{conn: conn} do
+    {:ok, snapshot} = ProviderPage.fetch("anthropic")
+
+    html =
+      conn
+      |> get(snapshot.route)
+      |> html_response(200)
+
+    [collection, dataset, breadcrumb] = json_ld(html)
+    page_url = PublicRoutes.absolute(snapshot.route)
+    home_url = PublicRoutes.absolute("/")
+    [dataset_reference, item_list] = collection["mainEntity"]
+
+    expected_models = Enum.take(snapshot.default_models, Catalog.default_page_size())
+
+    expected_urls =
+      Enum.map(expected_models, fn model ->
+        PublicRoutes.absolute(PublicRoutes.model_path(model))
+      end)
+
+    visible_ids =
+      html
+      |> Floki.parse_document!()
+      |> Floki.find("#models-table-body > tr")
+      |> Floki.attribute("id")
+
+    assert Enum.map([collection, dataset, breadcrumb], & &1["@type"]) == [
+             "CollectionPage",
+             "Dataset",
+             "BreadcrumbList"
+           ]
+
+    assert collection["@id"] == page_url <> "#webpage"
+    assert collection["publisher"] == %{"@id" => home_url <> "#organization"}
+    assert collection["isPartOf"] == %{"@id" => home_url <> "#website"}
+    assert collection["dateModified"] == snapshot.last_updated
+    assert dataset_reference == %{"@id" => page_url <> "#dataset"}
+
+    assert item_list["numberOfItems"] == snapshot.default_model_count
+    assert Enum.map(item_list["itemListElement"], & &1["url"]) == expected_urls
+    assert visible_ids == Enum.map(expected_models, & &1.id)
+
+    assert dataset["@id"] == page_url <> "#dataset"
+    assert dataset["dateModified"] == snapshot.last_updated
+    assert dataset["isPartOf"] == %{"@id" => home_url <> "#dataset"}
+    assert dataset["includedInDataCatalog"]["@id"] == home_url <> "#data-catalog"
+
+    assert dataset["distribution"] == [
+             %{
+               "@type" => "DataDownload",
+               "encodingFormat" => "text/markdown",
+               "contentUrl" => PublicRoutes.absolute(PublicRoutes.markdown_path(snapshot.route))
+             }
+           ]
+
+    assert Enum.map(breadcrumb["itemListElement"], & &1["name"]) == [
+             "LLM Catalog",
+             "Providers",
+             "Anthropic"
+           ]
   end
 
   test "developer, contact, and privacy pages emit page-specific JSON-LD", %{conn: conn} do

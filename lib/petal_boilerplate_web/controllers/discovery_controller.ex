@@ -5,6 +5,7 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
 
   use PetalBoilerplateWeb, :controller
 
+  alias PetalBoilerplate.Catalog.ProviderPage
   alias PetalBoilerplateWeb.PublicRoutes
   alias PetalBoilerplateWeb.DiscoveryDocuments
   alias PetalBoilerplateWeb.SEO
@@ -87,6 +88,13 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
   def llms(conn, _params) do
     endpoint_url = PetalBoilerplateWeb.Endpoint.url()
 
+    provider_links =
+      ProviderPage.indexable_ids()
+      |> Enum.map_join("\n", fn provider_id ->
+        {:ok, snapshot} = ProviderPage.fetch(provider_id)
+        "- [#{snapshot.name} models](#{endpoint_url}#{snapshot.route})"
+      end)
+
     body = """
     # LLM Catalog by Jidoka Labs
 
@@ -117,6 +125,7 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
     - [Deduplicated LLM models list](#{endpoint_url}/llm-models)
     - [Evaluation models](#{endpoint_url}/models/evaluation)
     - [Provider directory](#{endpoint_url}/providers)
+    #{provider_links}
     - [AI model rankings](#{endpoint_url}/rankings/ai-models)
     - [Cheapest LLM APIs](#{endpoint_url}/rankings/cheapest-llm-api)
     - [Zero-price LLM API offers](#{endpoint_url}/rankings/free-llm-api)

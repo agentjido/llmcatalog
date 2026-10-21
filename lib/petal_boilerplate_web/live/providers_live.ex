@@ -2,6 +2,7 @@ defmodule PetalBoilerplateWeb.ProvidersLive do
   use PetalBoilerplateWeb, :live_view
 
   alias PetalBoilerplate.Catalog.ProviderDirectory
+  alias PetalBoilerplate.Catalog.ProviderPage
   alias PetalBoilerplateWeb.PublicRoutes
   alias PetalBoilerplateWeb.SEO
 
@@ -108,7 +109,7 @@ defmodule PetalBoilerplateWeb.ProvidersLive do
                 </p>
                 <div class="mt-4 flex flex-wrap gap-4 text-sm">
                   <a
-                    href={ProviderDirectory.catalog_path(entry.id)}
+                    href={ProviderPage.browse_path(entry.id)}
                     class="font-medium hover:underline"
                     style="color: hsl(var(--primary));"
                   >

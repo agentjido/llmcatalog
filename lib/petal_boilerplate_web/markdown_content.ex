@@ -7,6 +7,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
   alias PetalBoilerplate.Catalog.LandingPages
   alias PetalBoilerplate.Catalog.LLMModelsList
   alias PetalBoilerplate.Catalog.ProviderDirectory
+  alias PetalBoilerplate.Catalog.ProviderPage
   alias PetalBoilerplate.SEOContent
   alias PetalBoilerplateWeb.LandingLinks
   alias PetalBoilerplateWeb.PublicRoutes
@@ -29,7 +30,8 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
       do: true
 
   def eligible_public_path?(path) when is_binary(path) do
-    not is_nil(SEOContent.get_page(path)) or
+    ProviderPage.published_path?(path) or
+      not is_nil(SEOContent.get_page(path)) or
       match?({:ok, _model}, PublicRoutes.model_from_path(path))
   end
 
@@ -43,6 +45,13 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
   def resolve("/models/evaluation", canonical_url), do: {:ok, evaluation_markdown(canonical_url)}
   def resolve("/providers", canonical_url), do: {:ok, providers_markdown(canonical_url)}
   def resolve("/privacy", canonical_url), do: {:ok, privacy_markdown(canonical_url)}
+
+  def resolve("/provider/" <> _provider_id = path, canonical_url) do
+    case ProviderPage.fetch_path(path) do
+      {:ok, snapshot} -> {:ok, provider_markdown(snapshot, canonical_url)}
+      :error -> :no_match
+    end
+  end
 
   def resolve(path, canonical_url) do
     with nil <- SEOContent.get_page(path) do
@@ -108,7 +117,7 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
 
     rows =
       Enum.map_join(entries, "\n", fn entry ->
-        catalog_url = PublicRoutes.absolute(ProviderDirectory.catalog_path(entry.id))
+        catalog_url = PublicRoutes.absolute(ProviderPage.browse_path(entry.id))
         evaluation_url = PublicRoutes.absolute("/models/evaluation")
 
         evaluation =
@@ -127,6 +136,65 @@ defmodule PetalBoilerplateWeb.MarkdownContent do
     | Provider | ID | Model records | Evaluation models |
     | --- | --- | ---: | ---: |
     #{rows}
+
+    Canonical URL: #{canonical_url}
+    """
+  end
+
+  defp provider_markdown(snapshot, canonical_url) do
+    rows =
+      Enum.map_join(snapshot.models, "\n", fn model ->
+        model_url = PublicRoutes.absolute(PublicRoutes.model_path(model))
+
+        capabilities =
+          case ProviderPage.capability_labels(model) do
+            [] -> "Not listed"
+            labels -> Enum.join(labels, ", ")
+          end
+
+        "| [#{markdown_escape(model.name || model.model_id)}](#{model_url}) | `#{markdown_escape(model.model_id)}` | #{value_or_na(model.release_date)} | #{ProviderPage.status(model)} | #{number_or_na(Map.get(model, :__context))} | #{cost_or_na(Map.get(model, :__cost_in))} / #{cost_or_na(Map.get(model, :__cost_out))} | #{markdown_escape(capabilities)} |"
+      end)
+
+    provider_links =
+      Enum.map_join(snapshot.related_providers, "\n", fn link ->
+        "- [#{link.label}](#{PublicRoutes.absolute(link.route)}) — #{link.description}"
+      end)
+
+    catalog_links =
+      Enum.map_join(snapshot.catalog_links, "\n", fn link ->
+        "- [#{link.label}](#{PublicRoutes.absolute(link.route)}) — #{link.description}"
+      end)
+
+    """
+    # #{snapshot.heading}
+
+    #{snapshot.description}
+
+    #{snapshot.summary}
+
+    This page uses exact records from the current LLM Catalog snapshot. A recorded capability or price does not guarantee current provider availability or ReqLLM call support. Confirm important values with the provider before production use.
+
+    - Catalog records: #{snapshot.model_count}
+    - Active records: #{snapshot.active_count}
+    - Records with known release dates: #{snapshot.dated_model_count}
+    - Latest known release date: #{value_or_na(snapshot.latest_release_date)}
+    - Latest catalog update: #{value_or_na(snapshot.last_updated)}
+
+    ## #{snapshot.name} model list by release date
+
+    Models with a known release date appear newest first. Records without a known release date appear after them in alphabetical order. Name and model ID break date ties. Prices are recorded catalog rates per one million tokens when known.
+
+    | Model | Exact model ID | Release date | Status | Context | Input / output price | Capabilities |
+    | --- | --- | --- | --- | ---: | ---: | --- |
+    #{rows}
+
+    ## Compare other model providers
+
+    #{provider_links}
+
+    ## Explore related LLM model lists
+
+    #{catalog_links}
 
     Canonical URL: #{canonical_url}
     """
