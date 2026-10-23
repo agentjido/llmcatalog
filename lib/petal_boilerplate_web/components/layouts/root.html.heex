@@ -6,12 +6,6 @@
     <meta name="csrf-token" content={get_csrf_token()} />
     <link rel="icon" href={~p"/favicon.ico"} sizes="64x64" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
     <% indexing_enabled? = PetalBoilerplateWeb.SEO.indexing_enabled?()
     canonical_status? = is_nil(@conn.status) or @conn.status == 200
     request_path = PetalBoilerplateWeb.PublicRoutes.normalize_path(@conn.request_path)

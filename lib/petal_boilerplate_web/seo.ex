@@ -149,8 +149,8 @@ defmodule PetalBoilerplateWeb.SEO do
         "description" =>
           "A catalog of #{model_count} large language models from #{provider_count} providers.",
         "url" => home_url,
-        "creator" => %{"@id" => organization_id},
-        "publisher" => %{"@id" => organization_id},
+        "creator" => organization_reference(organization_id),
+        "publisher" => organization_reference(organization_id),
         "license" => "https://www.apache.org/licenses/LICENSE-2.0",
         "isAccessibleForFree" => true,
         "version" => dataset_version,
@@ -484,8 +484,8 @@ defmodule PetalBoilerplateWeb.SEO do
         "name" => "#{snapshot.name} model catalog dataset",
         "description" => "#{snapshot.description} #{snapshot.summary}",
         "url" => page_url,
-        "creator" => %{"@id" => organization_id},
-        "publisher" => %{"@id" => organization_id},
+        "creator" => organization_reference(organization_id),
+        "publisher" => organization_reference(organization_id),
         "license" => "https://www.apache.org/licenses/LICENSE-2.0",
         "isAccessibleForFree" => true,
         "version" => Application.spec(:llm_db, :vsn) |> to_string(),
@@ -653,6 +653,15 @@ defmodule PetalBoilerplateWeb.SEO do
       "@context" => "https://schema.org",
       "@type" => "BreadcrumbList",
       "itemListElement" => items
+    }
+  end
+
+  defp organization_reference(organization_id) do
+    %{
+      "@type" => "Organization",
+      "@id" => organization_id,
+      "name" => "Jidoka Labs",
+      "url" => "https://jidokahq.com"
     }
   end
 

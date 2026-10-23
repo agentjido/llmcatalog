@@ -167,10 +167,17 @@ defmodule PetalBoilerplateWeb.DiscoveryDocuments do
 
   @spec api_catalog() :: map()
   def api_catalog do
+    catalog_url = PublicRoutes.absolute("/.well-known/api-catalog")
+    recent_history_url = PublicRoutes.absolute("/api/v1/history/recent")
+
     %{
       linkset: [
         %{
-          anchor: PublicRoutes.absolute("/api/v1/history/recent"),
+          anchor: catalog_url,
+          item: [%{href: recent_history_url}]
+        },
+        %{
+          anchor: recent_history_url,
           "service-desc": [
             %{
               href: PublicRoutes.absolute("/openapi.json"),

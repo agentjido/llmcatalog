@@ -36,8 +36,15 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     assert website["alternateName"] == ["LLM Catalog by Jidoka Labs", "llmcatalog.dev"]
     assert website["publisher"] == %{"@id" => organization["@id"]}
 
-    assert dataset["creator"] == %{"@id" => organization["@id"]}
-    assert dataset["publisher"] == %{"@id" => organization["@id"]}
+    organization_reference = %{
+      "@type" => "Organization",
+      "@id" => organization["@id"],
+      "name" => "Jidoka Labs",
+      "url" => "https://jidokahq.com"
+    }
+
+    assert dataset["creator"] == organization_reference
+    assert dataset["publisher"] == organization_reference
     assert dataset["includedInDataCatalog"]["@id"] == home_url <> "#data-catalog"
 
     assert dataset["license"] == "https://www.apache.org/licenses/LICENSE-2.0"
@@ -89,6 +96,15 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     assert visible_ids == Enum.map(expected_models, & &1.id)
 
     assert dataset["@id"] == page_url <> "#dataset"
+
+    assert dataset["creator"] == %{
+             "@type" => "Organization",
+             "@id" => home_url <> "#organization",
+             "name" => "Jidoka Labs",
+             "url" => "https://jidokahq.com"
+           }
+
+    assert dataset["publisher"] == dataset["creator"]
     assert dataset["dateModified"] == snapshot.last_updated
     assert dataset["isPartOf"] == %{"@id" => home_url <> "#dataset"}
     assert dataset["includedInDataCatalog"]["@id"] == home_url <> "#data-catalog"

@@ -107,6 +107,7 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
 
     refute body =~ "<priority>"
     refute body =~ "<changefreq>"
+    refute body =~ ".md</loc>"
 
     locations =
       Regex.scan(~r/<loc>(.*?)<\/loc>/, body, capture: :all_but_first)
@@ -209,6 +210,11 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert body =~ PublicRoutes.absolute("/openapi.json")
     assert body =~ PublicRoutes.absolute("/privacy")
     assert body =~ "https://www.npmjs.com/package/@agentjido/llmdb"
+    assert body =~ "> LLM Catalog by Jidoka Labs is a public catalog"
+    assert body =~ PublicRoutes.absolute("/index.md")
+    assert body =~ PublicRoutes.absolute("/developers.md")
+    assert body =~ PublicRoutes.absolute("/provider/anthropic.md")
+    assert body =~ PublicRoutes.absolute("/models/long-context.md")
     assert body =~ "## When to use this site"
     assert body =~ "## When not to use this site"
     assert body =~ "MCP Streamable HTTP endpoint"
@@ -272,8 +278,29 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
            |> hd() =~ "application/json"
 
     api_catalog = build_conn() |> get("/.well-known/api-catalog")
-    assert response(api_catalog, 200) =~ PublicRoutes.absolute("/openapi.json")
+    api_catalog_body = json_response(api_catalog, 200)
+
+    assert hd(api_catalog_body["linkset"])["anchor"] ==
+             PublicRoutes.absolute("/.well-known/api-catalog")
+
+    assert hd(hd(api_catalog_body["linkset"])["item"])["href"] ==
+             PublicRoutes.absolute("/api/v1/history/recent")
+
+    assert response(build_conn() |> get("/.well-known/api-catalog"), 200) =~
+             PublicRoutes.absolute("/openapi.json")
+
     assert get_resp_header(api_catalog, "content-type") |> hd() =~ "application/linkset+json"
+
+    assert get_resp_header(api_catalog, "link") == [
+             "<#{PublicRoutes.absolute("/.well-known/api-catalog")}>; rel=\"api-catalog\""
+           ]
+
+    head_catalog = build_conn() |> head("/.well-known/api-catalog")
+    assert response(head_catalog, 200) == ""
+
+    assert get_resp_header(head_catalog, "link") == [
+             "<#{PublicRoutes.absolute("/.well-known/api-catalog")}>; rel=\"api-catalog\""
+           ]
   end
 
   test "RSS feed uses stable event IDs, dates, and model links", %{conn: conn} do

@@ -37,6 +37,8 @@ defmodule PetalBoilerplateWeb.OgMetaTest do
       assert html =~ ~s(href="/privacy")
       assert html =~ PublicRoutes.absolute("/.well-known/mcp.json")
       assert html =~ PublicRoutes.absolute("/openapi.json")
+      refute html =~ "fonts.googleapis.com"
+      refute html =~ "fonts.gstatic.com"
     end
 
     test "about page has correct OG tags", %{conn: conn} do

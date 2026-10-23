@@ -12,6 +12,7 @@ defmodule PetalBoilerplateWeb.LLMResponseTest do
     link = get_resp_header(conn, "link") |> List.first()
     vary = get_resp_header(conn, "vary") |> List.first()
 
+    assert link =~ ~s(</llms.txt>; rel="describedby")
     assert link =~ ~s(</llms.txt>; rel="alternate"; type="text/plain")
 
     assert link =~

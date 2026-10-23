@@ -92,13 +92,14 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
       ProviderPage.indexable_ids()
       |> Enum.map_join("\n", fn provider_id ->
         {:ok, snapshot} = ProviderPage.fetch(provider_id)
-        "- [#{snapshot.name} models](#{endpoint_url}#{snapshot.route})"
+
+        "- [#{snapshot.name} models](#{endpoint_url}#{PublicRoutes.markdown_path(snapshot.route)})"
       end)
 
     body = """
     # LLM Catalog by Jidoka Labs
 
-    LLM Catalog by Jidoka Labs is a public catalog for browsing and comparing large language models.
+    > LLM Catalog by Jidoka Labs is a public catalog for browsing and comparing large language models.
 
     ## When to use this site
 
@@ -121,28 +122,28 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
 
     ## Public content
 
-    - [Catalog](#{endpoint_url}/)
-    - [Deduplicated LLM models list](#{endpoint_url}/llm-models)
-    - [Evaluation models](#{endpoint_url}/models/evaluation)
-    - [Provider directory](#{endpoint_url}/providers)
+    - [Catalog](#{endpoint_url}/index.md)
+    - [Deduplicated LLM models list](#{endpoint_url}/llm-models.md)
+    - [Evaluation models](#{endpoint_url}/models/evaluation.md)
+    - [Provider directory](#{endpoint_url}/providers.md)
     #{provider_links}
-    - [AI model rankings](#{endpoint_url}/rankings/ai-models)
-    - [Cheapest LLM APIs](#{endpoint_url}/rankings/cheapest-llm-api)
-    - [Zero-price LLM API offers](#{endpoint_url}/rankings/free-llm-api)
-    - [Vision LLM models](#{endpoint_url}/models/vision)
-    - [Tool-calling LLM models](#{endpoint_url}/models/tool-calling)
-    - [Largest context window LLMs](#{endpoint_url}/models/long-context)
-    - [Open-weight LLM models](#{endpoint_url}/models/open-weights)
-    - [Video AI models](#{endpoint_url}/models/video)
-    - [About](#{endpoint_url}/about)
-    - [Contact](#{endpoint_url}/contact)
-    - [Privacy policy](#{endpoint_url}/privacy)
-    - [Recent history](#{endpoint_url}/history)
-    - Model pages use `#{endpoint_url}/models/:provider/:model_id`.
+    - [AI model rankings](#{endpoint_url}/rankings/ai-models.md)
+    - [Cheapest LLM APIs](#{endpoint_url}/rankings/cheapest-llm-api.md)
+    - [Zero-price LLM API offers](#{endpoint_url}/rankings/free-llm-api.md)
+    - [Vision LLM models](#{endpoint_url}/models/vision.md)
+    - [Tool-calling LLM models](#{endpoint_url}/models/tool-calling.md)
+    - [Largest context window LLMs](#{endpoint_url}/models/long-context.md)
+    - [Open-weight LLM models](#{endpoint_url}/models/open-weights.md)
+    - [Video AI models](#{endpoint_url}/models/video.md)
+    - [About](#{endpoint_url}/about.md)
+    - [Contact](#{endpoint_url}/contact.md)
+    - [Privacy policy](#{endpoint_url}/privacy.md)
+    - [Recent history](#{endpoint_url}/history.md)
+    - Model pages use `#{endpoint_url}/models/:provider/:model_id.md`.
 
     ## Developer interfaces
 
-    - [Developer guide](#{endpoint_url}/developers)
+    - [Developer guide](#{endpoint_url}/developers.md)
     - [OpenAPI 3.1 document](#{endpoint_url}/openapi.json)
     - [JavaScript and TypeScript package](https://www.npmjs.com/package/@agentjido/llmdb)
     - [Recent history JSON](#{endpoint_url}/api/v1/history/recent)
@@ -195,6 +196,10 @@ defmodule PetalBoilerplateWeb.DiscoveryController do
 
   def api_catalog(conn, _params) do
     conn
+    |> put_resp_header(
+      "link",
+      "<#{PublicRoutes.absolute("/.well-known/api-catalog")}>; rel=\"api-catalog\""
+    )
     |> put_resp_header(
       "content-type",
       ~s(application/linkset+json;profile="https://www.rfc-editor.org/info/rfc9727")
