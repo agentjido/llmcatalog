@@ -31,6 +31,8 @@ defmodule PetalBoilerplateWeb.Plugs.PlausibleProxy do
 
   require Logger
 
+  alias PetalBoilerplateWeb.ClientIP
+
   @behaviour Plug
 
   @max_event_body_size 64_000
@@ -187,30 +189,8 @@ defmodule PetalBoilerplateWeb.Plugs.PlausibleProxy do
     [
       {"content-type", conn |> get_req_header("content-type") |> List.first()},
       {"user-agent", user_agent},
-      {"x-forwarded-for", client_ip(conn)}
+      {"x-forwarded-for", ClientIP.resolve(conn)}
     ]
-  end
-
-  defp client_ip(conn) do
-    conn
-    |> get_req_header("fly-client-ip")
-    |> List.first()
-    |> normalize_ip()
-    |> case do
-      nil -> conn.remote_ip |> :inet.ntoa() |> to_string()
-      ip -> ip
-    end
-  end
-
-  defp normalize_ip(nil), do: nil
-
-  defp normalize_ip(value) do
-    value = String.trim(value)
-
-    case :inet.parse_address(String.to_charlist(value)) do
-      {:ok, address} -> address |> :inet.ntoa() |> to_string()
-      {:error, _reason} -> nil
-    end
   end
 
   defp conditional_request_headers(conn) do

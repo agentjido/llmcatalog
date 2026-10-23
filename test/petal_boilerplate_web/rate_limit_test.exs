@@ -39,17 +39,59 @@ defmodule PetalBoilerplateWeb.RateLimitTest do
     first =
       conn
       |> with_remote_ip({192, 0, 2, 10})
-      |> put_req_header("fly-client-ip", "203.0.113.10")
+      |> put_req_header("fly-client-ip", "203.0.113.110")
       |> get("/openapi.json")
 
     second =
       build_conn()
       |> with_remote_ip({192, 0, 2, 10})
-      |> put_req_header("fly-client-ip", "203.0.113.11")
+      |> put_req_header("fly-client-ip", "203.0.113.111")
       |> get("/openapi.json")
 
     assert response(first, 200)
     assert response(second, 200)
+  end
+
+  test "uses the Cloudflare visitor IP behind a Cloudflare edge", %{conn: conn} do
+    Application.put_env(:petal_boilerplate, :trusted_client_ip_header, "fly-client-ip")
+
+    first =
+      conn
+      |> with_remote_ip({192, 0, 2, 10})
+      |> put_req_header("fly-client-ip", "173.245.48.12")
+      |> put_req_header("cf-connecting-ip", "203.0.113.10")
+      |> get("/openapi.json")
+
+    second =
+      build_conn()
+      |> with_remote_ip({192, 0, 2, 10})
+      |> put_req_header("fly-client-ip", "173.245.48.12")
+      |> put_req_header("cf-connecting-ip", "203.0.113.11")
+      |> get("/openapi.json")
+
+    assert response(first, 200)
+    assert response(second, 200)
+  end
+
+  test "ignores a forged Cloudflare visitor IP on direct Fly traffic", %{conn: conn} do
+    Application.put_env(:petal_boilerplate, :trusted_client_ip_header, "fly-client-ip")
+
+    first =
+      conn
+      |> with_remote_ip({192, 0, 2, 10})
+      |> put_req_header("fly-client-ip", "203.0.113.50")
+      |> put_req_header("cf-connecting-ip", "203.0.113.10")
+      |> get("/openapi.json")
+
+    second =
+      build_conn()
+      |> with_remote_ip({192, 0, 2, 10})
+      |> put_req_header("fly-client-ip", "203.0.113.50")
+      |> put_req_header("cf-connecting-ip", "203.0.113.11")
+      |> get("/openapi.json")
+
+    assert response(first, 200)
+    assert json_response(second, 429)["code"] == "rate_limit_exceeded"
   end
 
   test "rejects an invalid trusted header and falls back to the peer IP", %{conn: conn} do

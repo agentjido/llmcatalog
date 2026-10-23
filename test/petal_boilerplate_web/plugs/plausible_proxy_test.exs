@@ -97,9 +97,9 @@ defmodule PetalBoilerplateWeb.Plugs.PlausibleProxyTest do
     conn =
       :post
       |> conn("/_q/e", body)
+      |> Map.put(:remote_ip, {203, 0, 113, 42})
       |> put_req_header("content-type", "text/plain;charset=UTF-8")
       |> put_req_header("user-agent", "Test Browser/1.0")
-      |> put_req_header("fly-client-ip", "203.0.113.42")
       |> put_req_header("cookie", "private=value")
       |> PlausibleProxy.call(@settings)
 

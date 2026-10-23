@@ -47,7 +47,8 @@ if config_env() != :test do
   config :petal_boilerplate,
     canonical_host: System.get_env("CANONICAL_HOST"),
     seo_indexing_enabled: seo_indexing_enabled,
-    # Trust Fly-Client-IP only when the app runs behind Fly Proxy.
+    # Trust Fly-Client-IP only on Fly. The resolver verifies Cloudflare before it
+    # uses CF-Connecting-IP for a request that passed through both proxies.
     trusted_client_ip_header: if(System.get_env("FLY_APP_NAME"), do: "fly-client-ip"),
     # Keep this false or unset in local and staging environments.
     enable_analytics: analytics_enabled
