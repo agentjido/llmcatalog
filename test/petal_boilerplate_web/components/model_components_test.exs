@@ -47,6 +47,7 @@ defmodule PetalBoilerplateWeb.ModelComponentsTest do
       )
 
     assert html =~ "Claude Fable 5"
+    assert html =~ ~r/id="model-detail-dialog"[^>]*class="[^"]*scrollbar-thin/
     assert html =~ "Max Input"
     assert html =~ "1,000,000 tokens"
     assert html =~ "Reasoning Metadata"

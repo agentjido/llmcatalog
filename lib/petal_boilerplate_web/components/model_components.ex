@@ -1796,7 +1796,7 @@ defmodule PetalBoilerplateWeb.ModelComponents do
         aria-labelledby="model-detail-title"
         tabindex="-1"
         phx-mounted={JS.focus_first(to: "#model-detail-dialog")}
-        class="relative z-10 w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-lg border shadow-lg m-4"
+        class="relative z-10 w-full max-w-3xl max-h-[85vh] overflow-y-auto scrollbar-thin rounded-lg border shadow-lg m-4"
         style="border-color: hsl(var(--border)); background-color: hsl(var(--background));"
         phx-click-away="close_model"
         phx-window-keydown="close_model"
