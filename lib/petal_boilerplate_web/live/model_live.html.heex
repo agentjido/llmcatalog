@@ -423,7 +423,9 @@
       <article>
         <h3 class="font-semibold">What is LLM Catalog?</h3>
         <p class="mt-2 leading-7" style="color: hsl(var(--muted-foreground));">
-          LLM Catalog is a public database for comparing model providers, identifiers, capabilities, modalities, context windows, and recorded token prices.
+          LLM Catalog is a public database for comparing {format_number(@catalog_total)} models across {format_number(
+            length(@providers)
+          )} providers, including capabilities, modalities, context windows, and recorded token prices.
         </p>
       </article>
       <article>

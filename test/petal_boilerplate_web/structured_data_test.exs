@@ -51,6 +51,15 @@ defmodule PetalBoilerplateWeb.StructuredDataTest do
     assert dataset["isAccessibleForFree"] == true
     assert dataset["version"] == to_string(Application.spec(:llm_db, :vsn))
     assert length(faq["mainEntity"]) == 4
+
+    expected_faq_answer =
+      "LLM Catalog is a public database for comparing #{Catalog.format_number(Catalog.total_model_count())} models across #{Catalog.format_number(length(Catalog.list_providers()))} providers, including capabilities, modalities, context windows, and recorded token prices."
+
+    what_is_catalog =
+      Enum.find(faq["mainEntity"], &(&1["name"] == "What is LLM Catalog?"))
+
+    assert what_is_catalog["acceptedAnswer"]["text"] == expected_faq_answer
+    assert html =~ expected_faq_answer
   end
 
   test "provider page data matches the default visible model list", %{conn: conn} do

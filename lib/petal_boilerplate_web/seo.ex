@@ -175,7 +175,7 @@ defmodule PetalBoilerplateWeb.SEO do
         "mainEntity" => [
           faq_question(
             "What is LLM Catalog?",
-            "LLM Catalog is a public database for comparing model providers, identifiers, capabilities, modalities, context windows, and recorded token prices."
+            "LLM Catalog is a public database for comparing #{Catalog.format_number(model_count)} models across #{Catalog.format_number(provider_count)} providers, including capabilities, modalities, context windows, and recorded token prices."
           ),
           faq_question(
             "Can software and AI agents use LLM Catalog?",
