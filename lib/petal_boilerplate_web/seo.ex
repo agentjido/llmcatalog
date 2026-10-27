@@ -72,8 +72,12 @@ defmodule PetalBoilerplateWeb.SEO do
   @doc """
   Returns the approved sitemap paths and their last significant change date.
 
-  Catalog build dates cover data-driven changes. A later human review date
-  covers an editorial change on a published landing page.
+  The bundled LLMDB snapshot date covers catalog changes on every published
+  page. A later human review date covers an editorial change on a published
+  landing page.
+
+  Model `last_updated` values are model metadata, not page modification dates.
+  They do not cover changes such as price or capability corrections.
   """
   @spec search_indexable_entries() :: [%{path: String.t(), lastmod: Date.t() | nil}]
   def search_indexable_entries do
@@ -699,13 +703,7 @@ defmodule PetalBoilerplateWeb.SEO do
   end
 
   defp search_indexable_modified_on(path, catalog_date) do
-    provider_date =
-      case ProviderPage.fetch_path(path) do
-        {:ok, snapshot} -> parse_date(snapshot.last_updated)
-        :error -> catalog_date
-      end
-
-    latest_date(provider_date, editorial_modified_on(path))
+    latest_date(catalog_date, editorial_modified_on(path))
   end
 
   defp parse_date(value) when is_binary(value) do
@@ -720,8 +718,6 @@ defmodule PetalBoilerplateWeb.SEO do
         end
     end
   end
-
-  defp parse_date(_value), do: nil
 
   defp latest_date(nil, nil), do: nil
   defp latest_date(%Date{} = date, nil), do: date

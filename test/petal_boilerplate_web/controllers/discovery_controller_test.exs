@@ -167,10 +167,12 @@ defmodule PetalBoilerplateWeb.DiscoveryControllerTest do
     assert Enum.find(SEO.search_indexable_entries(), &(&1.path == "/developers")).lastmod ==
              expected_developers_lastmod
 
-    {:ok, anthropic} = ProviderPage.fetch("anthropic")
+    catalog_date = DateTime.to_date(catalog_generated_at)
 
-    assert Enum.find(SEO.search_indexable_entries(), &(&1.path == anthropic.route)).lastmod ==
-             Date.from_iso8601!(anthropic.last_updated)
+    for route <- ProviderPage.indexable_routes() do
+      assert Enum.find(SEO.search_indexable_entries(), &(&1.path == route)).lastmod ==
+               catalog_date
+    end
 
     refute body =~ "/history"
 
