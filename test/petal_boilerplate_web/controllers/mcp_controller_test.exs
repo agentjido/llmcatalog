@@ -44,7 +44,7 @@ defmodule PetalBoilerplateWeb.MCPTransportTest do
       })
       |> json_response(200)
 
-    assert call["result"]["isError"] == false
+    assert %{"isError" => false} = call["result"]
     assert call["result"]["structuredContent"]["model"]["spec"] == "openai:gpt-4o"
     assert [%{"type" => "text", "text" => text}] = call["result"]["content"]
     assert Jason.decode!(text)["model"]["spec"] == "openai:gpt-4o"

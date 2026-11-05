@@ -88,4 +88,8 @@ config :petal_components,
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
+# ex_mcp's default 100ms schema validation budget can expire under load, which
+# turns valid MCP tool calls into tool errors.
+config :ex_mcp, :json_schema, validation_timeout_ms: 1_000
+
 import_config "#{config_env()}.exs"
