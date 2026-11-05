@@ -29,8 +29,8 @@ jobs:
         include:
           - elixir: "1.18"
             otp: "27"
-          - elixir: "1.20.2"
-            otp: "29.0.2"
+          - elixir: "1.20.4"
+            otp: "29.1.2"
 
     steps:
       - name: Checkout code
