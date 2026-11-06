@@ -80,7 +80,7 @@ defmodule PetalBoilerplate.MixProject do
       {:llm_db, "~> 2026.10"},
 
       # Agent protocols
-      {:ex_mcp, "~> 1.7.3"},
+      {:ex_mcp, "~> 1.8.1"},
 
       # Dev & test
       {:phoenix_live_reload, "~> 1.6", only: [:dev, :test]},
