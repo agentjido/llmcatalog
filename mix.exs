@@ -9,10 +9,15 @@ defmodule PetalBoilerplate.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      # No patched cowlib Hex release is available yet. This application does
-      # not call the affected cookie, HTTP string, or Link encoder functions.
+      # No patched Cowboy or Cowlib Hex release is available yet.
       hex: [
-        ignore_advisories: ["CVE-2026-43971", "CVE-2026-43969", "CVE-2026-43966"]
+        ignore_advisories: [
+          "CVE-2026-115701",
+          "CVE-2026-113431",
+          "CVE-2026-43971",
+          "CVE-2026-43969",
+          "CVE-2026-43966"
+        ]
       ],
       deps: deps(),
       listeners: [Phoenix.CodeReloader]
