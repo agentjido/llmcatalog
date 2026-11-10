@@ -82,7 +82,7 @@ defmodule PetalBoilerplate.MixProject do
       {:zoi, "~> 0.18"},
 
       # Domain
-      {:llm_db, "~> 2026.10"},
+      {:llm_db, "~> 2026.11"},
 
       # Agent protocols
       {:ex_mcp, "~> 1.8.1"},
