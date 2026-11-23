@@ -10,11 +10,11 @@ defmodule PetalBoilerplateWeb.ModelMetadataController do
     id = Enum.join(parts, "/")
 
     with true <- byte_size(provider) in 1..128 and byte_size(id) in 1..512,
-         {:ok, %LLMDB.Model{id: ^id, provider: resolved_provider} = model} <-
-           LLMDB.model({provider, id}),
-         true <- Atom.to_string(resolved_provider) == provider,
-         %{meta: %{source_snapshot_id: snapshot_id}} when is_binary(snapshot_id) <-
-           LLMDB.snapshot() do
+         {:ok, provider_key} <- LLMDB.Spec.parse_provider(provider),
+         ^provider <- Atom.to_string(provider_key),
+         %{meta: %{source_snapshot_id: snapshot_id}, models_by_key: models}
+         when is_binary(snapshot_id) <- LLMDB.snapshot(),
+         %LLMDB.Model{} = model <- Map.get(models, {provider_key, id}) do
       conn
       |> put_resp_header("x-robots-tag", "noindex")
       |> json(%{schema_version: 1, snapshot_id: snapshot_id, model: Map.take(model, @fields)})

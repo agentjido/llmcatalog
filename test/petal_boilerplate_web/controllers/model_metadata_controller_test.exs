@@ -15,6 +15,13 @@ defmodule PetalBoilerplateWeb.ModelMetadataControllerTest do
     refute Map.has_key?(model, "base_url")
   end
 
+  test "serves an exact model even when another offer claims its ID as an alias", %{conn: conn} do
+    conn = get(conn, "/api/v1/models/xai/grok-code-fast-1")
+
+    assert %{"model" => %{"id" => "grok-code-fast-1", "provider" => "xai"}} =
+             json_response(conn, 200)
+  end
+
   test "returns a clear miss", %{conn: conn} do
     assert json_response(get(conn, "/api/v1/models/openai/no-such-model"), 404)
   end
