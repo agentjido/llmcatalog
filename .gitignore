@@ -39,3 +39,5 @@ lovable_design
 
 # Local SEO research data, reports, and paid-tool results.
 /seo/
+
+/priv/llm_db/catalog-full.json

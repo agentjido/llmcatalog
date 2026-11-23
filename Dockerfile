@@ -58,6 +58,7 @@ RUN mix do assets.setup + assets.build + assets.deploy
 
 # Compile the release
 RUN mix compile
+RUN mix catalog.pin
 
 # Bundle a verified history snapshot into the release so production does not
 # depend on runtime network access before the history UI becomes available.

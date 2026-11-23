@@ -177,6 +177,10 @@ jobs:
         if: steps.update.outputs.updated == 'true'
         run: MIX_ENV=test mix deps.get
 
+      - name: Pin and verify the full catalog
+        if: steps.update.outputs.updated == 'true'
+        run: MIX_ENV=test mix catalog.pin --update
+
       - name: Run tests
         if: steps.update.outputs.updated == 'true'
         run: mix test
@@ -186,6 +190,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add mix.exs mix.lock
+          git add mix.exs mix.lock priv/llm_db/catalog-manifest.json
           git commit -m "chore(deps): update llm_db to ${{ steps.upstream.outputs.version }}"
           git push

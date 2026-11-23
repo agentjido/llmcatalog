@@ -32,6 +32,44 @@ defmodule PetalBoilerplateWeb.OpenAPI do
 
   defp paths do
     %{
+      "/api/v1/models/{provider}/{model_id}" => %{
+        "get" => %{
+          "operationId" => "getModelMetadata",
+          "summary" => "Get metadata for one exact provider model",
+          "parameters" => [
+            path_parameter("provider", "Provider identifier, such as openrouter."),
+            path_parameter("model_id", "Exact model ID. Preserve any nested path segments.")
+          ],
+          "responses" => %{
+            "200" => %{
+              "description" => "Model metadata and its full catalog revision.",
+              "content" => %{
+                "application/json" => %{
+                  "schema" => %{
+                    "type" => "object",
+                    "required" => ["schema_version", "snapshot_id", "model"],
+                    "properties" => %{
+                      "schema_version" => %{"const" => 1},
+                      "snapshot_id" => %{"type" => "string", "pattern" => "^[0-9a-f]{64}$"},
+                      "model" => %{
+                        "type" => "object",
+                        "required" => ["id", "provider"],
+                        "properties" => %{
+                          "id" => %{"type" => "string"},
+                          "provider" => %{"type" => "string"}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404" => %{"description" => "Unknown exact provider and model ID."},
+            "429" => %{"description" => "Rate limit reached."}
+          },
+          "security" => []
+        }
+      },
       "/api/v1/history/recent" => %{
         "get" => %{
           "operationId" => "listRecentModelHistory",
