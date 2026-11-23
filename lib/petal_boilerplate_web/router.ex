@@ -99,6 +99,7 @@ defmodule PetalBoilerplateWeb.Router do
   scope "/api", PetalBoilerplateWeb do
     pipe_through :api
 
+    get "/v1/models/:provider/*id", ModelMetadataController, :show
     get "/v1/history/recent", HistoryController, :recent
     get "/v1/history/:provider/*id", HistoryController, :model
     get "/history/recent", HistoryController, :recent

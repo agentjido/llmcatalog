@@ -7,12 +7,12 @@ defmodule PetalBoilerplate.Application do
 
   @impl true
   def start(_type, _args) do
-    # Initialize LLMDB on startup
-    case LLMDB.load() do
-      {:ok, _} -> :ok
-      {:error, _} -> LLMDB.load_empty()
+    with :ok <- PetalBoilerplate.CatalogArtifact.load() do
+      start_supervisor()
     end
+  end
 
+  defp start_supervisor do
     PetalBoilerplate.History.configure_runtime_directory()
 
     # Pre-warm the model cache for fast initial load

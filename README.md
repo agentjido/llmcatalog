@@ -31,6 +31,18 @@ end
 
 This site consumes the published Hex release in [`mix.exs`](mix.exs), with the committed lockfile pinning the exact `llm_db` build. On startup, the app syncs the matching published history bundle into a local cache so the history UI and API stay available.
 
+### Full catalog release
+
+`mix catalog.pin --update` takes the exact Hex version from `mix.lock` and
+checks the full catalog from that GitHub release. Check in the generated
+`priv/llm_db/catalog-manifest.json` with the dependency update. The Docker
+build uses the pin to verify and include the full catalog. Site startup loads
+that local file and stops if the pin or file fails verification.
+
+`GET /api/v1/models/{provider}/{model_id}` returns the exact offer, the
+snapshot ID, and the response schema version. Keep the slash segments in IDs
+such as `openai/gpt-3.5-turbo-0613` for OpenRouter.
+
 ### Example Usage
 
 ```elixir
