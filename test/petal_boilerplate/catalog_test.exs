@@ -84,7 +84,18 @@ defmodule PetalBoilerplate.CatalogTest do
 
   test "analytics search values use an exact catalog allowlist" do
     provider = Catalog.list_providers() |> List.first()
-    model = Catalog.list_all_models() |> List.first()
+    models = Catalog.list_all_models()
+
+    search_key_counts =
+      models
+      |> Enum.flat_map(&[&1.name, &1.model_id])
+      |> Enum.frequencies_by(&String.downcase/1)
+
+    model =
+      Enum.find(models, fn model ->
+        search_key_counts[String.downcase(model.name)] == 1 and
+          search_key_counts[String.downcase(model.model_id)] == 1
+      end)
 
     assert Catalog.analytics_search_value("  #{String.upcase(provider.name)}  ") ==
              "provider:#{provider.name}"
